@@ -1,0 +1,35 @@
+
+#ifndef NET_OBJECT_H__
+#define NET_OBJECT_H__
+
+#include <memory>
+#include <string>
+
+using socket_type = uint32_t;
+
+class NetObject
+{
+protected:
+    static constexpr socket_type socket_error_val = static_cast<socket_type>(-1);
+    class NetObjectImpl;
+
+private:
+    std::string m_ipString;
+    uint16_t m_portNumber;
+    std::shared_ptr<NetObjectImpl> m_impl;
+    std::weak_ptr<NetObjectImpl> m_parent;
+
+public:
+    explicit NetObject(NetObject *parent = nullptr);
+    virtual ~NetObject();
+
+protected:
+    void GetImpl(NetObject *other, std::weak_ptr<NetObjectImpl> &destImpl);
+    NetObject *GetOther(std::weak_ptr<NetObjectImpl> &srcImpl);
+    NetObject *GetParent();
+    void ShareOption(NetObject *netUnit);
+    void SetNetOption(const std::string &ipAddress, uint16_t portId);
+};
+
+#endif
+
