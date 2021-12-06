@@ -33,7 +33,7 @@ private:
 	ConsoleColor m_oldColor;
 
 public:
-    TaskChatMessage();
+    TaskChatMessage(NetObject *parent);
     ~TaskChatMessage();
 
 private:

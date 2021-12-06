@@ -30,6 +30,8 @@ public:
         return m_message;
     }
 
+    void SetEchoMessage(const std::string &echoMessage);
+
 private:
     std::string ClassName() const override
     {

@@ -32,6 +32,7 @@ public:
     void SetSendBuffer(std::shared_ptr<IOBuffer> sendbuffer);
     void InputTask(std::unique_ptr<NetPacket> &&packet);
     AbstractTask *GetTask(const std::string &taskName);
+    void SendPacket(std::unique_ptr<NetPacket> &&packet);
 };
 
 #endif

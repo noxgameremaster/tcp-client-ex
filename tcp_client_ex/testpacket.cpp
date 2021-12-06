@@ -1,5 +1,6 @@
 
 #include "testpacket.h"
+#include "packetordertable.h"
 
 TestPacket::TestPacket()
 {
@@ -21,5 +22,10 @@ bool TestPacket::OnReadPacket()
         return false;
 
     return true;
+}
+
+uint8_t TestPacket::GetPacketId()
+{
+    return static_cast<uint8_t>(PacketOrderTable<TestPacket>::GetId());
 }
 

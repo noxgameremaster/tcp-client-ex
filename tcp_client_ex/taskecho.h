@@ -9,10 +9,11 @@ class NetPacket;
 class TaskEcho : public AbstractTask
 {
 public:
-    TaskEcho();
+    TaskEcho(NetObject *parent);
     ~TaskEcho();
 
 private:
+    void ReversalEchoPacket();
     void PrintEchoMessage(const std::string &echoMessage) const;
     virtual void DoTask(std::unique_ptr<NetPacket> &&packet) override;
 

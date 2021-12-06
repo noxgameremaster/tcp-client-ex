@@ -4,6 +4,7 @@
 #include "taskchatmessage.h"
 #include "taskecho.h"
 #include "iobuffer.h"
+#include "netpacket.h"
 
 TaskManager::TaskManager(NetObject *parent)
     : NetService(parent)
@@ -16,8 +17,8 @@ TaskManager::~TaskManager()
 
 bool TaskManager::OnInitialize()
 {   //테스크 등록
-    m_taskmap.emplace(TaskChatMessage::TaskName(), std::shared_ptr<TaskChatMessage>());
-    m_taskmap.emplace(TaskEcho::TaskName(), std::shared_ptr<TaskEcho>());
+    m_taskmap.emplace(TaskChatMessage::TaskName(), std::make_shared<TaskChatMessage>(this));
+    m_taskmap.emplace(TaskEcho::TaskName(), std::make_shared<TaskEcho>(this));
     
     m_taskthread = std::make_unique<TaskThread>(this);
     return true;
@@ -58,5 +59,20 @@ AbstractTask *TaskManager::GetTask(const std::string &taskName)
         return nullptr;
 
     return taskIterator->second.get();
+}
+
+void TaskManager::SendPacket(std::unique_ptr<NetPacket> &&packet)
+{
+    if (m_sendbuffer.expired())
+        return;
+
+    auto sendbuffer = m_sendbuffer.lock();
+
+    std::unique_ptr<NetPacket> willsend = std::forward<std::remove_reference<decltype(packet)>::type>(packet);
+
+    if (!willsend->Write())
+        return;
+
+    sendbuffer->PushBuffer(willsend...);
 }
 

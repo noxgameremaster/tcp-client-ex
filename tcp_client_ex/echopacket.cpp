@@ -4,7 +4,9 @@
 
 EchoPacket::EchoPacket()
     : NetPacket()
-{ }
+{
+    m_messageLength = 0;
+}
 
 EchoPacket::~EchoPacket()
 { }
@@ -69,5 +71,15 @@ bool EchoPacket::OnWritePacket()
 uint8_t EchoPacket::GetPacketId()
 {
     return static_cast<uint8_t>(PacketOrderTable<EchoPacket>::GetId());
+}
+
+void EchoPacket::SetEchoMessage(const std::string &echoMessage)
+{
+    if (echoMessage.empty() || (echoMessage.length() >= 0x80))
+        m_message = "echo completed";
+    else
+        m_message = echoMessage;
+
+    m_messageLength = static_cast<decltype(m_messageLength)>(m_message.length());
 }
 

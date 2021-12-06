@@ -7,7 +7,8 @@
 
 using namespace _StringHelper;
 
-TaskChatMessage::TaskChatMessage()
+TaskChatMessage::TaskChatMessage(NetObject *parent)
+    : AbstractTask(parent)
 {
     m_consoleHandle = nullptr;
     m_oldColor = ConsoleColor::COLOR_DARKWHITE;
