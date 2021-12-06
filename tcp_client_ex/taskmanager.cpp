@@ -31,11 +31,13 @@ void TaskManager::OnDeinitialize()
 
 bool TaskManager::OnStarted()
 {
+    m_taskthread->RunThread();
     return true;
 }
 
 void TaskManager::OnStopped()
 {
+    m_taskthread->StopThread();
 }
 
 void TaskManager::SetSendBuffer(std::shared_ptr<IOBuffer> sendbuffer)
@@ -73,6 +75,6 @@ void TaskManager::SendPacket(std::unique_ptr<NetPacket> &&packet)
     if (!willsend->Write())
         return;
 
-    sendbuffer->PushBuffer(willsend...);
+    sendbuffer->PushBuffer(willsend);
 }
 

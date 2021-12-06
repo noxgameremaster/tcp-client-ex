@@ -34,6 +34,12 @@ void BinaryStream::SetSeekpoint(uint32_t pos)
         m_seekpoint = pos;
 }
 
+void BinaryStream::GetStreamInfo(uint8_t *&streamDest, size_t &length)
+{
+    streamDest = m_context->data();
+    length = m_context->size();
+}
+
 void BinaryStream::BufferResize(const size_t buffersize)
 {
     m_context->clear();

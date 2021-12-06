@@ -136,6 +136,7 @@ public:
         std::copy(cont.begin(), cont.end(), m_context->begin());
         return true;
     }
+    void GetStreamInfo(uint8_t *&streamDest, size_t &length);
 
 protected:
     void BufferResize(const size_t buffersize);
