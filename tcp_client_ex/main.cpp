@@ -3,7 +3,7 @@
 
 #include "netclient.h"
 #include "stringhelper.h"
-#include <iostream>
+#include "printutil.h"
 
 using namespace _StringHelper;
 
@@ -12,7 +12,7 @@ int main()
     NetClient client;
     bool runRes = client.Startup();
 
-    std::cout << stringFormat("start client..., status: %s \n", runRes ? "ok" : "ng");
+    PrintUtil::PrintMessage(stringFormat("start client..., status: %s \n", runRes ? "ok" : "ng"));
     std::getchar();
 
     client.Shutdown();

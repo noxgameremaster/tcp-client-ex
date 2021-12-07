@@ -5,7 +5,7 @@
 #include "iobuffer.h"
 #include "socketset.h"
 #include "winsocket.h"
-#include <iostream>
+#include "printutil.h"
 #include <ws2tcpip.h>
 
 ClientReceive::ClientReceive(std::shared_ptr<WinSocket> &sock, NetObject *parent)
@@ -62,7 +62,7 @@ bool ClientReceive::Receiving()
         if (!m_receivebuffer->PushBuffer(reinterpret_cast<uint8_t *>(receiveVector.data()), receiveVector.size()))
             return ErrorBufferIsFull();
 
-        std::cout << "ClientReceive::Receiving\n";
+        PrintUtil::PrintMessage("ClientReceive::Receiving");
     }
 
     return true;
@@ -80,7 +80,7 @@ void ClientReceive::DoTask()
         }
         else if (status < 0)
         {
-            std::cout << "ClientReceive::DoTask - error\n";
+            PrintUtil::PrintMessage("ClientReceive::DoTask - error");
             break;
         }
         else

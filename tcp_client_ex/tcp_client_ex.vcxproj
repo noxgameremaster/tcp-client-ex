@@ -159,6 +159,7 @@
     <ClCompile Include="packetproducer.cpp" />
     <ClCompile Include="partitionpool.cpp" />
     <ClCompile Include="iobuffer.cpp" />
+    <ClCompile Include="printutil.cpp" />
     <ClCompile Include="socketset.cpp" />
     <ClCompile Include="taskchatmessage.cpp" />
     <ClCompile Include="taskecho.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="packetproducer.h" />
     <ClInclude Include="partitionpool.h" />
     <ClInclude Include="iobuffer.h" />
+    <ClInclude Include="printutil.h" />
     <ClInclude Include="socketset.h" />
     <ClInclude Include="stringhelper.h" />
     <ClInclude Include="taskchatmessage.h" />

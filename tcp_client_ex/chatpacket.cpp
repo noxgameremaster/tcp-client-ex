@@ -1,7 +1,10 @@
 
 #include "chatpacket.h"
 #include "packetordertable.h"
-#include <iostream>
+#include "stringhelper.h"
+#include "printutil.h"
+
+using namespace _StringHelper;
 
 ChatPacket::ChatPacket()
     : NetPacket()
@@ -60,7 +63,7 @@ bool ChatPacket::OnReadPacket()
 
 void ChatPacket::DoAction()
 {
-    std::cout << "ChatPacket::DoAction:: " << m_message << std::endl;
+    PrintUtil::PrintMessage(stringFormat("ChatPacket::DoAction:: %s", m_message));
 }
 
 uint8_t ChatPacket::GetPacketId()

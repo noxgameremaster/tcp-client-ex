@@ -83,3 +83,8 @@ void EchoPacket::SetEchoMessage(const std::string &echoMessage)
     m_messageLength = static_cast<decltype(m_messageLength)>(m_message.length());
 }
 
+size_t EchoPacket::PacketSize()
+{
+    return sizeof(m_messageLength) + m_messageLength;
+}
+

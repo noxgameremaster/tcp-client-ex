@@ -37,6 +37,7 @@ private:
     {
         return TaskName();
     }
+    size_t PacketSize() override;
 };
 
 #endif

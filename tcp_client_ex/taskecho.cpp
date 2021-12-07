@@ -3,7 +3,7 @@
 #include "taskmanager.h"
 #include "echopacket.h"
 #include "stringhelper.h"
-#include <iostream>
+#include "printutil.h"
 
 using namespace _StringHelper;
 
@@ -30,7 +30,7 @@ void TaskEcho::ReversalEchoPacket()
 
 void TaskEcho::PrintEchoMessage(const std::string &echoMessage) const
 {
-    std::cout << stringFormat("echo message: %s\n", echoMessage);
+    PrintUtil::PrintMessage(stringFormat("echo message: %s", echoMessage));
 }
 
 void TaskEcho::DoTask(std::unique_ptr<NetPacket>&& packet)

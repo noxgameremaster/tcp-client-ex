@@ -38,7 +38,7 @@ public:
 
     bool SetTrigger(NetObject *trigger, std::function<void()> &&fn);
 
-    bool MoveBuffer(std::shared_ptr<LocalBuffer> localbuffer);
+    void MoveBuffer(std::shared_ptr<LocalBuffer> localbuffer);
 
 private:
     std::mutex m_lock;

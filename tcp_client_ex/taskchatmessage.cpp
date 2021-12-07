@@ -2,44 +2,30 @@
 #include "taskchatmessage.h"
 #include "chatpacket.h"
 #include "stringhelper.h"
-#include <iostream>
-#include <windows.h>
+#include "printutil.h"
 
 using namespace _StringHelper;
 
 TaskChatMessage::TaskChatMessage(NetObject *parent)
     : AbstractTask(parent)
-{
-    m_consoleHandle = nullptr;
-    m_oldColor = ConsoleColor::COLOR_DARKWHITE;
-
-    GetConsoleHandlePointer();
-}
+{ }
 
 TaskChatMessage::~TaskChatMessage()
 { }
 
-void TaskChatMessage::ChangeTextColor(ConsoleColor colr)
-{
-    if (m_consoleHandle != nullptr)
-        SetConsoleTextAttribute(m_consoleHandle, static_cast<WORD>(colr));
-}
-
-void TaskChatMessage::GetConsoleHandlePointer()
-{
-    m_consoleHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
-}
-
 bool TaskChatMessage::CheckValidColor(uint8_t colrbyte)
 {
-    return ((colrbyte > static_cast<uint8_t>(ConsoleColor::COLOR_MIN)) && (colrbyte < static_cast<uint8_t>(ConsoleColor::COLOR_MAX)));
+    return ((colrbyte > static_cast<uint8_t>(PrintUtil::ConsoleColor::COLOR_MIN)) && (colrbyte < static_cast<uint8_t>(PrintUtil::ConsoleColor::COLOR_MAX)));
 }
 
-void TaskChatMessage::PrintMessage(const std::string &message, ConsoleColor colr)
+void TaskChatMessage::PrintMessage(const std::string &message, uint8_t colr)
 {
-    ChangeTextColor(colr);
-    std::cout << stringFormat("message: %s\n", message);
-    ChangeTextColor(m_oldColor);
+    std::string form = stringFormat("message: %s", message);
+
+    if (CheckValidColor(colr))
+        PrintUtil::PrintMessage(static_cast<PrintUtil::ConsoleColor>(colr), form);
+    else
+        PrintUtil::PrintMessage(form);
 }
 
 void TaskChatMessage::DoTask(std::unique_ptr<NetPacket> &&packet)
@@ -49,12 +35,7 @@ void TaskChatMessage::DoTask(std::unique_ptr<NetPacket> &&packet)
     if (chat == nullptr)
         return;
 
-    ConsoleColor textcolr = m_oldColor;
-
-    if (CheckValidColor(chat->GetColorId()))
-        textcolr = static_cast<ConsoleColor>(chat->GetColorId());
-
-    PrintMessage(chat->GetChatMessage(), textcolr);
+    PrintMessage(chat->GetChatMessage(), chat->GetColorId());
 }
 
 std::string TaskChatMessage::TaskName()

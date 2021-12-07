@@ -64,9 +64,9 @@ bool IOBuffer::PushBuffer(uint8_t *buffer, size_t bufferSize)
 
         if (!PushData(buffer, bufferSize, getindex))
             return false;
-    }
 
-    m_indexes.push_back(getindex);
+        m_indexes.push_back(getindex);
+    }
     TriggeredWhenPush();
     return true;
 }
@@ -75,8 +75,12 @@ bool IOBuffer::PopBuffer(const uint8_t *&destptr, size_t &bufferSize)
 {
     int index = 0;
 
-    if (!PopIndex(index))
-        return false;
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
+
+        if (!PopIndex(index))
+            return false;
+    }
 
     std::unique_ptr<int, std::function<void(int *)>> retIndex(&index, [this](const int *ret)
     {
@@ -130,15 +134,19 @@ bool IOBuffer::SetTrigger(NetObject *trigger, std::function<void()> &&fn)
     return true;
 }
 
-bool IOBuffer::MoveBuffer(std::shared_ptr<LocalBuffer> localbuffer)
+void IOBuffer::MoveBuffer(std::shared_ptr<LocalBuffer> localbuffer)
 {
     const uint8_t *dest = nullptr;
     size_t readsize = 0;
 
-    if (!PopBuffer(dest, readsize))
-        return false;
+    while (true)
+    {
+        if (!PopBuffer(dest, readsize))
+            break;
 
-    return localbuffer->Append(dest, readsize);
+        if (!localbuffer->Append(dest, readsize))
+            break;
+    }
 }
 
 

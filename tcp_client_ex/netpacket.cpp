@@ -71,7 +71,9 @@ bool NetPacket::Write()
     if (!OnWritePacket())
         return false;
 
-    int etx = m_headerData->GetProperty<HeaderData::FieldInfo::ETX>(etx);
+    int etx = 0;
+    
+    m_headerData->GetProperty<HeaderData::FieldInfo::ETX>(etx);
     
     return SetStreamChunk(etx, sizeAll - sizeof(etx));
 }
