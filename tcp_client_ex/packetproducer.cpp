@@ -130,7 +130,7 @@ void PacketProducer::SetCapture(NetObject *target, capture_function &&notifier)
     if (target == nullptr)
         return;
     GetImpl(target, m_target);
-    if (!m_target.expired())
+    if (m_target.expired())
         return;
     m_notifier = notifier;
 }

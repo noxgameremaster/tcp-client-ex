@@ -26,6 +26,7 @@ public:
     ~ClientReceive() override;
 
 private:
+    bool NotifyErrorToOwner();
     bool ErrorDisconnected();
     bool ErrorBufferIsFull();
     bool Receiving();

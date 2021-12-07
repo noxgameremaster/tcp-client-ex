@@ -25,7 +25,7 @@ void TaskEcho::ReversalEchoPacket()
     if (taskman == nullptr)
         return;
 
-    taskman->SendPacket(std::move(echoPacket));
+    taskman->ForwardPacket(std::move(echoPacket));
 }
 
 void TaskEcho::PrintEchoMessage(const std::string &echoMessage) const

@@ -5,6 +5,8 @@
 #include "clientsend.h"
 #include "winsocket.h"
 
+#include <iostream>
+
 NetClient::NetClient()
     : NetService()
 {
@@ -13,6 +15,12 @@ NetClient::NetClient()
 
 NetClient::~NetClient()
 { }
+
+void NetClient::OnError(const std::string &title, const std::string &errorMessage)
+{
+    if ("serverError" == title)
+        std::cout << errorMessage << std::endl;
+}
 
 bool NetClient::StandBySocket()
 {
@@ -51,8 +59,9 @@ bool NetClient::SenderInit()
     return true;
 }
 
-bool NetClient::OnStarted()
+bool NetClient::OnInitialize()
 {
+    NetService::OnInitialize();
     auto checkException = [](bool cond)
     {
         if (!cond)
@@ -71,7 +80,12 @@ bool NetClient::OnStarted()
     {
         return fail;
     }
+    return true;
+}
 
+bool NetClient::OnStarted()
+{
+    m_flowcontrol->Startup();
     return true;
 }
 
@@ -81,6 +95,8 @@ void NetClient::OnStopped()
         m_receiver->Shutdown();
     if (m_sender)
         m_sender->Shutdown();
+    if (m_flowcontrol)
+        m_flowcontrol->Shutdown();
 }
 
 std::weak_ptr<NetFlowControl> NetClient::FlowControl()

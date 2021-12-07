@@ -31,7 +31,7 @@ private:
     std::weak_ptr<NetFlowControl> m_flowcontrol;
 
 public:
-    explicit ClientWorker(NetObject *parent = nullptr);
+    explicit ClientWorker(NetObject *parent);
     ~ClientWorker() override;
 
 private:

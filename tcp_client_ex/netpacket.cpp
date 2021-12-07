@@ -76,3 +76,11 @@ bool NetPacket::Write()
     return SetStreamChunk(etx, sizeAll - sizeof(etx));
 }
 
+bool NetPacket::Write(uint8_t *&stream, size_t &length)
+{
+    bool result = Write();
+
+    GetStreamInfo(stream, length);
+    return result;
+}
+

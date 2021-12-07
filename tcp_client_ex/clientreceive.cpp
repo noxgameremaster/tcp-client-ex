@@ -20,33 +20,27 @@ ClientReceive::ClientReceive(std::shared_ptr<WinSocket> &sock, NetObject *parent
 ClientReceive::~ClientReceive()
 { }
 
-//bool GetErrorMessage(int iError)
-//{
-//    char *pError = nullptr;
-//
-//    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-//        nullptr,
-//        iError,
-//        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-//        (LPSTR)&pError,
-//        0,
-//        nullptr);
-//
-//    //CLogManager *pCLogManager = CSingleton::pCLogManager;
-//
-//    //pCLogManager->WriteLog("Error : %d : %s", iError, pError);
-//    //Beep(1000, 1000);
-//    OutputDebugString(pError);
-//
-//    LocalFree(pError);
-//    //ASSERT(0);
-//
-//    return true;
-//}
+bool ClientReceive::NotifyErrorToOwner()
+{
+    std::string errorMsg = GetErrorMessage();
+    NetObject *parent = GetParent();
+
+    if (parent == nullptr)
+        return false;
+
+    NetService *service = dynamic_cast<NetService *>(parent);
+
+    if (service == nullptr)
+        return false;
+
+    NotifyOccurError(service, "serverError", errorMsg);
+    return true;
+}
 
 bool ClientReceive::ErrorDisconnected()
 {
-    //GetErrorMessage(GetLastError());
+    NotifyErrorToOwner();
+
     return false;
 }
 
@@ -107,8 +101,9 @@ bool ClientReceive::OnInitialize()
     m_receivebuffer = std::make_shared<IOBuffer>();
     m_receivebuffer->SetLargeBufferScale(IOBuffer::receive_buffer_max_size);
 
-    m_networker = std::make_unique<ClientWorker>();
+    m_networker = std::make_unique<ClientWorker>(GetParent());
     m_networker->SetReceiveBuffer(m_receivebuffer);
+    m_networker->Startup();
 
     return true;
 }

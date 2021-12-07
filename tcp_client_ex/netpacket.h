@@ -30,6 +30,7 @@ private:
 
 public:
     bool Write();
+    bool Write(uint8_t *&stream, size_t &length);
 
 public:
     virtual void DoAction() {}

@@ -3,6 +3,9 @@
 #include "iptobyte.h"
 #include <ws2tcpip.h>
 #include <vector>
+#include <iterator>
+
+#pragma warning(disable:4996)
 
 WinSocket::WinSocket(socket_type sock)
 {
@@ -55,7 +58,7 @@ bool WinSocket::MakeHint()
 
     char *pSinAddr = reinterpret_cast<char *>(&nethint->sin_addr);        //Unsafe. !FIXME!
 
-    std::copy(dest.begin(), dest.end(), pSinAddr);
+    std::copy(dest.begin(), dest.end(), stdext::checked_array_iterator<char*>(pSinAddr, 4));
     m_netHint = std::move(nethint);
 
     return true;

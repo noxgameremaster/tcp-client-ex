@@ -51,6 +51,38 @@ bool NetService::OnStarted()
 void NetService::OnStopped()
 { }
 
+std::string NetService::GetErrorMessage()
+{
+    int iError = GetLastError();
+    char *pError = nullptr;
+
+    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+        nullptr,
+        iError,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPSTR)&pError,
+        0,
+        nullptr);
+
+    //CLogManager *pCLogManager = CSingleton::pCLogManager;
+
+    //pCLogManager->WriteLog("Error : %d : %s", iError, pError);
+    //Beep(1000, 1000);
+    std::string errorString = pError;
+    OutputDebugString(pError);
+
+    LocalFree(pError);
+    //ASSERT(0);
+
+    return errorString;
+}
+
+void NetService::NotifyOccurError(NetService *net, const std::string &errorTitle, const std::string &errorMessage)
+{
+    if (net != nullptr)
+        net->OnError(errorTitle, errorMessage);
+}
+
 bool NetService::Startup()
 {
     return OnInitialize() ? OnStarted() : false;

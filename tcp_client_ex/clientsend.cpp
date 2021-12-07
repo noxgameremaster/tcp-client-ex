@@ -63,17 +63,17 @@ bool ClientSend::OnInitialize()
 
     NetObject *parent = GetParent();
 
-    if (parent != nullptr)
-    {
-        NetClient *client = dynamic_cast<NetClient *>(parent);
-        if (client == nullptr)
-        {
-            auto flowcontrol = client->FlowControl();
+    if (parent == nullptr)
+        return false;
 
-            if (!flowcontrol.expired())
-                flowcontrol.lock()->SetSendBuffer(m_sendbuffer);
-        }
-    }
+    NetClient *client = dynamic_cast<NetClient *>(parent);
+    if (client == nullptr)
+        return false;
+
+    auto flowcontrol = client->FlowControl();
+
+    if (!flowcontrol.expired())
+        flowcontrol.lock()->SetSendBuffer(m_sendbuffer);
 
     return true;
 }

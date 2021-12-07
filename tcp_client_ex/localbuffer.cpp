@@ -1,5 +1,8 @@
 
 #include "localbuffer.h"
+#include <iterator>
+
+#pragma warning(disable:4996)
 
 LocalBuffer::LocalBuffer()
     : BinaryStream(1)
@@ -30,7 +33,7 @@ bool LocalBuffer::Append(const uint8_t *src, size_t length)
     if (!CheckRemaining(length))
         return false;
 
-    std::copy_n(src, length, &m_buffer[m_seekpoint]);
+    std::copy_n(src, length, stdext::checked_array_iterator<uint8_t *>(m_buffer.data(), m_buffer.size(), m_seekpoint));    
     m_seekpoint += length;
 
     return true;

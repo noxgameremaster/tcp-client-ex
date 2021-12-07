@@ -23,7 +23,7 @@ void ClientWorker::InterceptPacket(std::unique_ptr<NetPacket> &&pack)
 
     std::shared_ptr<NetFlowControl> flowcontrol = m_flowcontrol.lock();
 
-    flowcontrol->ReceivePacket(std::move(pack));
+    flowcontrol->Enqueue(std::move(pack), NetFlowControl::IOType::IN);
 }
 
 bool ClientWorker::FetchFromBuffer()

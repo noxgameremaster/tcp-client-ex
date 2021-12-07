@@ -12,6 +12,8 @@ TaskChatMessage::TaskChatMessage(NetObject *parent)
 {
     m_consoleHandle = nullptr;
     m_oldColor = ConsoleColor::COLOR_DARKWHITE;
+
+    GetConsoleHandlePointer();
 }
 
 TaskChatMessage::~TaskChatMessage()
@@ -19,12 +21,13 @@ TaskChatMessage::~TaskChatMessage()
 
 void TaskChatMessage::ChangeTextColor(ConsoleColor colr)
 {
-    SetConsoleTextAttribute(m_consoleHandle, static_cast<WORD>(colr));
+    if (m_consoleHandle != nullptr)
+        SetConsoleTextAttribute(m_consoleHandle, static_cast<WORD>(colr));
 }
 
 void TaskChatMessage::GetConsoleHandlePointer()
 {
-    m_consoleHandle = ::GetStdHandle(STD_INPUT_HANDLE);
+    m_consoleHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
 }
 
 bool TaskChatMessage::CheckValidColor(uint8_t colrbyte)

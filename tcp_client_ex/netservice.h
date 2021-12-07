@@ -26,6 +26,10 @@ protected:
     virtual bool OnStarted();
     virtual void OnStopped();
 
+    std::string GetErrorMessage();
+    virtual void OnError(const std::string &title, const std::string &content) {}
+    void NotifyOccurError(NetService *net, const std::string &errorTitle, const std::string &errorMessage);
+
 public:
     bool Startup();
     void Shutdown();

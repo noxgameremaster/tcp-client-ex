@@ -62,6 +62,7 @@ void TaskThread::DoThreadTask()
 {
     do
     {
+        Dequeue();
         {
             std::unique_lock<std::mutex> waitLock(m_waitLock);
             m_condvar.wait(waitLock);
@@ -69,7 +70,6 @@ void TaskThread::DoThreadTask()
         if (m_terminated)
             break;
 
-        Dequeue();
     }
     while (true);
 }

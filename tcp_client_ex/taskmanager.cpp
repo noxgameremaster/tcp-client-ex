@@ -1,25 +1,40 @@
 
 #include "taskmanager.h"
+#include "netflowcontrol.h"
 #include "taskthread.h"
 #include "taskchatmessage.h"
 #include "taskecho.h"
 #include "iobuffer.h"
-#include "netpacket.h"
+#include "echopacket.h"
 
 TaskManager::TaskManager(NetObject *parent)
     : NetService(parent)
 {
+    m_netFlow = nullptr;
 }
 
 TaskManager::~TaskManager()
 {
 }
 
+bool TaskManager::SetNetFlowIO()
+{
+    NetObject *parent = GetParent();
+
+    if (parent == nullptr)
+        return false;
+
+    m_netFlow = dynamic_cast<NetFlowControl *>(parent);
+    return (m_netFlow != nullptr);
+}
+
 bool TaskManager::OnInitialize()
 {   //테스크 등록
+    if (!SetNetFlowIO())
+        return false;
+
     m_taskmap.emplace(TaskChatMessage::TaskName(), std::make_shared<TaskChatMessage>(this));
-    m_taskmap.emplace(TaskEcho::TaskName(), std::make_shared<TaskEcho>(this));
-    
+    m_taskmap.emplace(TaskEcho::TaskName(), std::make_shared<TaskEcho>(this));    
     m_taskthread = std::make_unique<TaskThread>(this);
     return true;
 }
@@ -31,6 +46,7 @@ void TaskManager::OnDeinitialize()
 
 bool TaskManager::OnStarted()
 {
+    SendOnInitial();
     m_taskthread->RunThread();
     return true;
 }
@@ -40,17 +56,18 @@ void TaskManager::OnStopped()
     m_taskthread->StopThread();
 }
 
-void TaskManager::SetSendBuffer(std::shared_ptr<IOBuffer> sendbuffer)
+void TaskManager::SendOnInitial()
 {
-    m_sendbuffer = sendbuffer;
+    std::unique_ptr<EchoPacket> packet(new EchoPacket);
+
+    packet->SetEchoMessage("connect completed");
+    m_taskthread->PushBack(std::move(packet));
 }
 
 void TaskManager::InputTask(std::unique_ptr<NetPacket> &&packet)
 {
     if (m_taskthread)
-    {
         m_taskthread->PushBack(std::move(packet));
-    }
 }
 
 AbstractTask *TaskManager::GetTask(const std::string &taskName)
@@ -63,18 +80,10 @@ AbstractTask *TaskManager::GetTask(const std::string &taskName)
     return taskIterator->second.get();
 }
 
-void TaskManager::SendPacket(std::unique_ptr<NetPacket> &&packet)
+void TaskManager::ForwardPacket(std::unique_ptr<NetPacket>&& packet)
 {
-    if (m_sendbuffer.expired())
-        return;
-
-    auto sendbuffer = m_sendbuffer.lock();
-
-    std::unique_ptr<NetPacket> willsend = std::forward<std::remove_reference<decltype(packet)>::type>(packet);
-
-    if (!willsend->Write())
-        return;
-
-    sendbuffer->PushBuffer(willsend);
+    if (GetParent()!=nullptr)
+        m_netFlow->Enqueue(std::move(packet), NetFlowControl::IOType::OUT);
 }
+
 

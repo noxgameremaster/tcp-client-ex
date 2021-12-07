@@ -5,6 +5,7 @@
 #include "netobject.h"
 #include <functional>
 #include <string>
+#include <type_traits>
 
 struct sockaddr_in;
 
@@ -64,6 +65,31 @@ private:
     bool SendAll(const char *buffer, const size_t length);
     bool SendAll(const uint8_t *ubuffer, const size_t length);
 
+private:
+    template <class Ty>
+    struct is_char_type_impl
+        : std::false_type
+    {
+    };
+
+    template <>
+    struct is_char_type_impl<char>
+        : std::true_type
+    {
+    };
+
+    template <>
+    struct is_char_type_impl<unsigned char>
+        : std::true_type
+    {
+    };
+
+    template <class Ty>
+    struct is_char_type
+        : is_char_type_impl<typename std::remove_cv<Ty>::type>
+    {
+    };
+
 public:
     bool SetSocketOpt(const std::string &ipAddress, uint16_t portNumber);
     socket_type GetFd();
@@ -89,7 +115,7 @@ public:
         return SendAll(src.data(), src.size());
     }
 
-    template <class CharT, class = typename std::enable_if<std::_Is_character<CharT>::value>::type>
+    template <class CharT, class = typename std::enable_if<is_char_type<CharT>::value>::type>
     bool Send(const CharT *stream, const size_t length)
     {
         return SendAll(stream, length);

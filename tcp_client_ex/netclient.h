@@ -22,9 +22,11 @@ public:
     ~NetClient() override;
 
 private:
+    void OnError(const std::string &title, const std::string &errorMessage) override;
     bool StandBySocket();
     bool ReceiverInit();
     bool SenderInit();
+    bool OnInitialize() override;
     bool OnStarted() override;
     void OnStopped() override;
 
