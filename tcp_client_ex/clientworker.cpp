@@ -43,7 +43,7 @@ bool ClientWorker::DoTask()
     {
         {
             std::unique_lock<std::mutex> waitlock(m_waitlock);
-            m_condvar.wait(waitlock);
+            m_condvar.wait(waitlock, [this]() { return !m_recvbuffer->IsEmpty() || m_terminated; });
         }
         if (m_terminated)
             break;

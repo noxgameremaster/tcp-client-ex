@@ -61,8 +61,6 @@ bool ClientReceive::Receiving()
 
         if (!m_receivebuffer->PushBuffer(reinterpret_cast<uint8_t *>(receiveVector.data()), receiveVector.size()))
             return ErrorBufferIsFull();
-
-        PrintUtil::PrintMessage("ClientReceive::Receiving");
     }
 
     return true;
