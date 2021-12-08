@@ -8,6 +8,14 @@ class HeaderData;
 
 class NetPacket : public BinaryStream
 {
+protected:
+    enum class Mode
+    {
+        None,
+        Read,
+        Write
+    };
+
 private:
     std::unique_ptr<HeaderData> m_headerData;
 
@@ -19,8 +27,10 @@ private:
     virtual bool OnReadPacket();
     virtual bool OnWritePacket();
 
+protected:
+    virtual size_t PacketSize(Mode mode);
+
 public:
-    virtual size_t PacketSize();
     void SetHeaderData(std::unique_ptr<HeaderData> &&headerData);
     bool Read();
 

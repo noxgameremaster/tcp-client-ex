@@ -17,7 +17,7 @@ ChatPacket::~ChatPacket()
 {
 }
 
-size_t ChatPacket::PacketSize()
+size_t ChatPacket::PacketSize(Mode)
 {
     return sizeof(m_messageColor) + sizeof(m_messageLength) + m_messageLength;
 }

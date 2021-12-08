@@ -4,7 +4,8 @@
 
 NetPacket::NetPacket()
     : BinaryStream(1024)
-{ }
+{
+}
 
 NetPacket::~NetPacket()
 { }
@@ -19,7 +20,7 @@ bool NetPacket::OnWritePacket()
     return false;
 }
 
-size_t NetPacket::PacketSize()
+size_t NetPacket::PacketSize(Mode)
 {
     return sizeof(m_headerData);
 }
@@ -61,7 +62,7 @@ bool NetPacket::Write()
     if (!m_headerData)
         m_headerData = std::make_unique<HeaderData>();
 
-    size_t sizeAll = m_headerData->FieldLength() + PacketSize();
+    size_t sizeAll = m_headerData->FieldLength() + PacketSize(Mode::Write);
 
     BufferResize(sizeAll);    //@brief. 패킷의 총 길이를 먼저 설정합니다
 

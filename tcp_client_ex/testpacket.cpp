@@ -11,7 +11,7 @@ TestPacket::~TestPacket()
 {
 }
 
-size_t TestPacket::PacketSize()
+size_t TestPacket::PacketSize(Mode)
 {
     return sizeof(m_magic);
 }

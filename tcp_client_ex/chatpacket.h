@@ -16,7 +16,7 @@ public:
     ~ChatPacket() override;
 
 private:
-    size_t PacketSize() override;
+    size_t PacketSize(Mode) override;
     bool ReadMessage();
     bool OnReadPacket() override;
 

@@ -6,6 +6,7 @@
 #include "chatpacket.h"
 //#include "testpacket.h"
 #include "echopacket.h"
+#include "filepacket.h"
 
 PacketProducer::PacketProducer()
     : NetObject()
@@ -43,6 +44,8 @@ bool PacketProducer::CreatePacket(const char &packetId)
             m_createdPacket = std::make_unique<TestPacket>();*/
         else if (packetId == PacketOrderTable<EchoPacket>::GetId())
             m_createdPacket = std::make_unique<EchoPacket>();
+        else if (packetId == PacketOrderTable<FilePacket>::GetId())
+            m_createdPacket = std::make_unique<FilePacket>();
         else
             return false;
     }

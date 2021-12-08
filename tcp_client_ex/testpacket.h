@@ -14,7 +14,7 @@ public:
     ~TestPacket();
 
 private:
-    size_t PacketSize() override;
+    size_t PacketSize(Mode mode) override;
     bool OnReadPacket() override;
 
     std::string ClassName() const override

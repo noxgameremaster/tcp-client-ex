@@ -4,8 +4,10 @@
 #include "taskthread.h"
 #include "taskchatmessage.h"
 #include "taskecho.h"
+#include "taskfilestream.h"
 #include "iobuffer.h"
 #include "echopacket.h"
+#include "largefile.h"
 
 TaskManager::TaskManager(NetObject *parent)
     : NetService(parent)
@@ -29,12 +31,15 @@ bool TaskManager::SetNetFlowIO()
 }
 
 bool TaskManager::OnInitialize()
-{   //테스크 등록
+{
+    m_largefile = std::make_shared<LargeFile>();
+    //테스크 등록
     if (!SetNetFlowIO())
         return false;
 
     m_taskmap.emplace(TaskChatMessage::TaskName(), std::make_shared<TaskChatMessage>(this));
-    m_taskmap.emplace(TaskEcho::TaskName(), std::make_shared<TaskEcho>(this));    
+    m_taskmap.emplace(TaskEcho::TaskName(), std::make_shared<TaskEcho>(this));   
+    m_taskmap.emplace(TaskFileStream::TaskName(), std::make_shared<TaskFileStream>(this));
     m_taskthread = std::make_unique<TaskThread>(this);
     return true;
 }
@@ -64,6 +69,15 @@ void TaskManager::SendOnInitial()
     m_taskthread->PushBack(std::move(packet));
 }
 
+bool TaskManager::GetLargeFileObject(std::weak_ptr<LargeFile> &largefile)
+{
+    if (!m_largefile)
+        return false;
+
+    largefile = m_largefile;
+    return true;
+}
+
 void TaskManager::InputTask(std::unique_ptr<NetPacket> &&packet)
 {
     if (m_taskthread)
@@ -83,7 +97,7 @@ AbstractTask *TaskManager::GetTask(const std::string &taskName)
 void TaskManager::ForwardPacket(std::unique_ptr<NetPacket>&& packet)
 {
     if (GetParent()!=nullptr)
-        m_netFlow->Enqueue(std::move(packet), NetFlowControl::IOType::OUT);
+        m_netFlow->Enqueue(std::forward<std::remove_reference<decltype(packet)>::type>(packet), NetFlowControl::IOType::OUT);
 }
 
 

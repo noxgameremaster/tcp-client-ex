@@ -33,6 +33,7 @@ private:
 public:
     bool PushBuffer(uint8_t *buffer, size_t bufferSize);
     bool PopBuffer(const uint8_t *&destptr, size_t &bufferSize);
+    bool PopBufferAlloc(std::unique_ptr<uint8_t[]> &&destptr, size_t &bufferSize);
     bool SetLargeBufferScale(size_t scale);
     bool IsEmpty() const;
 

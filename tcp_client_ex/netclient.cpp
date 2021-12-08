@@ -4,6 +4,7 @@
 #include "clientreceive.h"
 #include "clientsend.h"
 #include "winsocket.h"
+#include "eventworker.h"
 
 #include <iostream>
 
@@ -15,6 +16,20 @@ NetClient::NetClient()
 
 NetClient::~NetClient()
 { }
+
+void NetClient::OnDeinitialize()
+{
+    NetService::OnDeinitialize();
+
+    ToggleEventManager(false);
+}
+
+void NetClient::ToggleEventManager(bool isOn)
+{
+    EventWorker &worker = EventWorker::Instance();
+
+    isOn ? worker.Start() : worker.Stop();
+}
 
 void NetClient::OnError(const std::string &title, const std::string &errorMessage)
 {
@@ -61,6 +76,8 @@ bool NetClient::SenderInit()
 
 bool NetClient::OnInitialize()
 {
+    ToggleEventManager(true);
+
     NetService::OnInitialize();
     auto checkException = [](bool cond)
     {

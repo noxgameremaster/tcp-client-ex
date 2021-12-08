@@ -52,7 +52,10 @@ bool EchoPacket::OnReadPacket()
 
 bool EchoPacket::OnWritePacket()
 {
-    m_messageLength = static_cast<char>(m_message.length());
+    if (m_message.length() > 128)
+        return false;
+
+    m_messageLength = static_cast<uint8_t>(m_message.length());
 
     try
     {
@@ -83,7 +86,7 @@ void EchoPacket::SetEchoMessage(const std::string &echoMessage)
     m_messageLength = static_cast<decltype(m_messageLength)>(m_message.length());
 }
 
-size_t EchoPacket::PacketSize()
+size_t EchoPacket::PacketSize(Mode)
 {
     return sizeof(m_messageLength) + m_messageLength;
 }

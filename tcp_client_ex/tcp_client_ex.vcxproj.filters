@@ -99,6 +99,18 @@
     <ClCompile Include="printutil.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="filepacket.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="taskfilestream.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="largefile.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="eventworker.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="netobject.h">
@@ -183,6 +195,21 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="printutil.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="filepacket.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="taskfilestream.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="largefile.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ccobject.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="eventworker.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

@@ -99,6 +99,35 @@ bool IOBuffer::PopBuffer(const uint8_t *&destptr, size_t &bufferSize)
     return true;
 }
 
+bool IOBuffer::PopBufferAlloc(std::unique_ptr<uint8_t[]> &&destptr, size_t &bufferSize)
+{
+    int index = 0;
+
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
+
+        if (!PopIndex(index))
+            return false;
+    }
+    size_t totalsize = 0;
+    std::unique_ptr<uint8_t[]> alloc;
+
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
+        if (!GetTotalSize(index, totalsize))
+            return false;
+
+        alloc = std::unique_ptr<uint8_t[]>(new uint8_t[totalsize]);
+
+        if (!GetData(index, alloc.get()))
+            return false;
+    }
+
+    destptr = std::move(alloc);
+    bufferSize = totalsize;
+    return true;
+}
+
 bool IOBuffer::SetLargeBufferScale(size_t scale)
 {
     if (m_largeBuffer.size())
@@ -136,16 +165,20 @@ bool IOBuffer::SetTrigger(NetObject *trigger, std::function<void()> &&fn)
 
 void IOBuffer::MoveBuffer(std::shared_ptr<LocalBuffer> localbuffer)
 {
-    const uint8_t *dest = nullptr;
+    //const uint8_t *dest = nullptr;
     size_t readsize = 0;
 
     while (true)
     {
-        if (!PopBuffer(dest, readsize))
-            break;
+        {
+            std::unique_ptr<uint8_t[]> alloc;
 
-        if (!localbuffer->Append(dest, readsize))
-            break;
+            if (!PopBufferAlloc(std::move(alloc), readsize))
+                break;
+
+            if (!localbuffer->Append(alloc.get(), readsize))
+                break;
+        }
     }
 }
 

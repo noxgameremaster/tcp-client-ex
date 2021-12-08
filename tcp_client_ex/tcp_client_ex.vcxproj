@@ -146,8 +146,11 @@
     <ClCompile Include="clientsend.cpp" />
     <ClCompile Include="clientworker.cpp" />
     <ClCompile Include="echopacket.cpp" />
+    <ClCompile Include="eventworker.cpp" />
+    <ClCompile Include="filepacket.cpp" />
     <ClCompile Include="headerdata.cpp" />
     <ClCompile Include="iptobyte.cpp" />
+    <ClCompile Include="largefile.cpp" />
     <ClCompile Include="localbuffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="netclient.cpp" />
@@ -163,6 +166,7 @@
     <ClCompile Include="socketset.cpp" />
     <ClCompile Include="taskchatmessage.cpp" />
     <ClCompile Include="taskecho.cpp" />
+    <ClCompile Include="taskfilestream.cpp" />
     <ClCompile Include="taskmanager.cpp" />
     <ClCompile Include="taskthread.cpp" />
     <ClCompile Include="testpacket.cpp" />
@@ -171,13 +175,17 @@
   <ItemGroup>
     <ClInclude Include="abstracttask.h" />
     <ClInclude Include="binarystream.h" />
+    <ClInclude Include="ccobject.h" />
     <ClInclude Include="chatpacket.h" />
     <ClInclude Include="clientreceive.h" />
     <ClInclude Include="clientsend.h" />
     <ClInclude Include="clientworker.h" />
     <ClInclude Include="echopacket.h" />
+    <ClInclude Include="eventworker.h" />
+    <ClInclude Include="filepacket.h" />
     <ClInclude Include="headerdata.h" />
     <ClInclude Include="iptobyte.h" />
+    <ClInclude Include="largefile.h" />
     <ClInclude Include="localbuffer.h" />
     <ClInclude Include="netclient.h" />
     <ClInclude Include="netflowcontrol.h" />
@@ -193,6 +201,7 @@
     <ClInclude Include="stringhelper.h" />
     <ClInclude Include="taskchatmessage.h" />
     <ClInclude Include="taskecho.h" />
+    <ClInclude Include="taskfilestream.h" />
     <ClInclude Include="taskmanager.h" />
     <ClInclude Include="taskthread.h" />
     <ClInclude Include="testpacket.h" />

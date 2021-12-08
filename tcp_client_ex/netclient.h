@@ -22,6 +22,8 @@ public:
     ~NetClient() override;
 
 private:
+    void OnDeinitialize() override;
+    void ToggleEventManager(bool isOn);
     void OnError(const std::string &title, const std::string &errorMessage) override;
     bool StandBySocket();
     bool ReceiverInit();
