@@ -33,21 +33,35 @@ bool TaskManager::SetNetFlowIO()
 bool TaskManager::OnInitialize()
 {
     m_largefile = std::make_shared<LargeFile>();
+
+    std::unique_ptr<TaskFileStream> filetask(new TaskFileStream(this));
+
+    filetask->OnReportFileMetaInfo().Connection(&LargeFile::SetFileParams, m_largefile.get());
+    m_largefile->OnReportSetParamResult().Connection(&TaskFileStream::Report, filetask.get());
     //테스크 등록
     if (!SetNetFlowIO())
         return false;
 
-    m_taskmap.emplace(TaskChatMessage::TaskName(), std::make_shared<TaskChatMessage>(this));
-    m_taskmap.emplace(TaskEcho::TaskName(), std::make_shared<TaskEcho>(this));   
-    m_taskmap.emplace(TaskFileStream::TaskName(), std::make_shared<TaskFileStream>(this));
+    InsertTask(std::make_unique<TaskChatMessage>(this));
+    InsertTask(std::make_unique<TaskEcho>(this));
+    InsertTask(std::move(filetask));
     m_taskthread = std::make_unique<TaskThread>(this);
     return true;
 }
 
-void TaskManager::OnDeinitialize()
+bool TaskManager::InsertTask(std::unique_ptr<AbstractTask> &&task)
 {
-    //
+    std::string taskname = task->TaskName();
+
+    if (GetTask(taskname) != nullptr)
+        return false;
+
+    m_taskmap.emplace(taskname, std::forward<std::remove_reference<decltype(task)>::type>(task));
+    return true;
 }
+
+void TaskManager::OnDeinitialize()
+{ }
 
 bool TaskManager::OnStarted()
 {

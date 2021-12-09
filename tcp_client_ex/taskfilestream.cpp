@@ -2,7 +2,7 @@
 #include "taskfilestream.h"
 #include "taskmanager.h"
 #include "filepacket.h"
-#include "largefile.h"
+#include "eventworker.h"
 
 TaskFileStream::TaskFileStream(NetObject *parent)
     : AbstractTask(parent)
@@ -16,17 +16,14 @@ TaskFileStream::~TaskFileStream()
 
 void TaskFileStream::WriteFileMetaData()
 {
-    if (m_largefile.expired())
-        return;
+    EventWorker &work = EventWorker::Instance();
 
-    std::shared_ptr<LargeFile> largefile = m_largefile.lock();
-
-    Report(largefile->SetFileParams(m_filename, m_pathname, m_filesize));
+    work.AppendTask(&m_OnReportFileMetaInfo, m_filename, m_pathname, m_filesize);
 }
 
 void TaskFileStream::GetLargeFileInstance()
 {
-    if (m_largefile.expired())
+    /*if (m_largefile.expired())
     {
         TaskManager *taskman = dynamic_cast<TaskManager *>(GetParent());
 
@@ -34,7 +31,7 @@ void TaskFileStream::GetLargeFileInstance()
             return;
 
         taskman->GetLargeFileObject(m_largefile);
-    }
+    }*/
 }
 
 void TaskFileStream::ReportFileMetaReceiveCompleted()
@@ -66,7 +63,7 @@ void TaskFileStream::DoTask(std::unique_ptr<NetPacket> &&packet)
     if (metadata == nullptr)
         return;
 
-    GetLargeFileInstance();
+    //GetLargeFileInstance();
 
     m_filename = metadata->GetFileName();
     m_pathname = metadata->GetFilePath();
@@ -75,7 +72,7 @@ void TaskFileStream::DoTask(std::unique_ptr<NetPacket> &&packet)
     WriteFileMetaData();
 }
 
-std::string TaskFileStream::TaskName()
+std::string TaskFileStream::TaskName() const
 {
-    return FilePacket::TaskName();
+    return NetPacket::TaskKey<FilePacket>::Get();
 }

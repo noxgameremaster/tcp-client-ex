@@ -24,6 +24,8 @@ public:
     bool SetFileParams(const std::string &fileName, const std::string &pathName, const size_t &fileSize);
     bool Write(const uint8_t *stream, const size_t &length);
     bool WriteAll(const uint8_t *stream, const size_t &length);
+
+    DECLARE_SIGNAL(OnReportSetParamResult, bool)
 };
 
 #endif

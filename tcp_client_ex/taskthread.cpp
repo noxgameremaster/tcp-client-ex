@@ -65,7 +65,7 @@ void TaskThread::DoThreadTask()
         Dequeue();
         {
             std::unique_lock<std::mutex> waitLock(m_waitLock);
-            m_condvar.wait(waitLock);
+            m_condvar.wait(waitLock, [this]() { return (m_terminated | (!m_msglist.empty())); });
         }
         if (m_terminated)
             break;

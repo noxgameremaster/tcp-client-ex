@@ -8,15 +8,18 @@ class NetPacket;
 
 class AbstractTask : public NetObject
 {
-    public:
-        AbstractTask(NetObject *parent = nullptr);
-        ~AbstractTask() override;
+public:
+    AbstractTask(NetObject *parent = nullptr);
+    ~AbstractTask() override;
 
-    private:
-        virtual void DoTask(std::unique_ptr<NetPacket> &&packet) = 0;
+private:
+    virtual void DoTask(std::unique_ptr<NetPacket> &&packet) = 0;
 
-    protected:
-        void ExcuteDoTask(AbstractTask *task, std::unique_ptr<NetPacket> &&packet);
+protected:
+    void ExcuteDoTask(AbstractTask *task, std::unique_ptr<NetPacket> &&packet);
+
+public:
+    virtual std::string TaskName() const = 0;
 };
 
 #endif

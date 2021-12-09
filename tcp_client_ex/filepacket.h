@@ -49,7 +49,7 @@ public:
         return static_cast<size_t>(m_filesize);
     }
 
-    uint8_t GetPacketId() override;
+    uint8_t GetPacketId() const override;
 
     void SetError(const uint8_t &errorId)
     {

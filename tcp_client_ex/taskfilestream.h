@@ -12,7 +12,6 @@ private:
     std::string m_filename;
     std::string m_pathname;
     size_t m_filesize;
-    std::weak_ptr<LargeFile> m_largefile;
 
     uint8_t m_error;
 
@@ -24,11 +23,17 @@ private:
     void WriteFileMetaData();
     void GetLargeFileInstance();
     void ReportFileMetaReceiveCompleted();
+
+public:
     void Report(bool noError);
+
+private:
     void DoTask(std::unique_ptr<NetPacket> &&packet) override;
 
 public:
-    static std::string TaskName();
+    std::string TaskName() const override;
+
+    DECLARE_SIGNAL(OnReportFileMetaInfo, std::string, std::string, size_t)
 };
 
 #endif

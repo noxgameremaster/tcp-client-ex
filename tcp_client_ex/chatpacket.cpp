@@ -66,7 +66,7 @@ void ChatPacket::DoAction()
     PrintUtil::PrintMessage(stringFormat("ChatPacket::DoAction:: %s", m_message));
 }
 
-uint8_t ChatPacket::GetPacketId()
+uint8_t ChatPacket::GetPacketId() const
 {
     return static_cast<uint8_t>(PacketOrderTable<ChatPacket>::GetId());
 }

@@ -21,7 +21,7 @@ private:
     {
         return "TestPacket";
     }
-    uint8_t GetPacketId() override;
+    uint8_t GetPacketId() const override;
 };
 
 #endif

@@ -44,8 +44,8 @@ void TaskEcho::DoTask(std::unique_ptr<NetPacket>&& packet)
     ReversalEchoPacket();
 }
 
-std::string TaskEcho::TaskName()
+std::string TaskEcho::TaskName() const
 {
-    return EchoPacket::TaskName();
+    return NetPacket::TaskKey<EchoPacket>::Get();
 }
 

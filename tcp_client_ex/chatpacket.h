@@ -21,7 +21,7 @@ private:
     bool OnReadPacket() override;
 
     void DoAction() override;
-    uint8_t GetPacketId() override;
+    uint8_t GetPacketId() const override;
 
 public:
     std::string GetChatMessage() const

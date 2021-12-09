@@ -147,6 +147,7 @@
     <ClCompile Include="clientworker.cpp" />
     <ClCompile Include="echopacket.cpp" />
     <ClCompile Include="eventworker.cpp" />
+    <ClCompile Include="filechunkpacket.cpp" />
     <ClCompile Include="filepacket.cpp" />
     <ClCompile Include="headerdata.cpp" />
     <ClCompile Include="iptobyte.cpp" />
@@ -182,6 +183,7 @@
     <ClInclude Include="clientworker.h" />
     <ClInclude Include="echopacket.h" />
     <ClInclude Include="eventworker.h" />
+    <ClInclude Include="filechunkpacket.h" />
     <ClInclude Include="filepacket.h" />
     <ClInclude Include="headerdata.h" />
     <ClInclude Include="iptobyte.h" />

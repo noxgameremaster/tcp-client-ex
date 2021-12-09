@@ -24,7 +24,7 @@ bool TestPacket::OnReadPacket()
     return true;
 }
 
-uint8_t TestPacket::GetPacketId()
+uint8_t TestPacket::GetPacketId() const
 {
     return static_cast<uint8_t>(PacketOrderTable<TestPacket>::GetId());
 }

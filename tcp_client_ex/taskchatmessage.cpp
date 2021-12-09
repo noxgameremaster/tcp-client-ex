@@ -38,8 +38,8 @@ void TaskChatMessage::DoTask(std::unique_ptr<NetPacket> &&packet)
     PrintMessage(chat->GetChatMessage(), chat->GetColorId());
 }
 
-std::string TaskChatMessage::TaskName()
+std::string TaskChatMessage::TaskName() const
 {
-    return ChatPacket::TaskName();
+    return NetPacket::TaskKey<ChatPacket>::Get();
 }
 

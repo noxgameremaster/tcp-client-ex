@@ -32,7 +32,7 @@ void FilePacket::ReadString(std::string &strDest, const uint8_t &length)
         throw false;
 
     strDest.resize(static_cast<const size_t>(length));
-    for (char c : strDest)
+    for (char &c : strDest)
         ReadCtx(c);
 }
 
@@ -53,7 +53,7 @@ bool FilePacket::OnReadPacket()
     return true;
 }
 
-uint8_t FilePacket::GetPacketId()
+uint8_t FilePacket::GetPacketId() const
 {
     return static_cast<uint8_t>(PacketOrderTable<FilePacket>::GetId());
 }

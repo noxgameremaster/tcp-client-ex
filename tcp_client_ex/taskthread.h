@@ -33,6 +33,12 @@ public:
     void RunThread();
 
 private:
+    std::string TaskName() const override
+    {
+        return "taskThread";
+    }
+
+private:
     std::mutex m_waitLock;
     std::mutex m_lock;
 };

@@ -165,7 +165,6 @@ bool IOBuffer::SetTrigger(NetObject *trigger, std::function<void()> &&fn)
 
 void IOBuffer::MoveBuffer(std::shared_ptr<LocalBuffer> localbuffer)
 {
-    //const uint8_t *dest = nullptr;
     size_t readsize = 0;
 
     while (true)

@@ -19,6 +19,7 @@ bool BinaryStream::PutStreamRaw(const value_type *raw, size_t length)
 
     m_context->resize(length);
     std::copy_n(raw, length, m_context->begin());
+    m_seekpoint = 0;
     return true;
 }
 

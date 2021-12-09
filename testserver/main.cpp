@@ -13,21 +13,21 @@ using namespace std;
 
 string serverIP = "127.0.0.1";
 
-int main() {
-
+int main()
+{
 	TCPServer server(serverIP, 18590);
 
-	if (server.initWinsock()) {
+    if (server.RunTestServer())
+        std::getchar();
 
-		server.run();
-
-	}
+    server.StopTestServer();
 
 	return 0;
 }
 
 #else
 
+#include "eventworker.h"
 #include <iostream>
 #include "TCPClient.h"
 #include <string>
@@ -39,6 +39,7 @@ using namespace std;
 
 int main() {
 
+    EventWorker::Instance().Start();
 	TCPClient *client = new TCPClient;
 	string msg = "a";
 	string usernameEntered;
@@ -77,6 +78,7 @@ int main() {
 
 
 	delete client;
+    EventWorker::Instance().Stop();
 	cin.get();
 	return 0;
 

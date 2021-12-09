@@ -28,6 +28,7 @@ public:
 private:
     bool SetNetFlowIO();
     bool OnInitialize() override;
+    bool InsertTask(std::unique_ptr<AbstractTask> &&task);
     void OnDeinitialize() override;
     bool OnStarted() override;
     void OnStopped() override;

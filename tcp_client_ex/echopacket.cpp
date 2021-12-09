@@ -71,7 +71,7 @@ bool EchoPacket::OnWritePacket()
     return true;
 }
 
-uint8_t EchoPacket::GetPacketId()
+uint8_t EchoPacket::GetPacketId() const
 {
     return static_cast<uint8_t>(PacketOrderTable<EchoPacket>::GetId());
 }

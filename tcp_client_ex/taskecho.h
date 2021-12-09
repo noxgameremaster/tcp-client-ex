@@ -18,7 +18,7 @@ private:
     virtual void DoTask(std::unique_ptr<NetPacket> &&packet) override;
 
 public:
-    static std::string TaskName();
+    std::string TaskName() const override;
 };
 
 #endif

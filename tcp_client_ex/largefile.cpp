@@ -1,5 +1,6 @@
 
 #include "largefile.h"
+#include "eventworker.h"
 #include "stringhelper.h"
 #include <experimental\filesystem>
 #include <fstream>
@@ -22,6 +23,11 @@ bool LargeFile::MakeDirectory(const std::string &path)
 
 bool LargeFile::RemoveIfAlreadExist(bool erase)
 {
+    if (m_pathname.empty())
+        return false;
+    if (m_filename.empty())
+        return false;
+
     std::string fullname = stringFormat("%s\\%s", m_pathname, m_filename);
 
     bool isExist = std::experimental::filesystem::exists(fullname);
@@ -34,6 +40,11 @@ bool LargeFile::RemoveIfAlreadExist(bool erase)
 
 bool LargeFile::SetFileParams(const std::string &fileName, const std::string &pathName, const size_t &fileSize)
 {
+    std::unique_ptr<bool, std::function<void(bool*)>> bRet(new bool(false), [this](bool *ret)
+    {
+        EventWorker::Instance().AppendTask(&m_OnReportSetParamResult, *ret);
+        delete ret;
+    });
     if (!RemoveIfAlreadExist())
     {
         if (!MakeDirectory(pathName))
@@ -61,8 +72,9 @@ bool LargeFile::SetFileParams(const std::string &fileName, const std::string &pa
     if (!fileSize)
         return false;
 
+    *bRet = true;
     m_filesize = fileSize;
-    return true;
+    return *bRet;
 }
 
 bool LargeFile::Write(const uint8_t *stream, const size_t &length)

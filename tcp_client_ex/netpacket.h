@@ -36,7 +36,7 @@ public:
 
 private:
     bool WriteHeaderData(const size_t length);
-    virtual uint8_t GetPacketId() = 0;
+    virtual uint8_t GetPacketId() const = 0;
 
 public:
     bool Write();
@@ -45,6 +45,17 @@ public:
 public:
     virtual void DoAction() {}
     virtual std::string ClassName() const = 0;
+
+    template <class PacketObject>
+    struct TaskKey
+    {
+        static std::string Get()
+        {
+            static_assert(std::is_base_of<NetPacket, PacketObject>::value, "the instance must be inherit NetPacket");
+
+            return PacketObject::TaskName();
+        }
+    };
 };
 
 #endif
