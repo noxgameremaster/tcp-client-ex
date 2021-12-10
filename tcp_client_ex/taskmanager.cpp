@@ -7,6 +7,7 @@
 #include "taskfilestream.h"
 #include "iobuffer.h"
 #include "echopacket.h"
+#include "filechunkpacket.h"
 #include "largefile.h"
 
 TaskManager::TaskManager(NetObject *parent)
@@ -34,18 +35,24 @@ bool TaskManager::SetNetFlowIO()
 bool TaskManager::OnInitialize()
 {
     m_largefile = std::make_shared<LargeFile>();
-
+    
     std::unique_ptr<TaskFileStream> filetask(new TaskFileStream(this));
 
-    filetask->OnReportFileMetaInfo().Connection(&LargeFile::SetFileParams, m_largefile.get());
+    filetask->OnReportFileMetaInfo().Connection(&LargeFile::SlotSetFileParams, m_largefile.get());
+    filetask->OnReportReceiveFileChunk().Connection(&LargeFile::SlotWriteChunk, m_largefile.get());
     m_largefile->OnReportSetParamResult().Connection(&TaskFileStream::Report, filetask.get());
+    m_largefile->OnWriteChunk().Connection(&TaskFileStream::ReportWriteChunk, filetask.get());
     //테스크 등록
     if (!SetNetFlowIO())
         return false;
 
     InsertTask(std::make_unique<TaskChatMessage>(this));
     InsertTask(std::make_unique<TaskEcho>(this));
-    InsertTask(std::move(filetask));
+    
+    std::shared_ptr<AbstractTask> sharedFileTask(filetask.release());
+
+    InsertSharedTask(sharedFileTask->TaskName(), sharedFileTask);
+    InsertSharedTask(FileChunkPacket::TaskName(), sharedFileTask);
     return true;
 }
 
@@ -57,6 +64,15 @@ bool TaskManager::InsertTask(std::unique_ptr<AbstractTask> &&task)
         return false;
 
     m_taskmap.emplace(taskname, std::forward<std::remove_reference<decltype(task)>::type>(task));
+    return true;
+}
+
+bool TaskManager::InsertSharedTask(const std::string &keyName, std::shared_ptr<AbstractTask> &sharedTask)
+{
+    if (GetTask(keyName) != nullptr)
+        return false;
+
+    m_taskmap.emplace(keyName, sharedTask);
     return true;
 }
 
@@ -81,15 +97,6 @@ void TaskManager::SendOnInitial()
 
     packet->SetEchoMessage("connect completed");
     m_taskthread->PushBack(std::move(packet));
-}
-
-bool TaskManager::GetLargeFileObject(std::weak_ptr<LargeFile> &largefile)
-{
-    if (!m_largefile)
-        return false;
-
-    largefile = m_largefile;
-    return true;
 }
 
 void TaskManager::InputTask(std::unique_ptr<NetPacket> &&packet)

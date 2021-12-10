@@ -21,19 +21,22 @@ public:
 
 private:
     void WriteFileMetaData();
-    void GetLargeFileInstance();
     void ReportFileMetaReceiveCompleted();
 
 public:
     void Report(bool noError);
+    void ReportWriteChunk(bool isError, const size_t &writeAmount, const size_t &totalSize);
 
 private:
+    void ProcessFileMeta(std::unique_ptr<NetPacket> &&packet);
+    void ProcessFileChunk(std::unique_ptr<NetPacket> &&packet);
     void DoTask(std::unique_ptr<NetPacket> &&packet) override;
 
 public:
     std::string TaskName() const override;
 
     DECLARE_SIGNAL(OnReportFileMetaInfo, std::string, std::string, size_t)
+    DECLARE_SIGNAL(OnReportReceiveFileChunk, std::vector<uint8_t>)
 };
 
 #endif

@@ -1,5 +1,6 @@
 
 #include "abstracttask.h"
+#include "taskmanager.h"
 
 AbstractTask::AbstractTask(NetObject *parent)
     : NetObject(parent)
@@ -12,5 +13,22 @@ void AbstractTask::ExecuteDoTask(AbstractTask *task, std::unique_ptr<NetPacket> 
 {
     task->DoTask(std::move(packet));
 }
+
+bool AbstractTask::ForwardPacketToManager(std::unique_ptr<NetPacket> &&forwardPacket)
+{
+    NetObject *parent = GetParent();
+
+    if (nullptr == parent)
+        return false;
+
+    TaskManager *taskman = dynamic_cast<TaskManager *>(parent);
+
+    if (nullptr == taskman)
+        return false;
+
+    taskman->ForwardPacket(std::forward<std::remove_reference<decltype(forwardPacket)>::type>(forwardPacket));
+    return true;
+}
+
 
 

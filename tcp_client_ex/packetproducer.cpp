@@ -39,18 +39,26 @@ bool PacketProducer::CreatePacket(const char &packetId)
 
     do
     {
-        if (packetId == PacketOrderTable<ChatPacket>::GetId())
+        switch (packetId)
+        {
+        case PacketOrderTable<ChatPacket>::GetId():
             m_createdPacket = std::make_unique<ChatPacket>();
-        else if (packetId == PacketOrderTable<TestPacket>::GetId())
+            break;
+        case PacketOrderTable<TestPacket>::GetId():
             m_createdPacket = std::make_unique<TestPacket>();
-        else if (packetId == PacketOrderTable<EchoPacket>::GetId())
+            break;
+        case PacketOrderTable<EchoPacket>::GetId():
             m_createdPacket = std::make_unique<EchoPacket>();
-        else if (packetId == PacketOrderTable<FilePacket>::GetId())
+            break;
+        case PacketOrderTable<FilePacket>::GetId():
             m_createdPacket = std::make_unique<FilePacket>();
-        else if (packetId == PacketOrderTable<FileChunkPacket>::GetId())
+            break;
+        case PacketOrderTable<FileChunkPacket>::GetId():
             m_createdPacket = std::make_unique<FileChunkPacket>();
-        else
+            break;
+        default:
             return false;
+        }
     }
     while (false);
 

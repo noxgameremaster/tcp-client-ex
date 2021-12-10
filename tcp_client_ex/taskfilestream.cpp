@@ -1,7 +1,7 @@
 
 #include "taskfilestream.h"
-#include "taskmanager.h"
 #include "filepacket.h"
+#include "filechunkpacket.h"
 #include "eventworker.h"
 
 TaskFileStream::TaskFileStream(NetObject *parent)
@@ -21,19 +21,6 @@ void TaskFileStream::WriteFileMetaData()
     work.AppendTask(&m_OnReportFileMetaInfo, m_filename, m_pathname, m_filesize);
 }
 
-void TaskFileStream::GetLargeFileInstance()
-{
-    /*if (m_largefile.expired())
-    {
-        TaskManager *taskman = dynamic_cast<TaskManager *>(GetParent());
-
-        if (taskman == nullptr)
-            return;
-
-        taskman->GetLargeFileObject(m_largefile);
-    }*/
-}
-
 void TaskFileStream::ReportFileMetaReceiveCompleted()
 {
     std::unique_ptr<FilePacket> report(new FilePacket);
@@ -41,12 +28,7 @@ void TaskFileStream::ReportFileMetaReceiveCompleted()
     report->SetError(m_error);
     report->SetFileName(m_filename);
 
-    TaskManager *taskman = dynamic_cast<TaskManager *>(GetParent());
-
-    if (taskman == nullptr)
-        return;
-
-    taskman->ForwardPacket(std::move(report));
+    ForwardPacketToManager(std::move(report));
 }
 
 void TaskFileStream::Report(bool noError)
@@ -56,20 +38,54 @@ void TaskFileStream::Report(bool noError)
     ReportFileMetaReceiveCompleted();
 }
 
-void TaskFileStream::DoTask(std::unique_ptr<NetPacket> &&packet)
+void TaskFileStream::ReportWriteChunk(bool isError, const size_t &writeAmount, const size_t &totalSize)
+{
+    std::unique_ptr<FileChunkPacket> reportChunk(new FileChunkPacket);
+
+    reportChunk->SetReportParam(isError, (writeAmount >= totalSize), writeAmount);
+    ForwardPacketToManager(std::move(reportChunk));
+}
+
+void TaskFileStream::ProcessFileMeta(std::unique_ptr<NetPacket> &&packet)
 {
     FilePacket *metadata = dynamic_cast<FilePacket *>(packet.get());
 
-    if (metadata == nullptr)
+    if (nullptr == metadata)
         return;
-
-    //GetLargeFileInstance();
 
     m_filename = metadata->GetFileName();
     m_pathname = metadata->GetFilePath();
     m_filesize = metadata->GetFilesize();
-    
+
     WriteFileMetaData();
+}
+
+void TaskFileStream::ProcessFileChunk(std::unique_ptr<NetPacket> &&packet)
+{
+    FileChunkPacket *chunkdata = dynamic_cast<FileChunkPacket *>(packet.get());
+
+    if (nullptr == chunkdata)
+        return;
+
+    std::vector<uint8_t> fileChunk;
+
+    if (!chunkdata->FetchFileChunk(fileChunk))
+        return;
+
+    EventWorker::Instance().AppendTask(&m_OnReportReceiveFileChunk, std::move(fileChunk));
+}
+
+void TaskFileStream::DoTask(std::unique_ptr<NetPacket> &&packet)
+{
+    if (!packet)
+        return;
+
+    std::remove_reference<decltype(packet)>::type getpacket = std::move(packet);
+
+    if (dynamic_cast<FilePacket *>(getpacket.get()) != nullptr)
+        ProcessFileMeta(std::move(getpacket));
+    else if (dynamic_cast<FileChunkPacket *>(getpacket.get()) != nullptr)
+        ProcessFileChunk(std::move(getpacket));
 }
 
 std::string TaskFileStream::TaskName() const

@@ -23,18 +23,18 @@ const int MAX_BUFFER_SIZE = 4096;			//Constant value for the buffer size = where
 TCPServer::TCPServer()
     : CCObject()
 {
-	m_listenerPort = 18590;
-	ServerInitialize();
+    m_listenerPort = 18590;
+    ServerInitialize();
 }
 
 TCPServer::TCPServer(std::string ipAddress, int port)
-	: m_listenerIPAddress(ipAddress), m_listenerPort(port), CCObject()
+    : m_listenerIPAddress(ipAddress), m_listenerPort(port), CCObject()
 {
-	ServerInitialize();
+    ServerInitialize();
 }
 
 TCPServer::~TCPServer() {
-	cleanupWinsock();			//Cleanup Winsock when the server shuts down. 
+    cleanupWinsock();			//Cleanup Winsock when the server shuts down. 
 }
 
 void TCPServer::ServerInitialize()
@@ -178,49 +178,49 @@ void TCPServer::OnEnteredNewUser(SOCKET client)
 //Function to check whether we were able to initialize Winsock & start the server. 
 bool TCPServer::initWinsock() {
 
-	WSADATA data;
-	WORD ver = MAKEWORD(2, 2);
+    WSADATA data;
+    WORD ver = MAKEWORD(2, 2);
 
-	int wsInit = WSAStartup(ver, &data);
+    int wsInit = WSAStartup(ver, &data);
 
-	if (wsInit != 0) {
-		std::cout << "Error: can't initialize Winsock." << std::endl;
-		return false;
-	}
-	return true;
+    if (wsInit != 0) {
+        std::cout << "Error: can't initialize Winsock." << std::endl;
+        return false;
+    }
+    return true;
 }
 
 //Function that creates a listening socket of the server. 
 bool TCPServer::createSocket() {
 
-	SOCKET listeningSocket = socket(AF_INET, SOCK_STREAM, 0);	//AF_INET = IPv4. 
+    SOCKET listeningSocket = socket(AF_INET, SOCK_STREAM, 0);	//AF_INET = IPv4. 
 
-	if (listeningSocket != INVALID_SOCKET) {
+    if (listeningSocket != INVALID_SOCKET) {
 
-		sockaddr_in hint;		//Structure used to bind IP address & port to specific socket. 
-		hint.sin_family = AF_INET;		//Tell hint that we are IPv4 addresses. 
-		hint.sin_port = htons(m_listenerPort);	//Tell hint what port we are using. 
-		inet_pton(AF_INET, m_listenerIPAddress.c_str(), &hint.sin_addr); 	//Converts IP string to bytes & pass it to our hint. hint.sin_addr is the buffer. 
+        sockaddr_in hint;		//Structure used to bind IP address & port to specific socket. 
+        hint.sin_family = AF_INET;		//Tell hint that we are IPv4 addresses. 
+        hint.sin_port = htons(m_listenerPort);	//Tell hint what port we are using. 
+        inet_pton(AF_INET, m_listenerIPAddress.c_str(), &hint.sin_addr); 	//Converts IP string to bytes & pass it to our hint. hint.sin_addr is the buffer. 
 
-		int bindCheck = bind(listeningSocket, (sockaddr *)&hint, sizeof(hint));	//Bind listeningSocket to the hint structure. We're telling it what IP address family & port to use. 
+        int bindCheck = bind(listeningSocket, (sockaddr *)&hint, sizeof(hint));	//Bind listeningSocket to the hint structure. We're telling it what IP address family & port to use. 
 
-		if (bindCheck != SOCKET_ERROR) {			//If bind OK:
+        if (bindCheck != SOCKET_ERROR) {			//If bind OK:
 
-			int listenCheck = listen(listeningSocket, SOMAXCONN);	//Tell the socket is for listening. 
-			if (listenCheck == SOCKET_ERROR) {
-				return false;
-			}
-		}
+            int listenCheck = listen(listeningSocket, SOMAXCONN);	//Tell the socket is for listening. 
+            if (listenCheck == SOCKET_ERROR) {
+                return false;
+            }
+        }
 
-		else {
-			return false;
-		}
+        else {
+            return false;
+        }
         m_listenSocket = listeningSocket;
-		return true;
+        return true;
 
-	}
+    }
 
-	return false;
+    return false;
 
 }
 
@@ -307,7 +307,7 @@ void TCPServer::run()
 //Function to send the message to a specific client. 
 void TCPServer::sendMsg(int clientSocket, std::string msg)
 {
-	send(clientSocket, msg.c_str(), msg.size() + 1, 0);
+    send(clientSocket, msg.c_str(), msg.size() + 1, 0);
 }
 
 
@@ -318,7 +318,7 @@ void TCPServer::cleanupWinsock()
     if (m_serverWorker.joinable())
         m_serverWorker.join();
 
-	WSACleanup();
+    WSACleanup();
 }
 
 template <class Function, class... Args>

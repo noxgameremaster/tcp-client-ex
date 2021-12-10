@@ -1,6 +1,5 @@
 
 #include "taskecho.h"
-#include "taskmanager.h"
 #include "echopacket.h"
 #include "stringhelper.h"
 #include "printutil.h"
@@ -19,13 +18,7 @@ void TaskEcho::ReversalEchoPacket()
     std::unique_ptr<EchoPacket> echoPacket(new EchoPacket);
 
     echoPacket->SetEchoMessage(stringFormat("echo response...msg: %s", m_echoMessage));
-
-    TaskManager *taskman = dynamic_cast<TaskManager *>(GetParent());
-
-    if (taskman == nullptr)
-        return;
-
-    taskman->ForwardPacket(std::move(echoPacket));
+    ForwardPacketToManager(std::move(echoPacket));
 }
 
 void TaskEcho::PrintEchoMessage(const std::string &echoMessage) const

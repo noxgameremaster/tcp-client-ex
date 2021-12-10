@@ -18,7 +18,10 @@
 using namespace _StringHelper;
 
 LargeFile::LargeFile()
-{ }
+{
+    m_filesize = 0;
+    m_writeAmount = 0;
+}
 
 LargeFile::~LargeFile()
 { }
@@ -84,6 +87,7 @@ bool LargeFile::SetFileParams(const std::string &fileName, const std::string &pa
 
     *bRet = true;
     m_filesize = fileSize;
+    m_writeAmount = 0;
     return *bRet;
 }
 
@@ -112,3 +116,18 @@ bool LargeFile::WriteAll(const uint8_t *stream, const size_t &length)
     file.write(stream, length);
     return file.good();
 }
+
+void LargeFile::SlotSetFileParams(const std::string &fileName, const std::string &pathName, const size_t &fileSize)
+{
+    SetFileParams(fileName, pathName, fileSize);
+}
+
+void LargeFile::SlotWriteChunk(const std::vector<uint8_t> &srcChunk)
+{
+    bool result = Write(srcChunk.data(), srcChunk.size());
+
+    if (result)
+        m_writeAmount += srcChunk.size();
+    EventWorker::Instance().AppendTask(&m_OnWriteChunk, result, m_writeAmount, m_filesize);  //todo report write amount
+}
+

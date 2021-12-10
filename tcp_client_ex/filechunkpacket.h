@@ -10,17 +10,35 @@ class FileChunkPacket : public NetPacket
 private:
     std::string m_filename;
     uint8_t m_chunkLength;
-    std::array<char, 256> m_filechunk;
+    std::array<uint8_t, 256> m_filechunk;
+
+    //writeOnly
+    bool m_isError;
+    bool m_isCompleted;
+    size_t m_writePos;
 
 public:
     FileChunkPacket();
     ~FileChunkPacket();
 
 private:
-    std::string ClassName() const override
+    bool OnWritePacket() override;
+
+public:
+    static std::string TaskName()
     {
         return "ChunkPacket";
     }
+
+    bool FetchFileChunk(std::vector<uint8_t> &dest);
+    void SetReportParam(bool isError, bool isCompleted, const size_t &writeAmount);
+
+private:
+    std::string ClassName() const override
+    {
+        return TaskName();
+    }
+
     bool OnReadPacket() override;
     uint8_t GetPacketId() const override;
 };

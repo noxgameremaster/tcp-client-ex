@@ -29,6 +29,7 @@ private:
     bool SetNetFlowIO();
     bool OnInitialize() override;
     bool InsertTask(std::unique_ptr<AbstractTask> &&task);
+    bool InsertSharedTask(const std::string &keyName, std::shared_ptr<AbstractTask> &sharedTask);
     void OnDeinitialize() override;
     bool OnStarted() override;
     void OnStopped() override;
@@ -36,7 +37,6 @@ private:
     void SendOnInitial();
 
 public:
-    bool GetLargeFileObject(std::weak_ptr<LargeFile> &largefile);
     void InputTask(std::unique_ptr<NetPacket> &&packet);
     AbstractTask *GetTask(const std::string &taskName);
     void ForwardPacket(std::unique_ptr<NetPacket> &&packet);

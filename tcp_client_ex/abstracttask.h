@@ -17,6 +17,7 @@ private:
 
 protected:
     void ExecuteDoTask(AbstractTask *task, std::unique_ptr<NetPacket> &&packet);
+    bool ForwardPacketToManager(std::unique_ptr<NetPacket> &&forwardPacket);
 
 public:
     virtual std::string TaskName() const = 0;
