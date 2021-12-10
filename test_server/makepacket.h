@@ -22,11 +22,13 @@ public:
     
 private:
     size_t HeaderLength() const;
+    bool ByteChecker(const size_t &sizeValue, uint8_t &dest);
 
 public:
     bool MakeChat(const std::string &msg, const uint8_t &messageColor);
     bool MakeEcho(const std::string &echoMessage);
     bool MakeFileMeta(const std::string &filename, const std::string &path);
+    bool MakeFileChunk(const std::string &filename, const std::vector<uint8_t> &src);
 
 private:
     bool SendImpl(int sendsock, const uint8_t *stream, const size_t &length);
@@ -46,11 +48,6 @@ public:
     }
 
 private:
-    /*virtual void OnReceiveUnknownPacket(const char *unknownStream, const size_t &length) {}
-    virtual void OnReceiveChatPacket(const std::string &msg) {}
-    virtual void OnReceiveEchoPacket(const std::string &echo) {}
-    virtual void UnknownPacketType(uint8_t packetId) {}*/
-
     bool ReadChatPacket(int senderSocket);
     bool ReadEchoPacket(int senderSocket);
     bool ReadFileMetaPacket(int senderSocket);

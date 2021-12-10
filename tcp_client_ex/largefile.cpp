@@ -108,7 +108,7 @@ bool LargeFile::Write(const uint8_t *stream, const size_t &length)
 bool LargeFile::WriteAll(const uint8_t *stream, const size_t &length)
 {
     using binary_ofstream = std::basic_ofstream<uint8_t, std::char_traits<uint8_t>>;
-    binary_ofstream file(m_filename, binary_ofstream::out | binary_ofstream::binary);
+    binary_ofstream file(stringFormat("%s\\%s", m_pathname, m_filename), binary_ofstream::out | binary_ofstream::binary);
 
     if (!file)
         return false;

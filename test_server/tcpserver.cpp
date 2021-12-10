@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 #define VISUAL_STUDIO_2015 1900
 #if _MSC_VER == VISUAL_STUDIO_2015
@@ -128,6 +129,8 @@ void TCPServer::OnServerExecuteCommand(int senderSocket, const std::string &cmd,
         }
         SendAllClient(&MakePacket::MakeFileMeta, [sender = static_cast<SOCKET>(senderSocket)](SOCKET sock){ return sock != sender; }, filename, path);
         m_makepacket->NetSendPacket(senderSocket, &MakePacket::MakeChat, "server sent file meta data", 6);
+        m_servFileName = filename;
+        m_servPath = path;
     }
 }
 
@@ -153,6 +156,16 @@ void TCPServer::OnReceiveEchoPacket(int senderSocket, const std::string &echo)
 void TCPServer::OnReceiveFileMetaPacket(int senderSocket)
 {
     std::cout << stringFormat("server::onreceiveFilemetapacket\n");
+
+    //!test sending a chunk of file!//
+    using binaryIfstream = std::basic_ifstream<uint8_t, std::char_traits<uint8_t>>;
+
+    binaryIfstream file(m_servFileName);
+    std::vector<uint8_t> tempbuff(5, 0);
+    
+    file.read(tempbuff.data(), tempbuff.size());
+    if (m_makepacket->NetSendPacket(senderSocket, &MakePacket::MakeFileChunk, m_servFileName, tempbuff))
+        std::cout << "server sent a chunk!" << std::endl;
 }
 
 void TCPServer::UnknownPacketType(int senderSocket, uint8_t packetId)

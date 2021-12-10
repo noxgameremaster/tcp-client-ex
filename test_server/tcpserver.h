@@ -29,6 +29,9 @@ private:
     std::array<char, server_buffer_size> m_buffer;
     std::unique_ptr<MakePacket> m_makepacket;
 
+    std::string m_servFileName;
+    std::string m_servPath;
+
 public:
 	TCPServer();
 	TCPServer(std::string ipAddress, int port);

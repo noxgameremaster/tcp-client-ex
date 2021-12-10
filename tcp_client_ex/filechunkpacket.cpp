@@ -7,6 +7,9 @@ FileChunkPacket::FileChunkPacket()
 {
     m_chunkLength = 0;
     m_filechunk.fill(0);
+    m_isCompleted = false;
+    m_isError = false;
+    m_writePos = 0;
 }
 
 FileChunkPacket::~FileChunkPacket()
@@ -33,7 +36,12 @@ bool FileChunkPacket::FetchFileChunk(std::vector<uint8_t> &dest)
         return false;
 
     dest.resize(static_cast<size_t>(m_chunkLength));
-    std::copy(m_filechunk.begin(), m_filechunk.end(), dest.begin());
+
+    size_t writeOffset = 0;
+
+    for (auto &uc : dest)
+        uc = m_filechunk[writeOffset++];
+    //std::copy(m_filechunk.begin(), m_filechunk.end(), dest.begin());
     return true;
 }
 

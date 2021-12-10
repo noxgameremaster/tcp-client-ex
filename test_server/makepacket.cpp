@@ -15,9 +15,24 @@ size_t MakePacket::HeaderLength() const
     return sizeof(packet_stx) + sizeof(int) + sizeof(packet_chat_type) + sizeof(packet_etx);
 }
 
+bool MakePacket::ByteChecker(const size_t &sizeValue, uint8_t &dest)
+{
+    if (!sizeValue)
+        return false;
+    if (sizeValue & (~0xff))
+        return false;
+
+    dest = static_cast<uint8_t>(sizeValue);
+    return true;
+}
+
 bool MakePacket::MakeChat(const std::string &msg, const uint8_t &messageColor)
 {
-    uint8_t msgLength = static_cast<uint8_t>(msg.length());
+    uint8_t msgLength = 0;
+
+    if (!ByteChecker(msg.length(), msgLength))
+        return false;
+
     size_t packetLength = msgLength + HeaderLength() + sizeof(msgLength) + sizeof(messageColor);
     
     SetBufferSize(packetLength);
@@ -42,6 +57,12 @@ bool MakePacket::MakeChat(const std::string &msg, const uint8_t &messageColor)
 
 bool MakePacket::MakeEcho(const std::string &echoMessage)
 {
+    uint8_t echoMessageLength = 0;
+    const uint8_t packetId = 2;
+
+    if (!ByteChecker(echoMessage.length(), echoMessageLength))
+        return false;
+
     size_t packetLength = HeaderLength() + echoMessage.length() + sizeof(char);
 
     SetBufferSize(packetLength);
@@ -49,8 +70,8 @@ bool MakePacket::MakeEcho(const std::string &echoMessage)
     {
         WriteCtx(packet_stx);
         WriteCtx(packetLength);
-        WriteCtx(static_cast<uint8_t>(2));
-        WriteCtx(static_cast<uint8_t>(echoMessage.length()));
+        WriteCtx(packetId);
+        WriteCtx(echoMessageLength);
         for (const char c : echoMessage)
             WriteCtx(c);
         WriteCtx(packet_etx);
@@ -64,8 +85,15 @@ bool MakePacket::MakeEcho(const std::string &echoMessage)
 
 bool MakePacket::MakeFileMeta(const std::string &filename, const std::string &path)
 {
-    uint8_t filenameLength = static_cast<uint8_t>(filename.length());
-    uint8_t pathLength = static_cast<uint8_t>(path.length());
+    uint8_t filenameLength = 0, pathLength = 0;
+
+    if (!ByteChecker(filename.length(), filenameLength))
+        return false;
+
+    if (!ByteChecker(path.length(), pathLength))
+        return false;
+
+    const uint8_t packetId = 4;
     size_t filesize = 50;
     size_t packetLength = HeaderLength() + sizeof(filenameLength) + filenameLength + sizeof(pathLength) + pathLength + sizeof(filesize);
 
@@ -74,7 +102,7 @@ bool MakePacket::MakeFileMeta(const std::string &filename, const std::string &pa
     {
         WriteCtx(packet_stx);
         WriteCtx(packetLength);
-        WriteCtx(static_cast<uint8_t>(4));
+        WriteCtx(packetId);
         WriteCtx(filenameLength);
         for (const auto &c : filename)
             WriteCtx(c);
@@ -82,6 +110,40 @@ bool MakePacket::MakeFileMeta(const std::string &filename, const std::string &pa
         for (const auto &c : path)
             WriteCtx(c);
         WriteCtx(filesize);
+        WriteCtx(packet_etx);
+    }
+    catch (const bool &fail)
+    {
+        return fail;
+    }
+    return true;
+}
+
+bool MakePacket::MakeFileChunk(const std::string &filename, const std::vector<uint8_t> &src)
+{
+    uint8_t filenameLength = 0, chunkSize = 0;
+
+    if (!ByteChecker(filename.length(), filenameLength))
+        return false;
+    if (!ByteChecker(src.size(), chunkSize))
+        return false;
+
+    const uint8_t packetId = 5;
+    size_t packetLength = HeaderLength() + sizeof(filenameLength) + filenameLength
+        + sizeof(chunkSize) + chunkSize;
+
+    SetBufferSize(packetLength);
+    try
+    {
+        WriteCtx(packet_stx);
+        WriteCtx(packetLength);
+        WriteCtx(packetId);
+        WriteCtx(filenameLength);
+        for (const auto &c : filename)
+            WriteCtx(c);
+        WriteCtx(chunkSize);
+        for (const auto &uc : src)
+            WriteCtx(uc);
         WriteCtx(packet_etx);
     }
     catch (const bool &fail)
