@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -18,11 +18,28 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="binarystream.h" />
+    <ClInclude Include="ccobject.h" />
+    <ClInclude Include="eventworker.h" />
+    <ClInclude Include="makepacket.h" />
+    <ClInclude Include="stringhelper.h" />
+    <ClInclude Include="tcpclient.h" />
+    <ClInclude Include="tcpserver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="binarystream.cpp" />
+    <ClCompile Include="eventworker.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="makepacket.cpp" />
+    <ClCompile Include="tcpclient.cpp" />
+    <ClCompile Include="tcpserver.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{c79a9214-4de1-44e7-9f1f-abfb0b53790b}</ProjectGuid>
-    <RootNamespace>tcpclientex</RootNamespace>
+    <ProjectGuid>{48d01a49-9420-4b41-bd8b-508ee4c5ed21}</ProjectGuid>
+    <RootNamespace>testserver</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -30,7 +47,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -84,12 +101,10 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -98,14 +113,12 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,77 +155,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="abstracttask.cpp" />
-    <ClCompile Include="binarystream.cpp" />
-    <ClCompile Include="chatpacket.cpp" />
-    <ClCompile Include="clientreceive.cpp" />
-    <ClCompile Include="clientsend.cpp" />
-    <ClCompile Include="clientworker.cpp" />
-    <ClCompile Include="echopacket.cpp" />
-    <ClCompile Include="eventworker.cpp" />
-    <ClCompile Include="filechunkpacket.cpp" />
-    <ClCompile Include="filepacket.cpp" />
-    <ClCompile Include="headerdata.cpp" />
-    <ClCompile Include="iptobyte.cpp" />
-    <ClCompile Include="largefile.cpp" />
-    <ClCompile Include="localbuffer.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="netclient.cpp" />
-    <ClCompile Include="netflowcontrol.cpp" />
-    <ClCompile Include="netobject.cpp" />
-    <ClCompile Include="netpacket.cpp" />
-    <ClCompile Include="netservice.cpp" />
-    <ClCompile Include="packetordertable.cpp" />
-    <ClCompile Include="packetproducer.cpp" />
-    <ClCompile Include="partitionpool.cpp" />
-    <ClCompile Include="iobuffer.cpp" />
-    <ClCompile Include="printutil.cpp" />
-    <ClCompile Include="socketset.cpp" />
-    <ClCompile Include="taskchatmessage.cpp" />
-    <ClCompile Include="taskecho.cpp" />
-    <ClCompile Include="taskfilestream.cpp" />
-    <ClCompile Include="taskmanager.cpp" />
-    <ClCompile Include="taskthread.cpp" />
-    <ClCompile Include="testpacket.cpp" />
-    <ClCompile Include="winsocket.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="abstracttask.h" />
-    <ClInclude Include="binarystream.h" />
-    <ClInclude Include="ccobject.h" />
-    <ClInclude Include="chatpacket.h" />
-    <ClInclude Include="clientreceive.h" />
-    <ClInclude Include="clientsend.h" />
-    <ClInclude Include="clientworker.h" />
-    <ClInclude Include="echopacket.h" />
-    <ClInclude Include="eventworker.h" />
-    <ClInclude Include="filechunkpacket.h" />
-    <ClInclude Include="filepacket.h" />
-    <ClInclude Include="headerdata.h" />
-    <ClInclude Include="iptobyte.h" />
-    <ClInclude Include="largefile.h" />
-    <ClInclude Include="localbuffer.h" />
-    <ClInclude Include="netclient.h" />
-    <ClInclude Include="netflowcontrol.h" />
-    <ClInclude Include="netobject.h" />
-    <ClInclude Include="netpacket.h" />
-    <ClInclude Include="netservice.h" />
-    <ClInclude Include="packetordertable.h" />
-    <ClInclude Include="packetproducer.h" />
-    <ClInclude Include="partitionpool.h" />
-    <ClInclude Include="iobuffer.h" />
-    <ClInclude Include="printutil.h" />
-    <ClInclude Include="socketset.h" />
-    <ClInclude Include="stringhelper.h" />
-    <ClInclude Include="taskchatmessage.h" />
-    <ClInclude Include="taskecho.h" />
-    <ClInclude Include="taskfilestream.h" />
-    <ClInclude Include="taskmanager.h" />
-    <ClInclude Include="taskthread.h" />
-    <ClInclude Include="testpacket.h" />
-    <ClInclude Include="winsocket.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -2,7 +2,17 @@
 #include "largefile.h"
 #include "eventworker.h"
 #include "stringhelper.h"
-#include <experimental\filesystem>
+
+#include <filesystem>
+
+#define VISUAL_STUDIO_2015 1900
+#if _MSC_VER == VISUAL_STUDIO_2015
+#define NAMESPACE_FILESYSTEM std::experimental::filesystem
+#else
+#define NAMESPACE_FILESYSTEM std::filesystem
+#endif
+#undef VISUAL_STUDIO_2015
+
 #include <fstream>
 
 using namespace _StringHelper;
@@ -15,10 +25,10 @@ LargeFile::~LargeFile()
 
 bool LargeFile::MakeDirectory(const std::string &path)
 {
-    if (std::experimental::filesystem::is_directory(path))
+    if (NAMESPACE_FILESYSTEM::is_directory(path))
         return true;
 
-    return std::experimental::filesystem::create_directories(path);
+    return NAMESPACE_FILESYSTEM::create_directories(path);
 }
 
 bool LargeFile::RemoveIfAlreadExist(bool erase)
@@ -30,10 +40,10 @@ bool LargeFile::RemoveIfAlreadExist(bool erase)
 
     std::string fullname = stringFormat("%s\\%s", m_pathname, m_filename);
 
-    bool isExist = std::experimental::filesystem::exists(fullname);
+    bool isExist = NAMESPACE_FILESYSTEM::exists(fullname);
 
     if (erase && isExist)
-        std::experimental::filesystem::remove(fullname);
+        NAMESPACE_FILESYSTEM::remove(fullname);
 
     return isExist;
 }

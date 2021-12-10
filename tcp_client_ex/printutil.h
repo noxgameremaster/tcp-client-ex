@@ -48,7 +48,7 @@ private:
     }
 
 private:
-    static void PrintUtil::ChangeTextColor(ConsoleColor colr);
+    static void ChangeTextColor(ConsoleColor colr);
 
 public:
     template <class... Args>
