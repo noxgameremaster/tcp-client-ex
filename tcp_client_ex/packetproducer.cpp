@@ -67,7 +67,7 @@ uint32_t PacketProducer::CheckValidPacket()
         if (!m_localbuffer->Peek(stx, readpos))     //EOF
             break;
 
-        if (packet_header_stx != stx)
+        if (HeaderData::header_stx != stx)
         {
             ++readpos;
             continue;
@@ -81,12 +81,12 @@ uint32_t PacketProducer::CheckValidPacket()
             break;
 
         int ttx = 0;
-        uint32_t ttxpos = (readpos + length) - sizeof(stx) - sizeof(length) - sizeof(packet_header_ttx);
+        uint32_t ttxpos = (readpos + length) - sizeof(stx) - sizeof(length) - sizeof(HeaderData::header_terminal);
 
         if (!m_localbuffer->PeekInc(ttx, ttxpos))
             break;
 
-        if (packet_header_ttx != ttx)
+        if (HeaderData::header_terminal != ttx)
         {
             if (m_stxposList.empty())
                 cstxpos = static_cast<decltype(cstxpos)>(-1);

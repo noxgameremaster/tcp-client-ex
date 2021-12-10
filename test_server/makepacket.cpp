@@ -190,6 +190,28 @@ bool MakePacket::ReadEchoPacket(int senderSocket)
     return true;
 }
 
+bool MakePacket::ReadFileMetaPacket(int senderSocket)
+{
+    uint8_t error = 0;
+    uint8_t length = 0;
+    std::string name(256, 0);
+
+    try
+    {
+        ReadCtx(error);
+        ReadCtx(length);
+        name.resize(length);
+        for (auto &c : name)
+            ReadCtx(c);
+    }
+    catch (const bool &fail)
+    {
+        return fail;
+    }
+    EventWorker::Instance().AppendTask(&m_OnReceiveFileMeta, senderSocket);
+    return true;
+}
+
 bool MakePacket::PacketTypeCase(int senderSocket, const uint8_t type)
 {
     bool ret = false;
@@ -203,6 +225,9 @@ bool MakePacket::PacketTypeCase(int senderSocket, const uint8_t type)
     case 2: //Echo
         checker(ReadEchoPacket(senderSocket));
         break;
+    case 4: //FileMeta
+        checker(ReadFileMetaPacket(senderSocket));
+        break;
     default:
         EventWorker::Instance().AppendTask(&m_OnUnknownPacketType, senderSocket, type);
         return false;
@@ -215,7 +240,7 @@ bool MakePacket::ReadPacket(int senderSocket, const char *buffer, const size_t &
     //std::lock_guard<std::mutex> guard(m_lock);
     PutStreamRaw(reinterpret_cast<const uint8_t *>(buffer), length);
 
-    int stx = 0;
+    int stx = 0, etx = 0;
     size_t packetLength = 0;
     uint8_t packetId = 0;
 
@@ -230,10 +255,14 @@ bool MakePacket::ReadPacket(int senderSocket, const char *buffer, const size_t &
             //OnReceiveUnknownPacket(buffer, length);
             //EventWorker::Instance().AppendTask(m_OnReceiveUnknown, std::move(copy), length);
             m_OnReceiveUnknown.Emit(senderSocket, std::move(copy), length);
-            return false;
+            throw false;
         }
         ReadCtx(packetLength);
         ReadCtx(packetId);
+        if (!GetStreamChunk(etx, packetLength-sizeof(etx)))
+            throw false;
+        if (etx != packet_etx)
+            throw false;
     }
     catch (const bool &fail)
     {

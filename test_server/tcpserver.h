@@ -38,9 +38,12 @@ private:
 	void ServerInitialize();
 
 private:
+    bool ServerHasFile(const std::string &path, const std::string &filename);
+    bool ServerRemoteParseFileCommand(const std::string &remoteFileCmd, std::string &path, std::string &name);
     void OnServerExecuteCommand(int senderSocket, const std::string &cmd, const size_t &cmdOffset);
     void OnReceiveChatPacket(int senderSocket, const std::string &msg);
     void OnReceiveEchoPacket(int senderSocket, const std::string &echo);
+    void OnReceiveFileMetaPacket(int senderSocket);
     void UnknownPacketType(int senderSocket, uint8_t packetId);
     void OnReceiveUnknownPacket(int senderSocket, std::unique_ptr<char[]> &&unknownStream, const size_t &length);
     

@@ -3,8 +3,17 @@
 #include "makepacket.h"
 #include "stringhelper.h"
 #include "eventworker.h"
+#include <filesystem>
 #include <iostream>
 #include <sstream>
+
+#define VISUAL_STUDIO_2015 1900
+#if _MSC_VER == VISUAL_STUDIO_2015
+#define NAMESPACE_FILESYSTEM std::experimental::filesystem
+#else
+#define NAMESPACE_FILESYSTEM std::filesystem
+#endif
+#undef VISUAL_STUDIO_2015
 
 using namespace _StringHelper;
 
@@ -46,18 +55,78 @@ void TCPServer::ServerInitialize()
     m_makepacket->OnReceiveUnknown().Connection(&TCPServer::OnReceiveUnknownPacket, this);
     m_makepacket->OnUnknownPacketType().Connection(&TCPServer::UnknownPacketType, this);
     m_makepacket->OnSended().Connection(&TCPServer::NetSended, this);
+    m_makepacket->OnReceiveFileMeta().Connection(&TCPServer::OnReceiveFileMetaPacket, this);
+}
+
+bool TCPServer::ServerHasFile(const std::string &path, const std::string &filename)
+{
+    if (!NAMESPACE_FILESYSTEM::is_directory(path))
+        return false;
+
+    return NAMESPACE_FILESYSTEM::exists(stringFormat("%s\\%s", path, filename));
+}
+
+bool TCPServer::ServerRemoteParseFileCommand(const std::string &remoteFileCmd, std::string &path, std::string &name)
+{
+    auto getCmdValue = [](const std::string &cmd, const std::string &findKey, std::string &dest)
+    {
+        size_t findpos = cmd.find(findKey);
+
+        if (findpos == std::string::npos)
+            return false;
+
+        std::string findResult = cmd.substr(findpos + findKey.length());
+
+        dest.reserve(findResult.size());
+        for (const auto &c : findResult)
+        {
+            switch (c)
+            {
+            case ' ': case '\t': case '\n':
+                break;
+            default:
+                dest.push_back(c);
+            }
+        }
+        size_t slashpos = dest.find_first_of('/');
+
+        if (slashpos != std::string::npos)
+            dest = dest.substr(0, slashpos);
+        return true;
+    };
+
+    if (!getCmdValue(remoteFileCmd, "/path", path))
+        return false;
+    if (!getCmdValue(remoteFileCmd, "/name", name))
+        return false;
+
+    return true;
 }
 
 void TCPServer::OnServerExecuteCommand(int senderSocket, const std::string &cmd, const size_t &cmdOffset)
 {
-    if (cmd.find("/echo", cmdOffset) != std::string::npos)
+    size_t findpos = cmd.find("/echo", cmdOffset);
+
+    if (findpos != std::string::npos)
     {
         SendAllClient(&MakePacket::MakeEcho, [](SOCKET) { return true; }, "push echo message");
         std::cout << "server_side::echo\n";
     }
-    if (cmd.find("/filemeta", cmdOffset) != std::string::npos)
+
+    findpos = cmd.find("/filemeta", cmdOffset);
+    if (findpos != std::string::npos)
     {
-        SendAllClient(&MakePacket::MakeFileMeta, [sender = static_cast<SOCKET>(senderSocket)](SOCKET sock){ return sock != sender; }, "abc.txt", "echotest");
+        std::string path, filename;
+
+        if (!ServerRemoteParseFileCommand(cmd.substr(findpos), path, filename))
+            return;
+        
+        if (!ServerHasFile(path, filename))
+        {
+            m_makepacket->NetSendPacket(senderSocket, &MakePacket::MakeChat, stringFormat("server has no file %s or directory %s\n", filename, path), 10);
+            return;
+        }
+        SendAllClient(&MakePacket::MakeFileMeta, [sender = static_cast<SOCKET>(senderSocket)](SOCKET sock){ return sock != sender; }, filename, path);
         m_makepacket->NetSendPacket(senderSocket, &MakePacket::MakeChat, "server sent file meta data", 6);
     }
 }
@@ -79,6 +148,11 @@ void TCPServer::OnReceiveChatPacket(int senderSocket, const std::string &msg)
 void TCPServer::OnReceiveEchoPacket(int senderSocket, const std::string &echo)
 {
     std::cout << stringFormat("echo:: %s\n", echo);
+}
+
+void TCPServer::OnReceiveFileMetaPacket(int senderSocket)
+{
+    std::cout << stringFormat("server::onreceiveFilemetapacket\n");
 }
 
 void TCPServer::UnknownPacketType(int senderSocket, uint8_t packetId)

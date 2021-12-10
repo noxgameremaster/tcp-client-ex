@@ -9,9 +9,11 @@ class LocalBuffer;
 
 class HeaderData : public NetObject
 {
+public:
     static constexpr int header_stx = 0xdeadface;
-    static constexpr int header_terminal = 0xdeadface;
+    static constexpr int header_terminal = 0xfadeface;
 
+private:
     struct HeaderVariantBase
     { };
 

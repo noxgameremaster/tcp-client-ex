@@ -53,6 +53,7 @@ private:
 
     bool ReadChatPacket(int senderSocket);
     bool ReadEchoPacket(int senderSocket);
+    bool ReadFileMetaPacket(int senderSocket);
     bool PacketTypeCase(int senderSocket, const uint8_t type);
 
 public:
@@ -67,6 +68,7 @@ private:
     DECLARE_SIGNAL(OnUnknownPacketType, int, uint8_t)
     DECLARE_SIGNAL(OnReceiveUnknown, int, std::unique_ptr<char[]>, size_t)
     DECLARE_SIGNAL(OnSended, const uint8_t *, size_t)
+    DECLARE_SIGNAL(OnReceiveFileMeta, int)
 
 };
 
