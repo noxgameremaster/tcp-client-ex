@@ -18,7 +18,7 @@ void TaskEcho::ReversalEchoPacket()
 {
     std::unique_ptr<EchoPacket> echoPacket(new EchoPacket);
 
-    echoPacket->SetEchoMessage("echo response...");
+    echoPacket->SetEchoMessage(stringFormat("echo response...msg: %s", m_echoMessage));
 
     TaskManager *taskman = dynamic_cast<TaskManager *>(GetParent());
 
@@ -40,7 +40,8 @@ void TaskEcho::DoTask(std::unique_ptr<NetPacket>&& packet)
     if (echo == nullptr)
         return;
 
-    PrintEchoMessage(echo->GetEchoMessage());
+    m_echoMessage = echo->GetEchoMessage();
+    PrintEchoMessage(m_echoMessage);
     ReversalEchoPacket();
 }
 

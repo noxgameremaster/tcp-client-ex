@@ -8,7 +8,7 @@ AbstractTask::AbstractTask(NetObject *parent)
 AbstractTask::~AbstractTask()
 { }
 
-void AbstractTask::ExcuteDoTask(AbstractTask *task, std::unique_ptr<NetPacket> &&packet)
+void AbstractTask::ExecuteDoTask(AbstractTask *task, std::unique_ptr<NetPacket> &&packet)
 {
     task->DoTask(std::move(packet));
 }

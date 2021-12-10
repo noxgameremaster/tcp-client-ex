@@ -13,7 +13,7 @@ TaskThread::~TaskThread()
 {
 }
 
-void TaskThread::ExcuteTask(std::unique_ptr<NetPacket> &&msg)
+void TaskThread::ExecuteTask(std::unique_ptr<NetPacket> &&msg)
 {
     NetObject *parent = GetParent();
 
@@ -30,7 +30,7 @@ void TaskThread::ExcuteTask(std::unique_ptr<NetPacket> &&msg)
     if (task == nullptr)
         return;
 
-    ExcuteDoTask(task, std::move(msg));
+    ExecuteDoTask(task, std::move(msg));
 }
 
 void TaskThread::Dequeue()
@@ -50,7 +50,7 @@ void TaskThread::Dequeue()
         }
         if (!msg)
             continue;
-        ExcuteTask(std::move(msg));
+        ExecuteTask(std::move(msg));
     }
 
 }

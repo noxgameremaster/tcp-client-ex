@@ -19,6 +19,7 @@ private:
     bool OnReadPacket() override;
     bool OnWritePacket() override;
     uint8_t GetPacketId() const override;
+    //void DoAction() override;
 
 public:
     static std::string TaskName()

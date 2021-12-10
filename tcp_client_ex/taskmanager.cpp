@@ -13,6 +13,7 @@ TaskManager::TaskManager(NetObject *parent)
     : NetService(parent)
 {
     m_netFlow = nullptr;
+    m_taskthread = std::make_unique<TaskThread>(this);
 }
 
 TaskManager::~TaskManager()
@@ -45,7 +46,6 @@ bool TaskManager::OnInitialize()
     InsertTask(std::make_unique<TaskChatMessage>(this));
     InsertTask(std::make_unique<TaskEcho>(this));
     InsertTask(std::move(filetask));
-    m_taskthread = std::make_unique<TaskThread>(this);
     return true;
 }
 

@@ -16,7 +16,7 @@ private:
     virtual void DoTask(std::unique_ptr<NetPacket> &&packet) = 0;
 
 protected:
-    void ExcuteDoTask(AbstractTask *task, std::unique_ptr<NetPacket> &&packet);
+    void ExecuteDoTask(AbstractTask *task, std::unique_ptr<NetPacket> &&packet);
 
 public:
     virtual std::string TaskName() const = 0;

@@ -22,7 +22,7 @@ public:
     ~TaskThread();
 
 private:
-    void ExcuteTask(std::unique_ptr<NetPacket> &&msg);
+    void ExecuteTask(std::unique_ptr<NetPacket> &&msg);
     void Dequeue();
     void DoTask(std::unique_ptr<NetPacket> &&packet) override;
     void DoThreadTask();

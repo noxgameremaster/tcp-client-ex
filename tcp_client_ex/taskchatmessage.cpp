@@ -33,7 +33,9 @@ void TaskChatMessage::DoTask(std::unique_ptr<NetPacket> &&packet)
     ChatPacket *chat = dynamic_cast<ChatPacket *>(packet.get());
 
     if (chat == nullptr)
+    {
         return;
+    }
 
     PrintMessage(chat->GetChatMessage(), chat->GetColorId());
 }

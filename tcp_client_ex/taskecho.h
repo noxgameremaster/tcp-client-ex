@@ -8,6 +8,9 @@ class NetPacket;
 
 class TaskEcho : public AbstractTask
 {
+private:
+    std::string m_echoMessage;
+
 public:
     TaskEcho(NetObject *parent);
     ~TaskEcho();
