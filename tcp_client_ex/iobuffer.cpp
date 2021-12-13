@@ -112,6 +112,11 @@ bool IOBuffer::PopBufferAlloc(std::unique_ptr<uint8_t[]> &&destptr, size_t &buff
     size_t totalsize = 0;
     std::unique_ptr<uint8_t[]> alloc;
 
+    std::unique_ptr<int, std::function<void(int *)>> retIndex(&index, [this](const int *ret)
+    {
+        ReturnData(*ret);
+    });
+
     {
         std::lock_guard<std::mutex> guard(m_lock);
         if (!GetTotalSize(index, totalsize))

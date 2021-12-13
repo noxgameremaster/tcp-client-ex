@@ -87,6 +87,7 @@ void ClientReceive::DoTask()
                 break;
         }
     }
+    PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_RED, "receive thread halted");
 }
 
 bool ClientReceive::OnInitialize()

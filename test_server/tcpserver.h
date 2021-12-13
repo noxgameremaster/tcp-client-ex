@@ -5,12 +5,13 @@
 
 #include <string>
 #include <thread>
-#include <array>
 #include <WS2tcpip.h>
 #pragma comment (lib, "ws2_32.lib")
 
 class TCPServer;
 class MakePacket;
+class ServerFile;
+class NetBuffer;
 
 //Callback fct = fct with fct as parameter.
 typedef void(*MessageReceivedHandler)(TCPServer *listener, int socketID, std::string msg);
@@ -26,11 +27,14 @@ private:
     bool m_halted;
     std::unique_ptr<fd_set> m_serverSet;
     std::unique_ptr<timeval> m_interval;
-    std::array<char, server_buffer_size> m_buffer;
+    //std::array<char, server_buffer_size> m_buffer;
+    std::vector<uint8_t> m_buffer;
     std::unique_ptr<MakePacket> m_makepacket;
 
     std::string m_servFileName;
     std::string m_servPath;
+    std::unique_ptr<ServerFile> m_servFile;
+    std::shared_ptr<NetBuffer> m_netbuffer;
 
 public:
 	TCPServer();
@@ -47,6 +51,7 @@ private:
     void OnReceiveChatPacket(int senderSocket, const std::string &msg);
     void OnReceiveEchoPacket(int senderSocket, const std::string &echo);
     void OnReceiveFileMetaPacket(int senderSocket);
+    void OnReceiveFileChunkPacket(int senderSocket, bool isError, bool completed, size_t workpos);
     void UnknownPacketType(int senderSocket, uint8_t packetId);
     void OnReceiveUnknownPacket(int senderSocket, std::unique_ptr<char[]> &&unknownStream, const size_t &length);
     

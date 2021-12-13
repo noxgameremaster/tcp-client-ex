@@ -65,49 +65,6 @@ bool PacketProducer::CreatePacket(const char &packetId)
     return true;
 }
 
-uint32_t PacketProducer::CheckValidPacket()
-{
-    uint32_t readpos = 0, cstxpos = static_cast<uint32_t>(-1);
-    int stx = 0;
-
-    for (;;)
-    {
-        if (!m_localbuffer->Peek(stx, readpos))     //EOF
-            break;
-
-        if (HeaderData::header_stx != stx)
-        {
-            ++readpos;
-            continue;
-        }
-
-        cstxpos = readpos;
-        int length = 0;
-
-        readpos += sizeof(stx);
-        if (!m_localbuffer->PeekInc(length, readpos))
-            break;
-
-        int ttx = 0;
-        uint32_t ttxpos = (readpos + length) - sizeof(stx) - sizeof(length) - sizeof(HeaderData::header_terminal);
-
-        if (!m_localbuffer->PeekInc(ttx, ttxpos))
-            break;
-
-        if (HeaderData::header_terminal != ttx)
-        {
-            if (m_stxposList.empty())
-                cstxpos = static_cast<decltype(cstxpos)>(-1);
-            break;
-        }
-
-        m_stxposList.push_back(cstxpos);
-        m_ttxpos = ttxpos;
-        readpos = ttxpos;
-    }
-    return cstxpos;
-}
-
 bool PacketProducer::MakePacketImpl(uint32_t offset)
 {
     decltype(m_headerdata) headerdata(new HeaderData);
@@ -156,7 +113,7 @@ void PacketProducer::MakePacket()
     for (const auto &offset : m_stxposList)
     {
         MakePacketImpl(offset);
-        //TODO. 여기에서 패킷을 뜯던지 해야함.
+
         if (intercept)
             m_notifier(std::move(m_createdPacket));
     }
@@ -169,19 +126,74 @@ void PacketProducer::SetLocalBuffer(std::shared_ptr<LocalBuffer> buffer)
     m_localbuffer = buffer;
 }
 
+void PacketProducer::Scan()
+{
+    size_t readpos = 0;
+    for (;;)
+    {
+        int stx = 0;
+
+        if (!m_localbuffer->Peek(stx, readpos)) //eof
+            break;
+
+        if (HeaderData::header_stx != stx)
+        {
+            ++readpos;
+            continue;
+        }
+        m_tempStxposList.push_back(readpos);
+        readpos += sizeof(stx);
+
+        int length = 0;
+
+        if (!m_localbuffer->PeekInc(length, readpos))
+            break;
+
+        int ttx = 0;
+        size_t ttxpos = (readpos + length) - sizeof(stx) - sizeof(length) - sizeof(HeaderData::header_terminal);
+
+        if (!m_localbuffer->PeekInc(ttx, ttxpos))
+            break;
+
+        if (HeaderData::header_terminal == ttx)
+            m_stxposList.push_back(m_tempStxposList.back());
+        else
+            m_tempStxposList.pop_back();
+        readpos = ttxpos;
+        m_ttxpos = ttxpos;
+    }
+}
+
 bool PacketProducer::ReadBuffer()
 {
+    m_ttxpos = 0;
     m_stxposList.clear();
-    uint32_t pos = CheckValidPacket();
+    Scan();
 
     do
     {
-        if (pos == -1)
+        if (m_tempStxposList.empty())   //stx 아무것도 못찾은경우
             m_localbuffer->Clear();
-        else if (m_stxposList.empty())
-            m_localbuffer->Pull(pos);
+
+        else if (m_stxposList.empty())  //stx 있는데 스트림 부족
+        {
+            auto &stxpos = m_tempStxposList.front();
+
+            if (stxpos)
+            {
+                m_localbuffer->Pull(stxpos);  //맨 앞 stx 찾은 데 까지 땡김
+                stxpos = 0;
+            }
+        }
+
         else
+        {
+            int popCount = static_cast<int>(m_stxposList.size());
+
+            while ((--popCount) >= 0)
+                m_tempStxposList.pop_front();
             break;
+        }
 
         return false;
     }
@@ -189,4 +201,3 @@ bool PacketProducer::ReadBuffer()
 
     return true;
 }
-

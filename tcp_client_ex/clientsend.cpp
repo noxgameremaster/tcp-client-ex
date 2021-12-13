@@ -36,7 +36,7 @@ void ClientSend::DoTask()
     {
         {
             std::unique_lock<std::mutex> waitlock(m_waitLock);
-            m_condvar.wait(waitlock);
+            m_condvar.wait(waitlock, [this]() { return (m_terminated || (!m_sendbuffer->IsEmpty())); });
         }
         if (m_terminated)
             break;

@@ -22,6 +22,17 @@ public:
     void Pull(const size_t &count);
 
     template <class Container>
+    bool Append(const Container &src)
+    {
+        if (!CheckRemaining(src.size()))
+            return false;
+
+        std::copy(src.begin(), src.end(), m_buffer.begin() + m_seekpoint);
+        m_seekpoint += src.length();
+        return true;
+    }
+
+    template <class Container>
     bool Pop(Container &dest)
     {
         if (!m_seekpoint)

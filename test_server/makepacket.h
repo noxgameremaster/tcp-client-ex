@@ -27,7 +27,7 @@ private:
 public:
     bool MakeChat(const std::string &msg, const uint8_t &messageColor);
     bool MakeEcho(const std::string &echoMessage);
-    bool MakeFileMeta(const std::string &filename, const std::string &path);
+    bool MakeFileMeta(const std::string &filename, const std::string &path, const size_t &filesize);
     bool MakeFileChunk(const std::string &filename, const std::vector<uint8_t> &src);
 
 private:
@@ -51,9 +51,11 @@ private:
     bool ReadChatPacket(int senderSocket);
     bool ReadEchoPacket(int senderSocket);
     bool ReadFileMetaPacket(int senderSocket);
+    bool ReadFileChunkPacket(int senderSocket);
     bool PacketTypeCase(int senderSocket, const uint8_t type);
 
 public:
+    bool ScanBuffer();
     bool ReadPacket(int senderSocket, const char *buffer, const size_t &length);
     static std::string filterPrint(const char *str, const size_t &length);
 
@@ -66,6 +68,7 @@ private:
     DECLARE_SIGNAL(OnReceiveUnknown, int, std::unique_ptr<char[]>, size_t)
     DECLARE_SIGNAL(OnSended, const uint8_t *, size_t)
     DECLARE_SIGNAL(OnReceiveFileMeta, int)
+    DECLARE_SIGNAL(OnReceiveFileChunk, int, bool, bool, size_t)
 
 };
 

@@ -1,6 +1,8 @@
 
 #include "TCPServer.h"
 #include "makepacket.h"
+#include "serverfile.h"
+#include "netbuffer.h"
 #include "stringhelper.h"
 #include "eventworker.h"
 #include <filesystem>
@@ -57,6 +59,10 @@ void TCPServer::ServerInitialize()
     m_makepacket->OnUnknownPacketType().Connection(&TCPServer::UnknownPacketType, this);
     m_makepacket->OnSended().Connection(&TCPServer::NetSended, this);
     m_makepacket->OnReceiveFileMeta().Connection(&TCPServer::OnReceiveFileMetaPacket, this);
+    m_makepacket->OnReceiveFileChunk().Connection(&TCPServer::OnReceiveFileChunkPacket, this);
+
+    m_netbuffer = std::make_shared<NetBuffer>();
+    m_buffer.reserve(0x1000);
 }
 
 bool TCPServer::ServerHasFile(const std::string &path, const std::string &filename)
@@ -114,7 +120,7 @@ void TCPServer::OnServerExecuteCommand(int senderSocket, const std::string &cmd,
         std::cout << "server_side::echo\n";
     }
 
-    findpos = cmd.find("/filemeta", cmdOffset);
+    findpos = cmd.find("/sendfile", cmdOffset);
     if (findpos != std::string::npos)
     {
         std::string path, filename;
@@ -127,7 +133,15 @@ void TCPServer::OnServerExecuteCommand(int senderSocket, const std::string &cmd,
             m_makepacket->NetSendPacket(senderSocket, &MakePacket::MakeChat, stringFormat("server has no file %s or directory %s\n", filename, path), 10);
             return;
         }
-        SendAllClient(&MakePacket::MakeFileMeta, [sender = static_cast<SOCKET>(senderSocket)](SOCKET sock){ return sock != sender; }, filename, path);
+        std::unique_ptr<ServerFile> file(new ServerFile(stringFormat("%s\\%s", path, filename)));
+
+        if (!file)
+            return;
+
+        size_t filesize = std::filesystem::file_size(file->FileName());
+
+        m_servFile = std::move(file);
+        SendAllClient(&MakePacket::MakeFileMeta, [sender = static_cast<SOCKET>(senderSocket)](SOCKET sock){ return sock != sender; }, filename, path, filesize);
         m_makepacket->NetSendPacket(senderSocket, &MakePacket::MakeChat, "server sent file meta data", 6);
         m_servFileName = filename;
         m_servPath = path;
@@ -157,15 +171,47 @@ void TCPServer::OnReceiveFileMetaPacket(int senderSocket)
 {
     std::cout << stringFormat("server::onreceiveFilemetapacket\n");
 
-    //!test sending a chunk of file!//
-    using binaryIfstream = std::basic_ifstream<uint8_t, std::char_traits<uint8_t>>;
+    ////!test sending a chunk of file!//
+    if (!m_servFile)
+        return;
 
-    binaryIfstream file(m_servFileName);
-    std::vector<uint8_t> tempbuff(5, 0);
-    
-    file.read(tempbuff.data(), tempbuff.size());
-    if (m_makepacket->NetSendPacket(senderSocket, &MakePacket::MakeFileChunk, m_servFileName, tempbuff))
+    std::vector<uint8_t> readbuff(128, 0);
+    m_servFile->Read(readbuff);
+
+    if (m_makepacket->NetSendPacket(senderSocket, &MakePacket::MakeFileChunk, m_servFileName, readbuff))
         std::cout << "server sent a chunk!" << std::endl;
+}
+
+void TCPServer::OnReceiveFileChunkPacket(int senderSocket, bool isError, bool completed, size_t workpos)
+{
+    if (!m_servFile)
+        return;
+
+    do
+    {
+        if (isError)
+            std::cout << "filechunk::geterror\n";
+        else if (completed)
+            std::cout << "completed!\n";
+        else
+            break;
+        m_servFile.reset();
+        return;
+    }
+    while (false);
+
+    std::vector<uint8_t> readbuff(128, 0);
+
+    if (!m_servFile->Read(readbuff))
+        std::cout << "error?\n";
+    if (readbuff.empty())
+    {
+        std::cout << "empty buffer\n";
+        return;
+    }
+
+    if (m_makepacket->NetSendPacket(senderSocket, &MakePacket::MakeFileChunk, m_servFileName, readbuff))
+        std::cout << stringFormat("server sent %d bytes", readbuff.size()) << std::endl;
 }
 
 void TCPServer::UnknownPacketType(int senderSocket, uint8_t packetId)
@@ -251,6 +297,7 @@ void TCPServer::EntryAccept()
 
     FD_SET(client, m_serverSet.get());
 
+    //m_makepacket->NetSendPacket(client, &MakePacket::MakeEcho, "echo msg");
     m_makepacket->NetSendPacket(client, &MakePacket::MakeChat, "Welcome to Amine's Chat...\n", 6);
     m_makepacket->NetSendPacket(client, &MakePacket::MakeChat, "This is a Chat packet", 5);
 
@@ -265,19 +312,22 @@ void TCPServer::OutOfClient(SOCKET client)
 
 void TCPServer::ReceiveFromClient(SOCKET client)
 {
-    m_buffer.fill(0);
-
-    int bytesRead = recv(client, m_buffer.data(), m_buffer.size(), 0);
+    int bytesRead = recv(client, reinterpret_cast<char *>(m_buffer.data()), m_buffer.size(), 0);
 
     if (bytesRead <= 0)
     {
         OutOfClient(client);
         return;
     }
-    if (!m_makepacket->ReadPacket(static_cast<int>(client), m_buffer.data(), bytesRead))
+
+    //m_netbuffer->Append(reinterpret_cast<uint8_t *>(m_buffer.data()), bytesRead);
+    
+    m_buffer.resize(bytesRead);
+    m_netbuffer->Append(m_buffer);
+    /*if (!m_makepacket->ReadPacket(static_cast<int>(client), m_buffer.data(), bytesRead))
     {
         std::cout << stringFormat("server::receive error. %d bytes received...\n", bytesRead);
-    }
+    }*/
 }
 
 void TCPServer::ListenServer()

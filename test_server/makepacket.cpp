@@ -83,7 +83,7 @@ bool MakePacket::MakeEcho(const std::string &echoMessage)
     return true;
 }
 
-bool MakePacket::MakeFileMeta(const std::string &filename, const std::string &path)
+bool MakePacket::MakeFileMeta(const std::string &filename, const std::string &path, const size_t &filesize)
 {
     uint8_t filenameLength = 0, pathLength = 0;
 
@@ -94,7 +94,7 @@ bool MakePacket::MakeFileMeta(const std::string &filename, const std::string &pa
         return false;
 
     const uint8_t packetId = 4;
-    size_t filesize = 50;
+    //size_t filesize = 50;
     size_t packetLength = HeaderLength() + sizeof(filenameLength) + filenameLength + sizeof(pathLength) + pathLength + sizeof(filesize);
 
     SetBufferSize(packetLength);
@@ -274,6 +274,26 @@ bool MakePacket::ReadFileMetaPacket(int senderSocket)
     return true;
 }
 
+bool MakePacket::ReadFileChunkPacket(int senderSocket)
+{
+    uint8_t isError = 0, completed = 0;
+    size_t progress = 0;
+
+    try
+    {
+        ReadCtx(isError);
+        ReadCtx(completed);
+        ReadCtx(progress);
+    }
+    catch (const bool &fail)
+    {
+        return fail;
+    }
+    EventWorker::Instance().AppendTask(
+        &m_OnReceiveFileChunk, senderSocket, isError ? true : false, completed ? true : false, progress);
+    return true;
+}
+
 bool MakePacket::PacketTypeCase(int senderSocket, const uint8_t type)
 {
     bool ret = false;
@@ -290,11 +310,19 @@ bool MakePacket::PacketTypeCase(int senderSocket, const uint8_t type)
     case 4: //FileMeta
         checker(ReadFileMetaPacket(senderSocket));
         break;
+    case 5: //FileChunk
+        checker(ReadFileChunkPacket(senderSocket));
+        break;
     default:
         EventWorker::Instance().AppendTask(&m_OnUnknownPacketType, senderSocket, type);
         return false;
     }
     return ret;
+}
+
+bool MakePacket::ScanBuffer()
+{
+    //
 }
 
 bool MakePacket::ReadPacket(int senderSocket, const char *buffer, const size_t &length)

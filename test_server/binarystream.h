@@ -106,6 +106,10 @@ public:
 protected:
     const value_type *GetRaw();
     void SetSeekpoint(uint32_t pos);
+    uint32_t CurrentSeekpoint() const
+    {
+        return m_seekpoint;
+    }
     void SetBufferSize(const size_t resize);
     size_t BufferSize() const
     {

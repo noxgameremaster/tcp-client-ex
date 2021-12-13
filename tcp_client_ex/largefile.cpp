@@ -34,14 +34,10 @@ bool LargeFile::MakeDirectory(const std::string &path)
     return NAMESPACE_FILESYSTEM::create_directories(path);
 }
 
-bool LargeFile::RemoveIfAlreadExist(bool erase)
+bool LargeFile::RemoveIfAlreadExist(const std::string &fullname, bool erase)
 {
-    if (m_pathname.empty())
+    if (fullname.empty())
         return false;
-    if (m_filename.empty())
-        return false;
-
-    std::string fullname = stringFormat("%s\\%s", m_pathname, m_filename);
 
     bool isExist = NAMESPACE_FILESYSTEM::exists(fullname);
 
@@ -51,6 +47,14 @@ bool LargeFile::RemoveIfAlreadExist(bool erase)
     return isExist;
 }
 
+std::string LargeFile::GetFullName()
+{
+    if (m_filename.empty() || m_pathname.empty())
+        return {};
+
+    return stringFormat("%s\\%s", m_pathname, m_filename);
+}
+
 bool LargeFile::SetFileParams(const std::string &fileName, const std::string &pathName, const size_t &fileSize)
 {
     std::unique_ptr<bool, std::function<void(bool*)>> bRet(new bool(false), [this](bool *ret)
@@ -58,7 +62,7 @@ bool LargeFile::SetFileParams(const std::string &fileName, const std::string &pa
         EventWorker::Instance().AppendTask(&m_OnReportSetParamResult, *ret);
         delete ret;
     });
-    if (!RemoveIfAlreadExist())
+    if (!RemoveIfAlreadExist(stringFormat("%s\\%s", pathName, fileName)))
     {
         if (!MakeDirectory(pathName))
             return false;
@@ -95,7 +99,7 @@ bool LargeFile::Write(const uint8_t *stream, const size_t &length)
 {
     using binary_ofstream = std::basic_ofstream<uint8_t, std::char_traits<uint8_t>>;
 
-    binary_ofstream file(m_filename, std::ofstream::out | std::ios::app | binary_ofstream::binary);
+    binary_ofstream file(GetFullName(), std::ofstream::out | std::ios::app | binary_ofstream::binary);
 
     if (!file)
         return false;
@@ -108,7 +112,7 @@ bool LargeFile::Write(const uint8_t *stream, const size_t &length)
 bool LargeFile::WriteAll(const uint8_t *stream, const size_t &length)
 {
     using binary_ofstream = std::basic_ofstream<uint8_t, std::char_traits<uint8_t>>;
-    binary_ofstream file(stringFormat("%s\\%s", m_pathname, m_filename), binary_ofstream::out | binary_ofstream::binary);
+    binary_ofstream file(GetFullName(), binary_ofstream::out | binary_ofstream::binary);
 
     if (!file)
         return false;
@@ -128,6 +132,6 @@ void LargeFile::SlotWriteChunk(const std::vector<uint8_t> &srcChunk)
 
     if (result)
         m_writeAmount += srcChunk.size();
-    EventWorker::Instance().AppendTask(&m_OnWriteChunk, result, m_writeAmount, m_filesize);  //todo report write amount
+    EventWorker::Instance().AppendTask(&m_OnWriteChunk, result ? false : true, m_writeAmount, m_filesize);
 }
 

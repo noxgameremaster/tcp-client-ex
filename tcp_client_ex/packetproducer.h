@@ -20,6 +20,7 @@ private:
     std::shared_ptr<LocalBuffer> m_localbuffer;
     std::unique_ptr<NetPacket> m_createdPacket;
     std::list<uint32_t> m_stxposList;
+    std::list<uint32_t> m_tempStxposList;
     uint32_t m_ttxpos;
 
     std::unique_ptr<HeaderData> m_headerdata;
@@ -34,7 +35,6 @@ public:
 private:
     bool PacketPostProc();
     bool CreatePacket(const char &packetId);
-    uint32_t CheckValidPacket();
 
     bool MakePacketImpl(uint32_t offset);
 
@@ -42,6 +42,11 @@ public:
     void SetCapture(NetObject *target, capture_function &&notifier);
     void MakePacket();
     void SetLocalBuffer(std::shared_ptr<LocalBuffer> buffer);
+
+private:
+    void Scan();
+
+public:
     bool ReadBuffer();
 };
 

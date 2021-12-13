@@ -23,6 +23,8 @@
     <ClInclude Include="ccobject.h" />
     <ClInclude Include="eventworker.h" />
     <ClInclude Include="makepacket.h" />
+    <ClInclude Include="netbuffer.h" />
+    <ClInclude Include="serverfile.h" />
     <ClInclude Include="stringhelper.h" />
     <ClInclude Include="tcpclient.h" />
     <ClInclude Include="tcpserver.h" />
@@ -32,6 +34,8 @@
     <ClCompile Include="eventworker.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="makepacket.cpp" />
+    <ClCompile Include="netbuffer.cpp" />
+    <ClCompile Include="serverfile.cpp" />
     <ClCompile Include="tcpclient.cpp" />
     <ClCompile Include="tcpserver.cpp" />
   </ItemGroup>

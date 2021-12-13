@@ -19,7 +19,8 @@ public:
 
 private:
     bool MakeDirectory(const std::string &path);
-    bool RemoveIfAlreadExist(bool erase = true);
+    bool RemoveIfAlreadExist(const std::string &fullname, bool erase = true);
+    std::string GetFullName();
 
 public:
     bool SetFileParams(const std::string &fileName, const std::string &pathName, const size_t &fileSize);
