@@ -60,7 +60,7 @@ public:
 
 private:
     bool MakeHint();
-    bool ReceiveImpl(char *buffer, const size_t length, int &readbytes);
+    bool ReceiveImpl(uint8_t *buffer, const size_t length, int &readbytes);
     bool SendImpl(const char *buffer, const size_t length, int &sendbytes);
     bool SendAll(const char *buffer, const size_t length);
     bool SendAll(const uint8_t *ubuffer, const size_t length);

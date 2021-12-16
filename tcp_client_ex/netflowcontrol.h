@@ -3,23 +3,22 @@
 #define NET_FLOW_CONTROL_H__
 
 #include "netservice.h"
-#include <thread>
 #include <list>
 #include <mutex>
 
 class TaskManager;
 class IOBuffer;
 class NetPacket;
+class LoopThread;
 
 class NetFlowControl : public NetService
 {
 private:
     std::shared_ptr<TaskManager> m_taskmanager;
     std::weak_ptr<IOBuffer> m_sendbuffer;
-    std::thread m_ioThread;
-    bool m_terminated;
     std::list<std::unique_ptr<NetPacket>> m_inpacketList;
     std::list<std::unique_ptr<NetPacket>> m_outpacketList;
+    std::unique_ptr<LoopThread> m_ioThread;
 
 public:
     NetFlowControl();
@@ -27,9 +26,6 @@ public:
 
 private:
     void CheckIOList();
-    void IOThreadIntervalTask();
-    void StopIOThread();
-
     virtual bool OnInitialize();
     virtual void OnDeinitialize();
     virtual bool OnStarted();

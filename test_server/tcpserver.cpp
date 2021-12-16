@@ -2,9 +2,10 @@
 #include "TCPServer.h"
 #include "makepacket.h"
 #include "serverfile.h"
-#include "netbuffer.h"
+#include "localbuffer.h"
 #include "stringhelper.h"
 #include "eventworker.h"
+#include "runClock.h"
 #include <filesystem>
 #include <iostream>
 #include <sstream>
@@ -61,8 +62,10 @@ void TCPServer::ServerInitialize()
     m_makepacket->OnReceiveFileMeta().Connection(&TCPServer::OnReceiveFileMetaPacket, this);
     m_makepacket->OnReceiveFileChunk().Connection(&TCPServer::OnReceiveFileChunkPacket, this);
 
-    m_netbuffer = std::make_shared<NetBuffer>();
-    m_buffer.reserve(0x1000);
+    m_servbuffer = std::make_shared<LocalBuffer>();
+    m_buffer.resize(0x1000);
+
+    m_clock = std::make_unique<RunClock>();
 }
 
 bool TCPServer::ServerHasFile(const std::string &path, const std::string &filename)
@@ -137,8 +140,8 @@ void TCPServer::OnServerExecuteCommand(int senderSocket, const std::string &cmd,
 
         if (!file)
             return;
-
-        size_t filesize = std::filesystem::file_size(file->FileName());
+                
+        size_t filesize = static_cast<size_t>(NAMESPACE_FILESYSTEM::file_size(file->FileName()));
 
         m_servFile = std::move(file);
         SendAllClient(&MakePacket::MakeFileMeta, [sender = static_cast<SOCKET>(senderSocket)](SOCKET sock){ return sock != sender; }, filename, path, filesize);
@@ -175,11 +178,13 @@ void TCPServer::OnReceiveFileMetaPacket(int senderSocket)
     if (!m_servFile)
         return;
 
-    std::vector<uint8_t> readbuff(128, 0);
+    /*std::vector<uint8_t> readbuff(512, 0);
     m_servFile->Read(readbuff);
 
     if (m_makepacket->NetSendPacket(senderSocket, &MakePacket::MakeFileChunk, m_servFileName, readbuff))
-        std::cout << "server sent a chunk!" << std::endl;
+        std::cout << "server sent a chunk!" << std::endl;*/
+    OnReceiveFileChunkPacket(senderSocket, false, false, 0);
+    m_clock->Reset();
 }
 
 void TCPServer::OnReceiveFileChunkPacket(int senderSocket, bool isError, bool completed, size_t workpos)
@@ -192,7 +197,10 @@ void TCPServer::OnReceiveFileChunkPacket(int senderSocket, bool isError, bool co
         if (isError)
             std::cout << "filechunk::geterror\n";
         else if (completed)
+        {
             std::cout << "completed!\n";
+            m_makepacket->NetSendPacket(senderSocket, &MakePacket::MakeChat, stringFormat("downloading is done. %s", m_clock->Show(true)), 2);
+        }
         else
             break;
         m_servFile.reset();
@@ -200,7 +208,7 @@ void TCPServer::OnReceiveFileChunkPacket(int senderSocket, bool isError, bool co
     }
     while (false);
 
-    std::vector<uint8_t> readbuff(128, 0);
+    std::vector<uint8_t> readbuff(1024, 0);
 
     if (!m_servFile->Read(readbuff))
         std::cout << "error?\n";
@@ -319,15 +327,8 @@ void TCPServer::ReceiveFromClient(SOCKET client)
         OutOfClient(client);
         return;
     }
-
-    //m_netbuffer->Append(reinterpret_cast<uint8_t *>(m_buffer.data()), bytesRead);
     
-    m_buffer.resize(bytesRead);
-    m_netbuffer->Append(m_buffer);
-    /*if (!m_makepacket->ReadPacket(static_cast<int>(client), m_buffer.data(), bytesRead))
-    {
-        std::cout << stringFormat("server::receive error. %d bytes received...\n", bytesRead);
-    }*/
+    m_makepacket->ReadPacket(client, reinterpret_cast<const char *>(m_buffer.data()), bytesRead);
 }
 
 void TCPServer::ListenServer()

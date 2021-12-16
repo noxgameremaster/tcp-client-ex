@@ -3,12 +3,15 @@
 #include "taskmanager.h"
 #include "iobuffer.h"
 #include "netpacket.h"
+#include "loopThread.h"
 
 NetFlowControl::NetFlowControl()
     : NetService()
 {
-    m_terminated = false;
     m_taskmanager = std::make_shared<TaskManager>(this);
+    m_ioThread = std::make_unique<LoopThread>();
+
+    m_ioThread->SetTaskFunction([this]() { this->CheckIOList(); });
 }
 
 NetFlowControl::~NetFlowControl()
@@ -16,67 +19,42 @@ NetFlowControl::~NetFlowControl()
 
 void NetFlowControl::CheckIOList()
 {
-    while (m_inpacketList.size())
     {
-        std::unique_ptr<NetPacket> packet = std::move(m_inpacketList.front());
-
-        ReceivePacket(std::move(packet));
-        m_inpacketList.pop_front();
-    }
-    while (m_outpacketList.size())
-    {
-        std::unique_ptr<NetPacket> packet = std::move(m_outpacketList.front());
-
-        ReleasePacket(std::move(packet));
-        m_outpacketList.pop_front();
-    }
-}
-
-void NetFlowControl::IOThreadIntervalTask()
-{
-    do
-    {
-        if (m_terminated)
-            break;
-
+        std::lock_guard<std::mutex> lock(m_lock);
+        while (m_inpacketList.size())
         {
-            std::lock_guard<std::mutex> lock(m_lock);
+            std::unique_ptr<NetPacket> packet = std::move(m_inpacketList.front());
 
-            CheckIOList();
+            ReceivePacket(std::move(packet));
+            m_inpacketList.pop_front();
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(3));
+        while (m_outpacketList.size())
+        {
+            std::unique_ptr<NetPacket> packet = std::move(m_outpacketList.front());
+
+            ReleasePacket(std::move(packet));
+            m_outpacketList.pop_front();
+        }
     }
-    while (true);
-}
-
-void NetFlowControl::StopIOThread()
-{    
-    m_terminated = true;
-
-    if (m_ioThread.joinable())
-        m_ioThread.join();
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
 }
 
 bool NetFlowControl::OnInitialize()
 {
-    m_ioThread = std::thread([this]() { this->IOThreadIntervalTask(); });
-
-    return true;
+    return m_ioThread->Startup();
 }
 
 void NetFlowControl::OnDeinitialize()
-{
-}
+{ }
 
 bool NetFlowControl::OnStarted()
 {
-    m_taskmanager->Startup();
-    return true;
+    return m_taskmanager->Startup();
 }
 
 void NetFlowControl::OnStopped()
 {
-    StopIOThread();
+    m_ioThread->Shutdown();
     m_taskmanager->Shutdown();
 }
 

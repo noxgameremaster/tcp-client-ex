@@ -55,7 +55,7 @@ void IOBuffer::TriggeredWhenPush()
         m_triggers.erase(it);
 }
 
-bool IOBuffer::PushBuffer(uint8_t *buffer, size_t bufferSize)
+bool IOBuffer::PushBuffer(const uint8_t *buffer, size_t bufferSize)
 {
     int getindex = 0;
 

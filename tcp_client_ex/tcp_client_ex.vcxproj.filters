@@ -114,6 +114,9 @@
     <ClCompile Include="filechunkpacket.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="loopThread.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="netobject.h">
@@ -216,6 +219,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="filechunkpacket.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="loopThread.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

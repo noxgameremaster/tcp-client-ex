@@ -2,13 +2,16 @@
 #include "netclient.h"
 #include "netflowcontrol.h"
 #include "iobuffer.h"
+#include "loopThread.h"
 #include "winsocket.h"
 
 ClientSend::ClientSend(std::shared_ptr<WinSocket> &sock, NetObject *parent)
     : NetService(parent)
 {
-    m_terminated = false;
     m_netsocket = sock;
+    m_sendThread = std::make_unique<LoopThread>();
+    m_sendThread->SetTaskFunction([this]() { this->StreamSend(); });
+    m_sendThread->SetWaitCondition([this]() { return !this->m_sendbuffer->IsEmpty(); });
 }
 
 ClientSend::~ClientSend()
@@ -16,43 +19,18 @@ ClientSend::~ClientSend()
 
 void ClientSend::BufferOnPushed()
 {
-    m_condvar.notify_one();
+    m_sendThread->Notify();
 }
 
 void ClientSend::StreamSend()
 {
-    const uint8_t *stream = nullptr;
+    std::unique_ptr<uint8_t[]> stream;
     size_t buffersize = 0;
 
-    if (!m_sendbuffer->PopBuffer(stream, buffersize))
+    if (!m_sendbuffer->PopBufferAlloc(std::move(stream), buffersize))
         return;
 
-    m_netsocket->Send(stream, buffersize);
-}
-
-void ClientSend::DoTask()
-{
-    do
-    {
-        {
-            std::unique_lock<std::mutex> waitlock(m_waitLock);
-            m_condvar.wait(waitlock, [this]() { return (m_terminated || (!m_sendbuffer->IsEmpty())); });
-        }
-        if (m_terminated)
-            break;
-
-        StreamSend();
-    }
-    while (true);
-}
-
-void ClientSend::HaltSendThread()
-{
-    m_terminated = true;
-    m_condvar.notify_one();
-
-    if (m_sendThread.joinable())
-        m_sendThread.join();
+    m_netsocket->Send(stream.get(), buffersize);
 }
 
 bool ClientSend::OnInitialize()
@@ -61,36 +39,19 @@ bool ClientSend::OnInitialize()
     m_sendbuffer->SetLargeBufferScale(IOBuffer::receive_buffer_max_size);
     m_sendbuffer->SetTrigger(this, [this]() { this->BufferOnPushed(); });
 
-    NetObject *parent = GetParent();
-
-    if (parent == nullptr)
-        return false;
-
-    NetClient *client = dynamic_cast<NetClient *>(parent);
-    if (client == nullptr)
-        return false;
-
-    auto flowcontrol = client->FlowControl();
-
-    if (!flowcontrol.expired())
-        flowcontrol.lock()->SetSendBuffer(m_sendbuffer);
-
     return true;
 }
 
 void ClientSend::OnDeinitialize()
-{
-}
+{ }
 
 bool ClientSend::OnStarted()
 {
-    m_sendThread = std::thread([this]() { this->DoTask(); });
-
-    return true;
+    return m_sendThread->Startup();
 }
 
 void ClientSend::OnStopped()
 {
-    HaltSendThread();
+    m_sendThread->Shutdown();
 }
 

@@ -13,7 +13,7 @@ class LocalBuffer;
 class IOBuffer : public PartitionPool
 {
 public:
-    static constexpr size_t receive_buffer_max_size = 1024;
+    static constexpr size_t receive_buffer_max_size = 65536;
 
 private:
     std::vector<uint8_t> m_largeBuffer;
@@ -31,7 +31,14 @@ private:
     void TriggeredWhenPush();
 
 public:
-    bool PushBuffer(uint8_t *buffer, size_t bufferSize);
+    bool PushBuffer(const uint8_t *buffer, size_t bufferSize);
+
+    template <class Container>
+    bool PushBuffer(const Container &src)
+    {
+        return PushBuffer(src.data(), src.size());
+    }
+
     bool PopBuffer(const uint8_t *&destptr, size_t &bufferSize);
     bool PopBufferAlloc(std::unique_ptr<uint8_t[]> &&destptr, size_t &bufferSize);
     bool SetLargeBufferScale(size_t scale);

@@ -31,7 +31,7 @@ private:
 
 protected:
     bool GetTotalSize(const int &index, size_t &destsize);
-    bool PushData(uint8_t *stream, const size_t ssize, int &getindex);
+    bool PushData(const uint8_t *stream, const size_t ssize, int &getindex);
     bool GetData(const int &index, uint8_t *destStream);
     void ReturnData(const int &index);
 };

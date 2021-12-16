@@ -9,8 +9,8 @@ class FileChunkPacket : public NetPacket
 {
 private:
     std::string m_filename;
-    uint8_t m_chunkLength;
-    std::array<uint8_t, 256> m_filechunk;
+    uint16_t m_chunkLength;
+    std::array<uint8_t, 65536> m_filechunk;
 
     //writeOnly
     bool m_isError;

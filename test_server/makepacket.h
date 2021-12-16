@@ -8,6 +8,8 @@
 #include <functional>
 #include <mutex>
 
+class LocalBuffer;
+
 class MakePacket : public BinaryStream
 {
     static constexpr int packet_stx = 0xdeadface;
@@ -15,6 +17,10 @@ class MakePacket : public BinaryStream
     static constexpr int packet_etx = 0xfadeface;
 private:
     std::vector<char> m_packet;
+    std::shared_ptr<LocalBuffer> m_localbuffer;
+    int m_ttxpos = 0;
+    std::list<int> m_stxposList;
+    std::list<int> m_tempStxposList;
 
 public:
     MakePacket();
@@ -55,9 +61,10 @@ private:
     bool PacketTypeCase(int senderSocket, const uint8_t type);
 
 public:
-    bool ScanBuffer();
     bool ReadPacket(int senderSocket, const char *buffer, const size_t &length);
     static std::string filterPrint(const char *str, const size_t &length);
+
+    bool DDDD();
 
 private:
     //std::mutex m_lock;

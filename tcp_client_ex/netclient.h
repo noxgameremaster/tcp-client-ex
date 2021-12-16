@@ -8,6 +8,7 @@ class ClientReceive;
 class ClientSend;
 class WinSocket;
 class NetFlowControl;
+class NetPacket;
 
 class NetClient : public NetService
 {
@@ -33,7 +34,7 @@ private:
     void OnStopped() override;
 
 public:
-    std::weak_ptr<NetFlowControl> FlowControl();
+    void SlotReceivePacket(std::unique_ptr<NetPacket> &&packet);
 };
 
 #endif

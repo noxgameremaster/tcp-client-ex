@@ -1,11 +1,15 @@
 #include "makepacket.h"
+#include "localbuffer.h"
 #include "eventworker.h"
+
 #include <list>
 #include <ws2tcpip.h>
 
 MakePacket::MakePacket()
     : BinaryStream(16384)
-{ }
+{
+    m_ttxpos = 0;
+}
 
 MakePacket::~MakePacket()
 { }
@@ -121,12 +125,13 @@ bool MakePacket::MakeFileMeta(const std::string &filename, const std::string &pa
 
 bool MakePacket::MakeFileChunk(const std::string &filename, const std::vector<uint8_t> &src)
 {
-    uint8_t filenameLength = 0, chunkSize = 0;
+    uint8_t filenameLength = 0;
+    uint16_t chunkSize = static_cast<uint16_t>(src.size());
 
     if (!ByteChecker(filename.length(), filenameLength))
         return false;
-    if (!ByteChecker(src.size(), chunkSize))
-        return false;
+    /*if (!ByteChecker(src.size(), chunkSize))
+        return false;*/
 
     const uint8_t packetId = 5;
     size_t packetLength = HeaderLength() + sizeof(filenameLength) + filenameLength
@@ -320,45 +325,43 @@ bool MakePacket::PacketTypeCase(int senderSocket, const uint8_t type)
     return ret;
 }
 
-bool MakePacket::ScanBuffer()
-{
-    //
-}
-
 bool MakePacket::ReadPacket(int senderSocket, const char *buffer, const size_t &length)
 {
-    //std::lock_guard<std::mutex> guard(m_lock);
     PutStreamRaw(reinterpret_cast<const uint8_t *>(buffer), length);
 
     int stx = 0, etx = 0;
     size_t packetLength = 0;
     uint8_t packetId = 0;
 
-    try
+    do
     {
-        ReadCtx(stx);
-        if (stx != packet_stx)
+        try
         {
-            std::unique_ptr<char[]> copy(new char[length]);
+            ReadCtx(stx);
+            if (stx != packet_stx)
+            {
+                std::unique_ptr<char[]> copy(new char[length]);
 
-            memcpy_s(copy.get(), length, buffer, length);
-            //OnReceiveUnknownPacket(buffer, length);
-            //EventWorker::Instance().AppendTask(m_OnReceiveUnknown, std::move(copy), length);
-            m_OnReceiveUnknown.Emit(senderSocket, std::move(copy), length);
-            throw false;
+                memcpy_s(copy.get(), length, buffer, length);
+                m_OnReceiveUnknown.Emit(senderSocket, std::move(copy), length);
+                throw false;
+            }
+            ReadCtx(packetLength);
+            ReadCtx(packetId);
+            if (!GetStreamChunk(etx, packetLength - sizeof(etx)))
+                throw false;
+            if (etx != packet_etx)
+                throw false;
+
+            PacketTypeCase(senderSocket, packetId);
+            ReadCtx(etx);
         }
-        ReadCtx(packetLength);
-        ReadCtx(packetId);
-        if (!GetStreamChunk(etx, packetLength-sizeof(etx)))
-            throw false;
-        if (etx != packet_etx)
-            throw false;
+        catch (const bool &fail)
+        {
+            return fail;
+        }
     }
-    catch (const bool &fail)
-    {
-        return fail;
-    }
-    return PacketTypeCase(senderSocket, packetId);
+    while (true);
 }
 
 std::string MakePacket::filterPrint(const char *str, const size_t &length)
@@ -368,10 +371,13 @@ std::string MakePacket::filterPrint(const char *str, const size_t &length)
     size_t pos = 0;
     for (; pos < length; ++pos)
     {
-        if (!(str[pos] & 0x80) && str[pos])
-            buffer.push_back(str[pos]);
+        char c = str[pos];
+
+        if (!(c & 0x80))
+            buffer.push_back(c < 32 ? '?' : c);
     }
 
     return std::string(buffer.cbegin(), buffer.cend());
 }
+
 

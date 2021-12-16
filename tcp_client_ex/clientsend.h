@@ -3,20 +3,17 @@
 #define CLIENT_SEND_H__
 
 #include "netservice.h"
-#include <thread>
-#include <mutex>
 
 class WinSocket;
 class IOBuffer;
+class LoopThread;
 
 class ClientSend : public NetService
 {
 private:
-    bool m_terminated;
-    std::condition_variable m_condvar;
     std::shared_ptr<WinSocket> m_netsocket;
     std::shared_ptr<IOBuffer> m_sendbuffer;
-    std::thread m_sendThread;
+    std::unique_ptr<LoopThread> m_sendThread;
 
 public:
     ClientSend(std::shared_ptr<WinSocket> &sock, NetObject *parent = nullptr);
@@ -25,15 +22,22 @@ public:
 private:
     void BufferOnPushed();
     void StreamSend();
-    void DoTask();
-    void HaltSendThread();
     bool OnInitialize() override;
     void OnDeinitialize() override;
     bool OnStarted() override;
     void OnStopped() override;
 
-private:
-    std::mutex m_waitLock;
+public:
+    template <class NetObjectPtr, class Function>
+    void SharedSendBuffer(NetObjectPtr *obj, Function &&memberF)
+    {
+        if (nullptr == obj)
+            return;
+
+        static_assert(std::is_base_of<NetObject, NetObjectPtr>::value, "the instance must be inherit NetObject");
+
+        (obj->*memberF)(m_sendbuffer);
+    }
 };
 
 #endif

@@ -1,15 +1,17 @@
 
 #include "clientworker.h"
-#include "netflowcontrol.h"
 #include "netclient.h"
 #include "iobuffer.h"
 #include "localbuffer.h"
+#include "loopThread.h"
 #include "packetproducer.h"
 
 ClientWorker::ClientWorker(NetObject *parent)
     : NetService(parent)
 {
-    m_terminated = false;
+    m_workThread = std::make_unique<LoopThread>();
+    m_workThread->SetTaskFunction([this]() { this->FetchFromBuffer(); });
+    m_workThread->SetWaitCondition([this]() { return !(this->m_recvbuffer->IsEmpty()); });
 }
 
 ClientWorker::~ClientWorker()
@@ -17,47 +19,39 @@ ClientWorker::~ClientWorker()
 
 void ClientWorker::InterceptPacket(std::unique_ptr<NetPacket> &&pack)
 {
-    ///생성된 패킷은 여기로옴. 안받으면 일방적인 파기
-    if (m_flowcontrol.expired())
-        return;
-
-    std::shared_ptr<NetFlowControl> flowcontrol = m_flowcontrol.lock();
-
-    flowcontrol->Enqueue(std::move(pack), NetFlowControl::IOType::IN);
+    m_OnReleasePacket.Emit(std::move(pack));
 }
 
-bool ClientWorker::FetchFromBuffer()
+void ClientWorker::FillLocalBuffer()
 {
-    if (m_localbuffer->IsEmpty())
-        return false;
+    size_t readsize = 0;
 
-    if (m_analyzer->ReadBuffer())
-        m_analyzer->MakePacket();
-
-    return true;
-}
-
-bool ClientWorker::DoTask()
-{
     while (true)
     {
-        {
-            std::unique_lock<std::mutex> waitlock(m_waitlock);
-            m_condvar.wait(waitlock, [this]() { return !m_recvbuffer->IsEmpty() || m_terminated; });
-        }
-        if (m_terminated)
+        std::unique_ptr<uint8_t[]> alloc;
+
+        if (!m_recvbuffer->PopBufferAlloc(std::move(alloc), readsize))
             break;
 
-        m_recvbuffer->MoveBuffer(m_localbuffer);
-
-        while (FetchFromBuffer());
+        if (!m_localbuffer->Append(alloc.get(), readsize))
+            break;
     }
-    return true;
+}
+
+void ClientWorker::FetchFromBuffer()
+{
+    FillLocalBuffer();
+
+    while (!m_localbuffer->IsEmpty())
+    {
+        if (m_analyzer->ReadBuffer())
+            m_analyzer->MakePacket();
+    }
 }
 
 void ClientWorker::BufferOnPushed()
 {
-    m_condvar.notify_one();
+    m_workThread->Notify();
 }
 
 void ClientWorker::SetReceiveBuffer(std::shared_ptr<IOBuffer> recvBuffer)
@@ -65,27 +59,31 @@ void ClientWorker::SetReceiveBuffer(std::shared_ptr<IOBuffer> recvBuffer)
     m_recvbuffer = recvBuffer;
 }
 
+bool ClientWorker::InitPacketForwarding()
+{
+    NetObject *parent = GetParent();
+
+    if (nullptr == parent)
+        return false;
+    NetClient *serv = dynamic_cast<NetClient *>(parent);
+
+    if (nullptr == serv)
+        return false;
+
+    return m_OnReleasePacket.Connection(&NetClient::SlotReceivePacket, serv);
+}
+
 bool ClientWorker::OnInitialize()
 {
     if (!m_recvbuffer)
+        return false;
+    if (!InitPacketForwarding())
         return false;
 
     m_analyzer = std::make_unique<PacketProducer>();
     m_localbuffer = std::make_shared<LocalBuffer>();
     m_analyzer->SetLocalBuffer(m_localbuffer);
-
     m_recvbuffer->SetTrigger(this, std::bind(&ClientWorker::BufferOnPushed, this));
-
-    NetObject *parent = GetParent();
-
-    if (parent != nullptr)
-    {
-        NetClient *client = dynamic_cast<NetClient *>(parent);
-
-        if (client != nullptr)
-            m_flowcontrol = client->FlowControl();
-    }
-
     return true;
 }
 
@@ -97,25 +95,16 @@ void ClientWorker::OnDeinitialize()
 
 bool ClientWorker::OnStarted()
 {
-    std::packaged_task<bool()> task(std::bind(&ClientWorker::DoTask, this));
-
-    m_workResult = task.get_future();
-    m_workerThread = std::thread(std::move(task));
-
     m_analyzer->SetCapture(this,
         [this](std::unique_ptr<NetPacket> &&p)
     { this->InterceptPacket(std::forward<std::remove_reference<decltype(p)>::type>(p)); });
 
-    return true;
+    return m_workThread->Startup();
 }
 
 void ClientWorker::HaltWorkThread()
 {
-    m_terminated = true;
-    m_condvar.notify_one();
-
-    if (m_workerThread.joinable())
-        m_workerThread.join();
+    m_workThread->Shutdown();
 }
 
 void ClientWorker::OnStopped()

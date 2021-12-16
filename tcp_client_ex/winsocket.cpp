@@ -82,9 +82,9 @@ socket_type WinSocket::GetFd()
     return *m_socket;
 }
 
-bool WinSocket::ReceiveImpl(char *buff, const size_t length, int &readbytes)
+bool WinSocket::ReceiveImpl(uint8_t *buff, const size_t length, int &readbytes)
 {
-    readbytes = recv(*m_socket, buff, length, 0);
+    readbytes = recv(*m_socket, reinterpret_cast< char *>(buff), length, 0);
 
     if (readbytes <= 0)
         return false;

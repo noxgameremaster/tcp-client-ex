@@ -3,6 +3,7 @@
 #define TASK_FILE_STREAM_H__
 
 #include "abstracttask.h"
+#include <vector>
 
 class LargeFile;
 

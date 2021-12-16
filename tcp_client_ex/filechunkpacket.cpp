@@ -52,7 +52,7 @@ void FileChunkPacket::SetReportParam(bool isError, bool isCompleted, const size_
     m_writePos = writeAmount;
 }
 
-//IN: (byte: filenameLength)+"FILENAME"+ (byte: chunkLength)+ B"Chunk"
+//IN: (byte: filenameLength)+"FILENAME"+ (word: chunkLength)+ B"Chunk"
 //OUT: (byte: isError)+(byte: isCompleted)+(dword: writePos)
 
 bool FileChunkPacket::OnReadPacket()

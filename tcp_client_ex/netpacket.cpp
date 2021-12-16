@@ -3,7 +3,7 @@
 #include "headerdata.h"
 
 NetPacket::NetPacket()
-    : BinaryStream(1024)
+    : BinaryStream(65536)
 {
 }
 

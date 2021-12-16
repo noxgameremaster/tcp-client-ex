@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -22,8 +22,9 @@
     <ClInclude Include="binarystream.h" />
     <ClInclude Include="ccobject.h" />
     <ClInclude Include="eventworker.h" />
+    <ClInclude Include="localbuffer.h" />
     <ClInclude Include="makepacket.h" />
-    <ClInclude Include="netbuffer.h" />
+    <ClInclude Include="runClock.h" />
     <ClInclude Include="serverfile.h" />
     <ClInclude Include="stringhelper.h" />
     <ClInclude Include="tcpclient.h" />
@@ -32,9 +33,10 @@
   <ItemGroup>
     <ClCompile Include="binarystream.cpp" />
     <ClCompile Include="eventworker.cpp" />
+    <ClCompile Include="localbuffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="makepacket.cpp" />
-    <ClCompile Include="netbuffer.cpp" />
+    <ClCompile Include="runClock.cpp" />
     <ClCompile Include="serverfile.cpp" />
     <ClCompile Include="tcpclient.cpp" />
     <ClCompile Include="tcpserver.cpp" />
@@ -44,13 +46,13 @@
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{48d01a49-9420-4b41-bd8b-508ee4c5ed21}</ProjectGuid>
     <RootNamespace>testserver</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">

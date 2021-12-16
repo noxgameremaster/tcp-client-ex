@@ -7,7 +7,7 @@ class PartitionPool::Partition
     friend PartitionPool;
 
 private:
-    static constexpr size_t space_size = 64;
+    static constexpr size_t space_size = 256;
 
     size_t m_totalsize;
     size_t m_size;
@@ -87,7 +87,7 @@ bool PartitionPool::GetTotalSize(const int &index, size_t &destsize)
     return true;
 }
 
-bool PartitionPool::PushData(uint8_t *stream, const size_t ssize, int &getindex)
+bool PartitionPool::PushData(const uint8_t *stream, const size_t ssize, int &getindex)
 {
     if (!CheckCapacity(ssize))
         return false;

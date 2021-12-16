@@ -51,7 +51,7 @@ bool ClientReceive::ErrorBufferIsFull()
 
 bool ClientReceive::Receiving()
 {
-    std::vector<char> receiveVector(IOBuffer::receive_buffer_max_size, 0);
+    std::vector<uint8_t> receiveVector(IOBuffer::receive_buffer_max_size, 0);
     std::list<WinSocket *> notifiers = m_readFds->NotifiedClientList();
 
     for (WinSocket *sock : notifiers)
@@ -59,7 +59,7 @@ bool ClientReceive::Receiving()
         if (!sock->Receive(receiveVector))
             return ErrorDisconnected();             //서버가 끊어지면 -1이 들어옴
 
-        if (!m_receivebuffer->PushBuffer(reinterpret_cast<uint8_t *>(receiveVector.data()), receiveVector.size()))
+        if (!m_receivebuffer->PushBuffer(receiveVector))
             return ErrorBufferIsFull();
     }
 

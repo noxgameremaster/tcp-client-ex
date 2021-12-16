@@ -4,6 +4,7 @@
 
 #include "ccobject.h"
 #include <string>
+#include <vector>
 
 class LargeFile : public CCObject
 {

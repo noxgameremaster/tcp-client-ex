@@ -12,8 +12,6 @@ class HeaderData;
 
 class PacketProducer : public NetObject
 {
-    /*static constexpr int packet_header_stx = 0xdeadface;
-    static constexpr int packet_header_ttx = 0xfadeface;*/
     using capture_function = std::function<void(std::unique_ptr<NetPacket> &&)>;
 
 private:

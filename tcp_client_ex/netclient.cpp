@@ -97,6 +97,7 @@ bool NetClient::OnInitialize()
     {
         return fail;
     }
+    m_sender->SharedSendBuffer(m_flowcontrol.get(), &NetFlowControl::SetSendBuffer);
     return true;
 }
 
@@ -116,8 +117,8 @@ void NetClient::OnStopped()
         m_flowcontrol->Shutdown();
 }
 
-std::weak_ptr<NetFlowControl> NetClient::FlowControl()
+void NetClient::SlotReceivePacket(std::unique_ptr<NetPacket> &&packet)
 {
-    return m_flowcontrol;
+    if (m_flowcontrol)
+        m_flowcontrol->Enqueue(std::move(packet), NetFlowControl::IOType::IN);
 }
-
