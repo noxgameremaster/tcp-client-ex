@@ -30,6 +30,7 @@ void LoopThread::DoTask(std::function<void()> task)
         task();
     }
     while (true);
+    m_OnTerminatedThread.Emit();
 }
 
 bool LoopThread::OnInitialize()

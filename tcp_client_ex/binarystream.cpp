@@ -9,8 +9,7 @@ BinaryStream::BinaryStream(const size_t reserve_size)
 }
 
 BinaryStream::~BinaryStream()
-{
-}
+{ }
 
 bool BinaryStream::PutStreamRaw(const value_type *raw, size_t length)
 {

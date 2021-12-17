@@ -2,12 +2,12 @@
 #ifndef HEADER_DATA_H__
 #define HEADER_DATA_H__
 
-#include "netobject.h"
+#include "binarystream.h"
 #include <map>
 
 class LocalBuffer;
 
-class HeaderData : public NetObject
+class HeaderData : public BinaryStream
 {
 public:
     static constexpr int header_stx = 0xdeadface;
@@ -22,16 +22,33 @@ public:
     {
         STX,
         LENGTH,
+        PAIR_NUMBER,
         TYPE,
+        PACKET_ORDER,
+        COMPRESS_TYPE,
+        CRYPT_KEY,
+        PACKET_CRC,
+        MAIN_CMD_TYPE,
+        SUB_CMD_TYPE,
         ETX
     };
 
 private:
     int m_stx;
-    int m_length;
+    size_t m_length;
+    int m_pairNumber;   //unused
     char m_type;
-    int m_ttx;
+    int m_packetOrder;  //udp only
+    char m_compressType; //unused
+    int m_cryptKey; //un
+    int m_crc;  //un
+    char m_mainCmdType;
+    char m_subCmdType;
+    int m_etx;
     std::map<FieldInfo, std::unique_ptr<HeaderVariantBase>> m_propertyMap;
+
+    size_t m_headerSizeOnly;
+    size_t m_dataOffset;
 
 public:
     HeaderData();
@@ -71,6 +88,7 @@ private:
         if (FindProperty(fieldId, variant))
             return false;
 
+        m_headerSizeOnly += sizeof(Ty);
         m_propertyMap.emplace(fieldId, std::make_unique<HeaderVariant<fieldId, Ty>>(ptr));
         return true;
     }
@@ -80,10 +98,13 @@ public:
 
     size_t DataSectionOffset() const
     {
-        return sizeof(m_stx) + sizeof(m_length) + sizeof(m_type);
+        return m_dataOffset;
     }
 
-    size_t FieldLength() const;
+    size_t FieldLength() const
+    {
+        return m_headerSizeOnly;
+    }
 
     template <FieldInfo fieldId, class Ty>
     bool GetProperty(Ty &dest)
@@ -112,6 +133,8 @@ public:
         *pProperty->m_ptr = src;
         return true;
     }
+
+    std::vector<uint8_t> ReleaseData();
 
 };
 

@@ -4,13 +4,13 @@
 
 #include "ccobject.h"
 
+class LoopThread;
+
 class EventWorker : public CCObject
 {
 private:
     std::list<std::function<void()>> m_task;
-    std::condition_variable m_condvar;
-    std::thread m_worker;
-    bool m_terminate;
+    std::unique_ptr<LoopThread> m_eventThread;
 
 private:
     explicit EventWorker();
@@ -24,6 +24,8 @@ public:
     ~EventWorker() override;
 
 private:
+    bool IsTask() const;
+    void CheckoutEvent();
     void Work();
 
 public:
@@ -48,17 +50,18 @@ public:
                 signal->Emit(args...);
             }
             );
-            m_condvar.notify_one();
+            EventThreadNotify();
         }
     }
 
     bool Start();
     bool Stop();
+    void EventThreadNotify();
 
     static EventWorker &Instance();
 
 private:
-    std::mutex m_lock;
+    mutable std::mutex m_lock;
 };
 
 #endif

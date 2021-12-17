@@ -2,15 +2,26 @@
 #include "taskthread.h"
 #include "taskmanager.h"
 #include "netpacket.h"
+#include "loopThread.h"
 
 TaskThread::TaskThread(NetObject *parent)
     : AbstractTask(parent)
 {
-    m_terminated = false;
+    m_taskThread = std::make_unique<LoopThread>();
+    m_taskThread->SetWaitCondition([this]() { return this->IsMessageList(); });
+    m_taskThread->SetTaskFunction([this]() { this->Dequeue(); });
 }
 
 TaskThread::~TaskThread()
+{ }
+
+bool TaskThread::IsMessageList() const
 {
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
+
+        return m_msglist.size();
+    }
 }
 
 void TaskThread::ExecuteTask(std::unique_ptr<NetPacket> &&msg)
@@ -58,45 +69,24 @@ void TaskThread::Dequeue()
 void TaskThread::DoTask(std::unique_ptr<NetPacket> &&)
 { }
 
-void TaskThread::DoThreadTask()
-{
-    do
-    {
-        Dequeue();
-        {
-            std::unique_lock<std::mutex> waitLock(m_waitLock);
-            m_condvar.wait(waitLock, [this]() { return (m_terminated | (!m_msglist.empty())); });
-        }
-        if (m_terminated)
-            break;
-
-    }
-    while (true);
-}
-
 void TaskThread::PushBack(std::unique_ptr<NetPacket> &&msg)
 {
     {
         std::lock_guard<std::mutex> lock(m_lock);
 
         m_msglist.push_back(std::move(msg));
-        m_condvar.notify_one();
     }
+    m_taskThread->Notify();
 }
 
 void TaskThread::StopThread()
 {
-    m_terminated = true;
-    if (m_taskThread.joinable())
-    {
-        m_condvar.notify_one();
-        m_taskThread.join();
-    }
+    m_taskThread->Shutdown();
 }
 
 void TaskThread::RunThread()
 {
-    m_taskThread = std::thread([this]() { this->DoThreadTask(); });
+    m_taskThread->Startup();
 }
 
 

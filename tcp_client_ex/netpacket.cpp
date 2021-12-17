@@ -22,7 +22,7 @@ bool NetPacket::OnWritePacket()
 
 size_t NetPacket::PacketSize(Mode)
 {
-    return sizeof(m_headerData);
+    return 0;
 }
 
 void NetPacket::SetHeaderData(std::unique_ptr<HeaderData> &&headerData)
@@ -38,17 +38,17 @@ bool NetPacket::Read()
     return OnReadPacket();
 }
 
-bool NetPacket::WriteHeaderData(const size_t length)
+bool NetPacket::WriteHeaderData()
 {
-    int stx = 0;
+    std::vector<uint8_t> stream = m_headerData->ReleaseData();
 
-    m_headerData->GetProperty<HeaderData::FieldInfo::STX>(stx);
+    if (stream.empty())
+        return false;
 
     try
     {
-        WriteCtx(stx);
-        WriteCtx(length);
-        WriteCtx(GetPacketId());
+        for (const uint8_t &uc : stream)
+            WriteCtx(uc);
     }
     catch (const bool &fail)
     {
@@ -64,9 +64,11 @@ bool NetPacket::Write()
 
     size_t sizeAll = m_headerData->FieldLength() + PacketSize(Mode::Write);
 
+    m_headerData->SetProperty<HeaderData::FieldInfo::LENGTH>(sizeAll);
+    m_headerData->SetProperty<HeaderData::FieldInfo::MAIN_CMD_TYPE>(GetPacketId());
     BufferResize(sizeAll);    //@brief. 패킷의 총 길이를 먼저 설정합니다
 
-    if (!WriteHeaderData(sizeAll))
+    if (!WriteHeaderData())
         return false;
 
     if (!OnWritePacket())

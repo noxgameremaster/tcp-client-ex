@@ -3,12 +3,22 @@
 #include "localbuffer.h"
 
 HeaderData::HeaderData()
-    : NetObject()
+    : BinaryStream(64)
 {
+    m_headerSizeOnly = 0;
+    m_dataOffset = 0;
+
     m_stx = header_stx;
     m_length = 0;
+    m_pairNumber = 1;
     m_type = 0;
-    m_ttx = header_terminal;
+    m_packetOrder = -1;
+    m_compressType = 0;
+    m_cryptKey = 0;
+    m_crc = 0;
+    m_mainCmdType = 0;
+    m_subCmdType = 0;
+    m_etx = header_terminal;
 
     PropertyEntry();
 }
@@ -18,10 +28,18 @@ HeaderData::~HeaderData()
 
 void HeaderData::PropertyEntry()
 {
-    NewProperty<FieldInfo::STX, decltype(m_stx)>(&m_stx);
-    NewProperty<FieldInfo::LENGTH, decltype(m_length)>(&m_length);
-    NewProperty<FieldInfo::TYPE, decltype(m_type)>(&m_type);
-    NewProperty<FieldInfo::ETX, decltype(m_ttx)>(&m_ttx);
+    NewProperty<FieldInfo::STX>(&m_stx);
+    NewProperty<FieldInfo::LENGTH>(&m_length);
+    NewProperty<FieldInfo::PAIR_NUMBER>(&m_pairNumber);
+    NewProperty<FieldInfo::TYPE>(&m_type);
+    NewProperty<FieldInfo::PACKET_ORDER>(&m_packetOrder);
+    NewProperty<FieldInfo::COMPRESS_TYPE>(&m_compressType);
+    NewProperty<FieldInfo::CRYPT_KEY>(&m_cryptKey);
+    NewProperty<FieldInfo::PACKET_CRC>(&m_crc);
+    NewProperty<FieldInfo::MAIN_CMD_TYPE>(&m_mainCmdType);
+    NewProperty<FieldInfo::SUB_CMD_TYPE>(&m_subCmdType);
+    m_dataOffset = m_headerSizeOnly;
+    NewProperty<FieldInfo::ETX>(&m_etx);
 }
 
 bool HeaderData::MakeData(std::shared_ptr<LocalBuffer> localbuffer, uint32_t offset)
@@ -33,13 +51,41 @@ bool HeaderData::MakeData(std::shared_ptr<LocalBuffer> localbuffer, uint32_t off
 
     localbuffer->PeekInc(m_stx, workpos);
     localbuffer->PeekInc(m_length, workpos);
+    localbuffer->PeekInc(m_pairNumber, workpos);
     localbuffer->PeekInc(m_type, workpos);
-    localbuffer->Peek(m_ttx, m_length - sizeof(m_ttx));
-
-    return true;
+    localbuffer->PeekInc(m_packetOrder, workpos);
+    localbuffer->PeekInc(m_compressType, workpos);
+    localbuffer->PeekInc(m_cryptKey, workpos);
+    localbuffer->PeekInc(m_crc, workpos);
+    localbuffer->PeekInc(m_mainCmdType, workpos);
+    localbuffer->PeekInc(m_subCmdType, workpos);
+    return localbuffer->Peek(m_etx, m_length - sizeof(m_etx));
 }
 
-size_t HeaderData::FieldLength() const //@brief. 순수 헤더 데이터 만의 크기입니다
+std::vector<uint8_t> HeaderData::ReleaseData()
 {
-    return sizeof(m_stx) + sizeof(m_length) + sizeof(m_type) + sizeof(m_ttx);
+    BufferResize(m_dataOffset);
+
+    try
+    {
+        WriteCtx(m_stx);
+        WriteCtx(m_length);
+        WriteCtx(m_pairNumber);
+        WriteCtx(m_type);
+        WriteCtx(m_packetOrder);
+        WriteCtx(m_compressType);
+        WriteCtx(m_cryptKey);
+        WriteCtx(m_crc);
+        WriteCtx(m_mainCmdType);
+        WriteCtx(m_subCmdType);
+    }
+    catch (const bool &)
+    {
+        return {};
+    }
+    uint8_t *stream = nullptr;
+    size_t length = 0;
+
+    GetStreamInfo(stream, length);
+    return std::vector<uint8_t>(stream, stream + length);
 }

@@ -35,7 +35,7 @@ public:
     bool Read();
 
 private:
-    bool WriteHeaderData(const size_t length);
+    bool WriteHeaderData();
     virtual uint8_t GetPacketId() const = 0;
 
 public:

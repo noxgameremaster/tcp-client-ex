@@ -3,29 +3,27 @@
 #define TASK_THREAD_H__
 
 #include "abstracttask.h"
-#include <thread>
 #include <list>
 #include <mutex>
 
 class NetPacket;
+class LoopThread;
 
 class TaskThread : public AbstractTask
 {
 private:
-    bool m_terminated;
-    std::condition_variable m_condvar;
-    std::thread m_taskThread;
     std::list<std::unique_ptr<NetPacket>> m_msglist;
+    std::unique_ptr<LoopThread> m_taskThread;
 
 public:
     TaskThread(NetObject *parent);
-    ~TaskThread();
+    ~TaskThread() override;
 
 private:
+    bool IsMessageList() const;
     void ExecuteTask(std::unique_ptr<NetPacket> &&msg);
     void Dequeue();
     void DoTask(std::unique_ptr<NetPacket> &&packet) override;
-    void DoThreadTask();
 
 public:
     void PushBack(std::unique_ptr<NetPacket> &&msg);
@@ -39,8 +37,7 @@ private:
     }
 
 private:
-    std::mutex m_waitLock;
-    std::mutex m_lock;
+    mutable std::mutex m_lock;
 };
 
 #endif

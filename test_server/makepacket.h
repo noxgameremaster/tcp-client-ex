@@ -64,8 +64,6 @@ public:
     bool ReadPacket(int senderSocket, const char *buffer, const size_t &length);
     static std::string filterPrint(const char *str, const size_t &length);
 
-    bool DDDD();
-
 private:
     //std::mutex m_lock;
 

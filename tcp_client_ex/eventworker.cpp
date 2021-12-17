@@ -1,52 +1,49 @@
 
 #include "eventworker.h"
+#include "loopThread.h"
 
 EventWorker::EventWorker()
+    : CCObject()
 {
-    m_terminate = false;
+    m_eventThread = std::make_unique<LoopThread>();
+    m_eventThread->SetTaskFunction([this]() { this->CheckoutEvent(); });
+    m_eventThread->SetWaitCondition([this]() { return IsTask(); });
 }
 
 EventWorker::~EventWorker()
 { }
 
-void EventWorker::Work()
+bool EventWorker::IsTask() const
 {
-    while (true)
     {
-        std::function<void()> task = nullptr;
+        std::lock_guard<std::mutex> guard(m_lock);
 
-        {
-            std::unique_lock<std::mutex> lock(m_lock);
-            m_condvar.wait(lock, [this]() { return !m_task.empty() || m_terminate; });
-
-            if (m_terminate)
-                break;
-
-            task = m_task.front();
-            m_task.pop_front();
-        }
-        if (task)
-            task();
+        return !m_task.empty();
     }
+}
+
+void EventWorker::CheckoutEvent()
+{
+    std::function<void()> task;
+
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
+
+        task = m_task.front();
+        m_task.pop_front();
+    }
+    if (task)
+        task();
 }
 
 bool EventWorker::Start()
 {
-    if (m_worker.joinable())
-        return false;
-
-    m_worker = std::thread([this]() { this->Work(); });
-    return true;
+    return m_eventThread->Startup();
 }
 
 bool EventWorker::Stop()
 {
-    if (!m_worker.joinable())
-        return false;
-
-    m_terminate = true;
-    m_condvar.notify_all();
-    m_worker.join();
+    m_eventThread->Shutdown();
     return true;
 }
 
@@ -55,4 +52,10 @@ EventWorker &EventWorker::Instance()
     static EventWorker worker;
 
     return worker;
+}
+
+void EventWorker::EventThreadNotify()
+{
+    if (m_eventThread)
+        m_eventThread->Notify();
 }

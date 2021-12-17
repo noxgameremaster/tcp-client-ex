@@ -16,7 +16,7 @@ class ClientWorker : public NetService
 private:
     std::shared_ptr<IOBuffer> m_recvbuffer;
     std::shared_ptr<LocalBuffer> m_localbuffer;
-    std::unique_ptr<PacketProducer> m_analyzer;
+    std::unique_ptr<PacketProducer> m_produce;
     std::unique_ptr<LoopThread> m_workThread;
 
 public:

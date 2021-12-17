@@ -130,8 +130,6 @@ bool MakePacket::MakeFileChunk(const std::string &filename, const std::vector<ui
 
     if (!ByteChecker(filename.length(), filenameLength))
         return false;
-    /*if (!ByteChecker(src.size(), chunkSize))
-        return false;*/
 
     const uint8_t packetId = 5;
     size_t packetLength = HeaderLength() + sizeof(filenameLength) + filenameLength
@@ -331,7 +329,8 @@ bool MakePacket::ReadPacket(int senderSocket, const char *buffer, const size_t &
 
     int stx = 0, etx = 0;
     size_t packetLength = 0;
-    uint8_t packetId = 0;
+    uint8_t packetId = 0, dmbyte = 0;
+    int dmdword = 0;
 
     do
     {
@@ -346,8 +345,15 @@ bool MakePacket::ReadPacket(int senderSocket, const char *buffer, const size_t &
                 m_OnReceiveUnknown.Emit(senderSocket, std::move(copy), length);
                 throw false;
             }
-            ReadCtx(packetLength);
+            ReadCtx(packetLength);  //길이
+            ReadCtx(dmdword);       //쌍번호
+            ReadCtx(dmbyte);        //종류
+            ReadCtx(dmdword);       //패킷순서
+            ReadCtx(dmbyte);       //압축
+            ReadCtx(dmdword);//crypt
+            ReadCtx(dmdword);//crc
             ReadCtx(packetId);
+            ReadCtx(dmbyte);
             if (!GetStreamChunk(etx, packetLength - sizeof(etx)))
                 throw false;
             if (etx != packet_etx)

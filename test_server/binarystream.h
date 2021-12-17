@@ -138,8 +138,8 @@ public:
     template <class Container>
     bool PutStream(const Container &cont)
     {
-        if (m_context->capacity() < cont.size())
-            return false;
+        /*if (m_context->capacity() < cont.size())
+            return false;*/
 
         m_context->resize(cont.size());
         std::copy(cont.begin(), cont.end(), m_context->begin());

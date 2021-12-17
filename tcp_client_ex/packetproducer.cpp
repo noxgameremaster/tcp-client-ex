@@ -76,16 +76,16 @@ bool PacketProducer::MakePacketImpl(uint32_t offset)
 
     uint8_t type = 0;
 
-    m_headerdata->GetProperty<HeaderData::FieldInfo::TYPE>(type);
+    m_headerdata->GetProperty<HeaderData::FieldInfo::MAIN_CMD_TYPE>(type);
 
     if (!CreatePacket(type))
         return false;       //unknown packet here
 
-    int length = 0;
+    size_t length = 0;
 
     m_headerdata->GetProperty<HeaderData::FieldInfo::LENGTH>(length);
 
-    std::vector<uint8_t> deststream(static_cast<size_t>(length), 0);
+    std::vector<uint8_t> deststream(length, 0);
 
     if (!m_localbuffer->PopN(deststream, offset))
         return false;

@@ -44,8 +44,8 @@ void ClientWorker::FetchFromBuffer()
 
     while (!m_localbuffer->IsEmpty())
     {
-        if (m_analyzer->ReadBuffer())
-            m_analyzer->MakePacket();
+        if (m_produce->ReadBuffer())
+            m_produce->MakePacket();
     }
 }
 
@@ -80,9 +80,9 @@ bool ClientWorker::OnInitialize()
     if (!InitPacketForwarding())
         return false;
 
-    m_analyzer = std::make_unique<PacketProducer>();
+    m_produce = std::make_unique<PacketProducer>();
     m_localbuffer = std::make_shared<LocalBuffer>();
-    m_analyzer->SetLocalBuffer(m_localbuffer);
+    m_produce->SetLocalBuffer(m_localbuffer);
     m_recvbuffer->SetTrigger(this, std::bind(&ClientWorker::BufferOnPushed, this));
     return true;
 }
@@ -95,7 +95,7 @@ void ClientWorker::OnDeinitialize()
 
 bool ClientWorker::OnStarted()
 {
-    m_analyzer->SetCapture(this,
+    m_produce->SetCapture(this,
         [this](std::unique_ptr<NetPacket> &&p)
     { this->InterceptPacket(std::forward<std::remove_reference<decltype(p)>::type>(p)); });
 

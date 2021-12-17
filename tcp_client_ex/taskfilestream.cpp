@@ -48,7 +48,8 @@ void TaskFileStream::ReportWriteChunk(bool isError, const size_t &writeAmount, c
 
     reportChunk->SetReportParam(isError, (writeAmount >= totalSize), writeAmount);
     ForwardPacketToManager(std::move(reportChunk));
-    PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_CYAN, stringFormat("report progress (%d of %d)...", writeAmount, totalSize));
+    PrintUtil::PrintMessage(
+        PrintUtil::ConsoleColor::COLOR_CYAN, stringFormat("report progress (%d of %d)...", writeAmount, totalSize));
 }
 
 void TaskFileStream::ProcessFileMeta(std::unique_ptr<NetPacket> &&packet)

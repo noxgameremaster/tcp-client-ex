@@ -45,6 +45,9 @@
     <ClInclude Include="runClock.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="packetProto.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="binarystream.cpp">
@@ -72,6 +75,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="runClock.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="packetProto.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

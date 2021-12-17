@@ -36,6 +36,8 @@ public:
 
 private:
     std::mutex m_waitLock;
+
+    DECLARE_SIGNAL(OnTerminatedThread)
 };
 
 #endif
