@@ -18,108 +18,78 @@
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="netclient.cpp">
+    <ClCompile Include="exampleServer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="iobuffer.cpp">
+    <ClCompile Include="serverAccept.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="clientreceive.cpp">
+    <ClCompile Include="clientpool.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="clientworker.cpp">
+    <ClCompile Include="serverReceiveEx.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="clientsend.cpp">
+    <ClCompile Include="simpleBuffer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="packetproducer.cpp">
+    <ClCompile Include="bufferPopper.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="testpacket.cpp">
+    <ClCompile Include="serverTaskManager.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="taskmanager.cpp">
+    <ClCompile Include="serverTaskThread.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="taskthread.cpp">
+    <ClCompile Include="serverTask.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="netflowcontrol.cpp">
+    <ClCompile Include="serverEchoTask.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="taskchatmessage.cpp">
+    <ClCompile Include="serverSend.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="taskecho.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="filepacket.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="taskfilestream.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="largefile.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="filechunkpacket.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="abstractTask.cpp">
+    <ClCompile Include="serverChatTask.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="netclient.h">
+    <ClInclude Include="exampleServer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="iobuffer.h">
+    <ClInclude Include="serverAccept.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="clientreceive.h">
+    <ClInclude Include="clientpool.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="clientworker.h">
+    <ClInclude Include="serverReceiveEx.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="clientsend.h">
+    <ClInclude Include="simpleBuffer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="packetproducer.h">
+    <ClInclude Include="bufferPopper.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="testpacket.h">
+    <ClInclude Include="serverTaskManager.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="taskmanager.h">
+    <ClInclude Include="serverTaskThread.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="taskthread.h">
+    <ClInclude Include="serverTask.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="netflowcontrol.h">
+    <ClInclude Include="serverEchoTask.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="taskchatmessage.h">
+    <ClInclude Include="serverSend.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="taskecho.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="filepacket.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="taskfilestream.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="largefile.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="filechunkpacket.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="abstractTask.h">
+    <ClInclude Include="serverChatTask.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

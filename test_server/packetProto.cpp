@@ -28,6 +28,7 @@ bool PacketProto::ReadNetStream(const std::vector<uint8_t> &stream)
 
 
     }
+    return true;;
 }
 
 

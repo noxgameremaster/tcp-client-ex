@@ -5,6 +5,21 @@
 #include <list>
 #include <ws2tcpip.h>
 
+struct MakePacket::CommonPacketHeader
+{
+    int m_stx;
+    size_t m_length;
+    int m_pairNumber;   //unused
+    char m_type;
+    int m_packetOrder;  //udp only
+    char m_compressType; //unused
+    int m_cryptKey; //un
+    int m_crc;  //un
+    char m_mainCmdType;
+    char m_subCmdType;
+    int m_etx;
+};
+
 MakePacket::MakePacket()
     : BinaryStream(16384)
 {
@@ -16,7 +31,7 @@ MakePacket::~MakePacket()
 
 size_t MakePacket::HeaderLength() const
 {
-    return sizeof(packet_stx) + sizeof(int) + sizeof(packet_chat_type) + sizeof(packet_etx);
+    return sizeof(int[7])+sizeof(char[4]);
 }
 
 bool MakePacket::ByteChecker(const size_t &sizeValue, uint8_t &dest)
@@ -38,13 +53,21 @@ bool MakePacket::MakeChat(const std::string &msg, const uint8_t &messageColor)
         return false;
 
     size_t packetLength = msgLength + HeaderLength() + sizeof(msgLength) + sizeof(messageColor);
-    
+    size_t dwdAny = 0;
+    uint8_t byteAny = 0;
     SetBufferSize(packetLength);
     try
     {
         WriteCtx(packet_stx);
         WriteCtx(packetLength);
+        WriteCtx(dwdAny);
+        WriteCtx(byteAny);
+        WriteCtx(dwdAny);
+        WriteCtx(byteAny);
+        WriteCtx(dwdAny);
+        WriteCtx(dwdAny);
         WriteCtx(packet_chat_type);
+        WriteCtx(byteAny);
         WriteCtx(messageColor);
         WriteCtx(msgLength);
         

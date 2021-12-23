@@ -1,9 +1,9 @@
-﻿// tcp_client_ex.cpp : 이 파일에는 'main' 함수가 포함됩니다. 거기서 프로그램 실행이 시작되고 종료됩니다.
+﻿// tcp_testserver_re.cpp : 이 파일에는 'main' 함수가 포함됩니다. 거기서 프로그램 실행이 시작되고 종료됩니다.
 //
 
-#include "netclient.h"
-#include "stringhelper.h"
-#include "printutil.h"
+#include "exampleServer.h"
+#include "stringHelper.h"
+#include <iostream>
 
 #pragma comment(lib, "tcpcommonsource.lib")
 
@@ -11,17 +11,16 @@ using namespace _StringHelper;
 
 int main()
 {
-    NetClient client;
-    bool runRes = client.Startup();
+    ExampleServer serv;
+    bool isWork = serv.Startup();
 
-    PrintUtil::PrintMessage(stringFormat("start client..., status: %s \n", runRes ? "ok" : "ng"));
+    std::cout << stringFormat("server status: %s\n", isWork ? "ok" : "ng");
     std::getchar();
 
-    client.Shutdown();
+    serv.Shutdown();
 
     return 0;
 }
-
 
 // 프로그램 실행: <Ctrl+F5> 또는 [디버그] > [디버깅하지 않고 시작] 메뉴
 // 프로그램 디버그: <F5> 키 또는 [디버그] > [디버깅 시작] 메뉴

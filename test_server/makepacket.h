@@ -15,6 +15,7 @@ class MakePacket : public BinaryStream
     static constexpr int packet_stx = 0xdeadface;
     static constexpr char packet_chat_type = 1;
     static constexpr int packet_etx = 0xfadeface;
+    struct CommonPacketHeader;
 private:
     std::vector<char> m_packet;
     std::shared_ptr<LocalBuffer> m_localbuffer;

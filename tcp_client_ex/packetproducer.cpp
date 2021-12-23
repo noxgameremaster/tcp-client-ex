@@ -69,7 +69,10 @@ bool PacketProducer::MakePacketImpl(uint32_t offset)
 {
     decltype(m_headerdata) headerdata(new HeaderData);
 
-    if (!headerdata->MakeData(m_localbuffer, offset))
+    if (!headerdata->PutStream(m_localbuffer->GetPartStream(offset, headerdata->FieldLength())))
+        return false;
+
+    if (!headerdata->MakeData())
         return false;
 
     m_headerdata = std::move(headerdata);

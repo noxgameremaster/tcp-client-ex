@@ -1,7 +1,7 @@
 ﻿// tcp_server_client.cpp : 이 파일에는 'main' 함수가 포함됩니다. 거기서 프로그램 실행이 시작되고 종료됩니다.
 //
 
-#define TCP_SERVER_CODE
+//#define TCP_SERVER_CODE
 
 #ifdef TCP_SERVER_CODE
 
@@ -39,7 +39,7 @@ using namespace std;
 
 int main() {
 
-    EventWorker::Instance().Start();
+	EventWorker::Instance().Start();
 	TCPClient *client = new TCPClient;
 	string msg = "a";
 	string usernameEntered;
@@ -71,7 +71,8 @@ int main() {
 				messageToSend = ss.str();
 				client->joinChat = false;
 			}
-			client->sendMsg(messageToSend);
+			if (!client->sendMsg(messageToSend))
+				break;
 		}
 
 	}

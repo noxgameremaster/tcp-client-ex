@@ -14,7 +14,7 @@ class LoopThread;
 class NetFlowControl : public NetService
 {
 private:
-    std::shared_ptr<TaskManager> m_taskmanager;
+    std::shared_ptr<TaskManager> m_taskmanager; 
     std::weak_ptr<IOBuffer> m_sendbuffer;
     std::list<std::unique_ptr<NetPacket>> m_inpacketList;
     std::list<std::unique_ptr<NetPacket>> m_outpacketList;

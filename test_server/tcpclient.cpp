@@ -74,13 +74,14 @@ void TCPClient::threadRecv() {
 		int bytesReceived = recv(serverSocket, buf, sizeof(buf), 0);
 		if (bytesReceived > 0) {			//If client disconnects, bytesReceived = 0; if error, bytesReceived = -1;
 
-			//std::cout << string(buf, 0, bytesReceived) << std::endl;
-            {
-                std::lock_guard<std::mutex> guard(m_lock);
+			std::cout << stringFormat("message: %s", m_makepacket->filterPrint(buf, bytesReceived)) << std::endl;
+			////std::cout << string(buf, 0, bytesReceived) << std::endl;
+   //         {
+   //             std::lock_guard<std::mutex> guard(m_lock);
 
-                if (!m_makepacket->ReadPacket(static_cast<int>(serverSocket), buf, bytesReceived))
-                    std::cout << stringFormat("error! %d bytes received", bytesReceived) << std::endl;
-            }
+   //             if (!m_makepacket->ReadPacket(static_cast<int>(serverSocket), buf, bytesReceived))
+   //                 std::cout << stringFormat("error! %d bytes received", bytesReceived) << std::endl;
+   //         }
 
 		}
 
@@ -122,19 +123,17 @@ void TCPClient::connectSock() {
 
 }
 
-void TCPClient::sendMsg(string txt) {
+bool TCPClient::sendMsg(string txt) {
 
 	if (!txt.empty() && serverSocket != INVALID_SOCKET) {
 
-		//send(serverSocket, txt.c_str(), txt.size() + 1, 0);
-        {
-            std::lock_guard<std::mutex> guard(m_lock);
-
-            m_makepacket->NetSendPacket(serverSocket, &MakePacket::MakeChat, txt, 6);
-        }
+			bool complete = m_makepacket->NetSendPacket(serverSocket, &MakePacket::MakeChat, txt, 6);
+			std::cout << stringFormat("send result: %s\n", complete ? "ok" : "ng");
 
 		//It wouldn't work with the previous version bc while we were constantly listening for received msgs, we would keep caling this fct. 
 		//This fct would send the message & try to handle the receiving too. It would get stuck while waiting for a received msg. 
+			if (!complete)
+				return false;
 	}
-
+	return true;
 }

@@ -19,7 +19,7 @@ public:
 	~TCPClient() override;
 	bool initWinsock();
 	void connectSock();
-	void sendMsg(std::string txt);
+	bool sendMsg(std::string txt);
 	std::thread recvThread;
 	void threadRecv();
 	std::string username;
