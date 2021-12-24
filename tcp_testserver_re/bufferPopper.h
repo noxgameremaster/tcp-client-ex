@@ -4,14 +4,14 @@
 
 #include "netservice.h"
 
-class SimpleBuffer;
+class PacketBuffer;
 class LoopThread;
 class NetPacket;
 
 class BufferPopper : public NetService
 {
 private:
-    std::shared_ptr<SimpleBuffer> m_simpbuffer;
+    std::shared_ptr<PacketBuffer> m_packetBuffer;
     std::unique_ptr<LoopThread> m_popThread;
 
 public:
@@ -26,7 +26,7 @@ private:
     void OnStopped() override;
 
 public:
-    void SlotRegistBuffer(std::shared_ptr<SimpleBuffer> buffer);
+    void SlotRegistBuffer(std::shared_ptr<PacketBuffer> buffer);
 
     DECLARE_SIGNAL(OnReleasePacket, std::unique_ptr<NetPacket>)
 };

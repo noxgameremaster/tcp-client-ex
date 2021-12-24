@@ -16,12 +16,16 @@ private:
 
 public:
     FilePacket();
-    ~FilePacket();
+    ~FilePacket() override;
 
 private:
     size_t PacketSize(Mode mode) override;
     void ReadString(std::string &strDest, const uint8_t &length);
+    bool ReadFromServer();
+    bool ReadFromClient();
     bool OnReadPacket() override;
+
+    bool CheckStringLimit(const std::string &src, std::string &dest, uint8_t &byteLength);
 
 public:
     static std::string TaskName()
@@ -36,12 +40,21 @@ public:
 
     void SetFileName(const std::string &filename)
     {
-        m_filename = filename;
+        CheckStringLimit(filename, m_filename, m_filenameLength);
+    }
+    void SetSavePath(const std::string &path)
+    {
+        CheckStringLimit(path, m_savepath, m_pathLength);
     }
 
     std::string GetFilePath() const
     {
         return m_savepath;
+    }
+
+    void SetFilesize(const size_t &filesize)
+    {
+        m_filesize = filesize;
     }
 
     size_t GetFilesize() const
@@ -56,11 +69,22 @@ public:
         m_reportError = errorId;
     }
 
+public:
+    enum class FilePacketDirection
+    {
+        ClientToServer,
+        ServerToClient
+    };
+    void SetFilePacketDirection(FilePacketDirection dir);
+
 private:
     std::string ClassName() const override
     {
         return TaskName();
     }
+
+    bool ClientWrite();
+    bool ServerWrite();
     bool OnWritePacket() override;
 
 };

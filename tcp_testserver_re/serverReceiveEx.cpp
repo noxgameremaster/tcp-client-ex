@@ -3,7 +3,7 @@
 #include "socketset.h"
 #include "clientpool.h"
 #include "winsocket.h"
-#include "simpleBuffer.h"
+#include "packetBuffer.h"
 #include "loopThread.h"
 
 ServerReceiveEx::ServerReceiveEx()
@@ -36,8 +36,8 @@ void ServerReceiveEx::ReceiveFromClient(WinSocket *client)
 
     if (!client->Receive(m_recvBuffer))
         OnDisconnected(client);
-    else if (m_simpBuffer)
-        m_simpBuffer->PushBack(client, m_recvBuffer);
+    else if (m_packetBuffer)
+        m_packetBuffer->PushBack(client, m_recvBuffer);
 }
 
 void ServerReceiveEx::ReceiveData()
@@ -50,8 +50,8 @@ bool ServerReceiveEx::OnInitialize()
     if (!m_cliPool)
         return false;
 
-    m_simpBuffer = std::make_shared<SimpleBuffer>();
-    m_OnShareBuffer.Emit(m_simpBuffer);
+    m_packetBuffer = std::make_shared<PacketBuffer>();
+    m_OnShareBuffer.Emit(m_packetBuffer);
 
     return true;
 }

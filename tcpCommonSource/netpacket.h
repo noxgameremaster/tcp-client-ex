@@ -66,6 +66,10 @@ public:
     {
         return m_senderSocketId;
     }
+
+protected:
+    void SetSubCommand(uint8_t subCmd);
+    uint8_t GetSubCommand() const;
 };
 
 #endif

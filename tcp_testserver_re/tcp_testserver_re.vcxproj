@@ -157,9 +157,10 @@
     <ClCompile Include="serverReceiveEx.cpp" />
     <ClCompile Include="serverSend.cpp" />
     <ClCompile Include="serverTask.cpp" />
+    <ClCompile Include="serverFileTask.cpp" />
     <ClCompile Include="serverTaskManager.cpp" />
     <ClCompile Include="serverTaskThread.cpp" />
-    <ClCompile Include="simpleBuffer.cpp" />
+    <ClCompile Include="packetBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bufferPopper.h" />
@@ -171,9 +172,10 @@
     <ClInclude Include="serverReceiveEx.h" />
     <ClInclude Include="serverSend.h" />
     <ClInclude Include="serverTask.h" />
+    <ClInclude Include="serverFileTask.h" />
     <ClInclude Include="serverTaskManager.h" />
     <ClInclude Include="serverTaskThread.h" />
-    <ClInclude Include="simpleBuffer.h" />
+    <ClInclude Include="packetBuffer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

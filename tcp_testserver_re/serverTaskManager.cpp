@@ -3,6 +3,7 @@
 #include "serverTaskThread.h"
 #include "serverEchoTask.h"
 #include "serverChatTask.h"
+#include "serverFileTask.h"
 #include "clientpool.h"
 #include "chatPacket.h"
 #include "winsocket.h"
@@ -62,6 +63,8 @@ bool ServerTaskManager::OnInitialize()
     if (!InsertServerTask(std::make_unique<ServerEchoTask>(this)))
         return false;
     if (!InsertServerTask(std::make_unique<ServerChatTask>(this)))
+        return false;
+    if (!InsertServerTask(std::make_unique<ServerFileTask>(this)))
         return false;
 
     return true;

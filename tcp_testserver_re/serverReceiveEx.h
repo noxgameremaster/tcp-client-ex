@@ -8,7 +8,7 @@ class LoopThread;
 class WinSocket;
 class SocketSet;
 class ClientPool;
-class SimpleBuffer;
+class PacketBuffer;
 
 class ServerReceiveEx : public NetService
 {
@@ -18,7 +18,7 @@ private:
     std::shared_ptr<ClientPool> m_cliPool;
     std::unique_ptr<SocketSet> m_socketSet;
     std::vector<uint8_t> m_recvBuffer;
-    std::shared_ptr<SimpleBuffer> m_simpBuffer;
+    std::shared_ptr<PacketBuffer> m_packetBuffer;
 
 public:
     explicit ServerReceiveEx();
@@ -39,7 +39,7 @@ private:
 public:
     void RegistClientPool(std::shared_ptr<ClientPool> &cliPool);
 
-    DECLARE_SIGNAL(OnShareBuffer, std::shared_ptr<SimpleBuffer>)
+    DECLARE_SIGNAL(OnShareBuffer, std::shared_ptr<PacketBuffer>)
 
 private:
     std::mutex m_lock;

@@ -6,6 +6,7 @@ NetPacket::NetPacket()
     : BinaryStream(65536)
 {
     m_senderSocketId = static_cast<socket_type>(-1);
+    m_headerData = std::make_unique<HeaderData>();
 }
 
 NetPacket::~NetPacket()
@@ -33,9 +34,7 @@ void NetPacket::SetHeaderData(std::unique_ptr<HeaderData> &&headerData)
 
 bool NetPacket::Read()
 {
-    if (m_headerData)
-        SetSeekpoint(m_headerData->DataSectionOffset());
-
+    SetSeekpoint(m_headerData->DataSectionOffset());
     return OnReadPacket();
 }
 
@@ -60,9 +59,6 @@ bool NetPacket::WriteHeaderData()
 
 bool NetPacket::Write()
 {
-    if (!m_headerData)
-        m_headerData = std::make_unique<HeaderData>();
-
     size_t sizeAll = m_headerData->FieldLength() + PacketSize(Mode::Write);
 
     m_headerData->SetProperty<HeaderData::FieldInfo::LENGTH>(sizeAll);
@@ -90,3 +86,15 @@ bool NetPacket::Write(uint8_t *&stream, size_t &length)
     return result;
 }
 
+void NetPacket::SetSubCommand(uint8_t subCmd)
+{
+    m_headerData->SetProperty<HeaderData::FieldInfo::SUB_CMD_TYPE>(subCmd);
+}
+
+uint8_t NetPacket::GetSubCommand() const
+{
+    uint8_t subCmd = static_cast<uint8_t>(-1);
+
+    m_headerData->GetProperty<HeaderData::FieldInfo::SUB_CMD_TYPE>(subCmd);
+    return subCmd;
+}

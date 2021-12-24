@@ -31,6 +31,7 @@ void TaskFileStream::ReportFileMetaReceiveCompleted()
 
     report->SetError(m_error);
     report->SetFileName(m_filename);
+    report->SetFilePacketDirection(FilePacket::FilePacketDirection::ClientToServer);
 
     ForwardPacketToManager(std::move(report));
 }

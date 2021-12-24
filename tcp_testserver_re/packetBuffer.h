@@ -3,8 +3,8 @@
 /// THE PACKET WILL BE REVEALED BY THIS OBJECT
 /// 
 
-#ifndef SIMPLE_BUFFER_H__
-#define SIMPLE_BUFFER_H__
+#ifndef PACKET_BUFFER_H__
+#define PACKET_BUFFER_H__
 
 #include "binarystream.h"
 #include <vector>
@@ -13,7 +13,7 @@ class WinSocket;
 class HeaderData;
 class NetPacket;
 
-class SimpleBuffer : public BinaryStream
+class PacketBuffer : public BinaryStream
 {
     static constexpr size_t max_buffer_length = 65536;
 private:
@@ -26,8 +26,8 @@ private:
     std::list<std::unique_ptr<NetPacket>> m_packetList;
 
 public:
-    explicit SimpleBuffer();
-    ~SimpleBuffer() override;
+    explicit PacketBuffer();
+    ~PacketBuffer() override;
 
 private:
     bool ResetSeekPoint();

@@ -30,7 +30,7 @@
     <ClCompile Include="serverReceiveEx.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="simpleBuffer.cpp">
+    <ClCompile Include="packetBuffer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="bufferPopper.cpp">
@@ -54,6 +54,9 @@
     <ClCompile Include="serverChatTask.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="serverFileTask.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="exampleServer.h">
@@ -68,7 +71,7 @@
     <ClInclude Include="serverReceiveEx.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="simpleBuffer.h">
+    <ClInclude Include="packetBuffer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="bufferPopper.h">
@@ -90,6 +93,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="serverChatTask.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="serverFileTask.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

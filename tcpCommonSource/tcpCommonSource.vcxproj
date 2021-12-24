@@ -147,7 +147,10 @@
     <ClCompile Include="chatPacket.cpp" />
     <ClCompile Include="echoPacket.cpp" />
     <ClCompile Include="eventworker.cpp" />
+    <ClCompile Include="fileChunkPacket.cpp" />
+    <ClCompile Include="filepacket.cpp" />
     <ClCompile Include="headerdata.cpp" />
+    <ClCompile Include="ioFileStream.cpp" />
     <ClCompile Include="ipToByte.cpp" />
     <ClCompile Include="localbuffer.cpp" />
     <ClCompile Include="loopThread.cpp" />
@@ -167,7 +170,10 @@
     <ClInclude Include="chatPacket.h" />
     <ClInclude Include="echoPacket.h" />
     <ClInclude Include="eventworker.h" />
+    <ClInclude Include="fileChunkPacket.h" />
+    <ClInclude Include="filepacket.h" />
     <ClInclude Include="headerdata.h" />
+    <ClInclude Include="ioFileStream.h" />
     <ClInclude Include="ipToByte.h" />
     <ClInclude Include="localbuffer.h" />
     <ClInclude Include="loopThread.h" />

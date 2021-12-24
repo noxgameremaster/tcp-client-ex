@@ -54,16 +54,10 @@
     <ClCompile Include="taskecho.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="filepacket.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="taskfilestream.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="largefile.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="filechunkpacket.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="abstractTask.cpp">
@@ -107,16 +101,10 @@
     <ClInclude Include="taskecho.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="filepacket.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="taskfilestream.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="largefile.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="filechunkpacket.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="abstractTask.h">

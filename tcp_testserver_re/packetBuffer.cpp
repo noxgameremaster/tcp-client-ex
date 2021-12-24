@@ -1,12 +1,14 @@
 
-#include "simpleBuffer.h"
+#include "packetBuffer.h"
 #include "winsocket.h"
 #include "chatPacket.h"
 #include "echoPacket.h"
+#include "filepacket.h"
+#include "fileChunkPacket.h"
 #include "headerdata.h"
 #include "packetOrderTable.h"
 
-SimpleBuffer::SimpleBuffer()
+PacketBuffer::PacketBuffer()
     : BinaryStream(256)
 {
     m_latestSocketId = static_cast<socket_type>(-1);
@@ -15,10 +17,10 @@ SimpleBuffer::SimpleBuffer()
     ResetSeekPoint();
 }
 
-SimpleBuffer::~SimpleBuffer()
+PacketBuffer::~PacketBuffer()
 { }
 
-bool SimpleBuffer::ResetSeekPoint()
+bool PacketBuffer::ResetSeekPoint()
 {
     m_readSeekpoint = 0;
     m_writeSeekpoint = 0;
@@ -26,12 +28,12 @@ bool SimpleBuffer::ResetSeekPoint()
     return true;
 }
 
-bool SimpleBuffer::CheckCapacity(const size_t &inputSize)
+bool PacketBuffer::CheckCapacity(const size_t &inputSize)
 {
     return (m_writeSeekpoint + inputSize) <= max_buffer_length;
 }
 
-bool SimpleBuffer::AppendSenderInfo(WinSocket *sock)
+bool PacketBuffer::AppendSenderInfo(WinSocket *sock)
 {
     socket_type sockId = sock->GetFd();
 
@@ -50,7 +52,7 @@ bool SimpleBuffer::AppendSenderInfo(WinSocket *sock)
     return true;
 }
 
-bool SimpleBuffer::PushBack(WinSocket *sock, const std::vector<uint8_t> &stream)
+bool PacketBuffer::PushBack(WinSocket *sock, const std::vector<uint8_t> &stream)
 {
     if (!AppendSenderInfo(sock))
         return false;
@@ -64,7 +66,7 @@ bool SimpleBuffer::PushBack(WinSocket *sock, const std::vector<uint8_t> &stream)
 }
 
 //마지막 읽은 위치로 부터 끝까지를 임시버퍼에??
-bool SimpleBuffer::Pulling(const size_t &off)
+bool PacketBuffer::Pulling(const size_t &off)
 {
     if (!m_writeSeekpoint)
         return false;
@@ -79,7 +81,7 @@ bool SimpleBuffer::Pulling(const size_t &off)
     return true;
 }
 
-bool SimpleBuffer::PacketInstance()
+bool PacketBuffer::PacketInstance()
 {
     uint8_t packetId = 0;
 
@@ -94,13 +96,19 @@ bool SimpleBuffer::PacketInstance()
     case PacketOrderTable<EchoPacket>::GetId():
         m_createdPacket = std::make_unique<EchoPacket>();
         break;
+    case PacketOrderTable<FilePacket>::GetId():
+        m_createdPacket = std::make_unique<FilePacket>();
+        break;
+    case PacketOrderTable<FileChunkPacket>::GetId():
+        m_createdPacket = std::make_unique<FileChunkPacket>();
+        break;
     default:
         return false;
     }
     return true;
 }
 
-bool SimpleBuffer::MakePacketReal(const size_t &off)
+bool PacketBuffer::MakePacketReal(const size_t &off)
 {
     if (!PacketInstance())
         return false;
@@ -120,7 +128,7 @@ bool SimpleBuffer::MakePacketReal(const size_t &off)
     return m_createdPacket->Read();
 }
 
-bool SimpleBuffer::MakePacketHeaderData(const size_t &startOff/*, const size_t &length*/)
+bool PacketBuffer::MakePacketHeaderData(const size_t &startOff/*, const size_t &length*/)
 {
     std::unique_ptr<HeaderData> header(new HeaderData);
     size_t endpos = startOff + header->FieldLength();
@@ -136,7 +144,7 @@ bool SimpleBuffer::MakePacketHeaderData(const size_t &startOff/*, const size_t &
     return true;
 }
 
-bool SimpleBuffer::ReadSenderInfo()
+bool PacketBuffer::ReadSenderInfo()
 {
     int sub = 0;
     socket_type sockId = 0;
@@ -152,7 +160,7 @@ bool SimpleBuffer::ReadSenderInfo()
     return true;
 }
 
-bool SimpleBuffer::ReadPacketInfo()
+bool PacketBuffer::ReadPacketInfo()
 {
     size_t length = 0;
     size_t stxOff = m_readSeekpoint - sizeof(length);
@@ -183,7 +191,7 @@ bool SimpleBuffer::ReadPacketInfo()
 }
 
 //패킷 채로 준다?
-bool SimpleBuffer::PopAsPacket()
+bool PacketBuffer::PopAsPacket()
 {
     while (m_readSeekpoint < m_writeSeekpoint)
     {
@@ -215,12 +223,12 @@ bool SimpleBuffer::PopAsPacket()
     return ResetSeekPoint();
 }
 
-bool SimpleBuffer::IsEmpty() const
+bool PacketBuffer::IsEmpty() const
 {
     return m_writeSeekpoint == 0;
 }
 
-bool SimpleBuffer::PopPacket(std::unique_ptr<NetPacket> &dest)
+bool PacketBuffer::PopPacket(std::unique_ptr<NetPacket> &dest)
 {
     PopAsPacket();
 

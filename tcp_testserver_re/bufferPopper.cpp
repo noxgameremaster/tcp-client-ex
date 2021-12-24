@@ -1,7 +1,7 @@
 
 #include "bufferPopper.h"
 #include "loopThread.h"
-#include "simpleBuffer.h"
+#include "packetBuffer.h"
 #include "netpacket.h"
 
 BufferPopper::BufferPopper()
@@ -18,14 +18,14 @@ void BufferPopper::PopData()
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
-    if (!m_simpbuffer)
+    if (!m_packetBuffer)
         return;
-    if (m_simpbuffer->IsEmpty())
+    if (m_packetBuffer->IsEmpty())
         return;
 
     std::unique_ptr<NetPacket> getPacket;
 
-    while (m_simpbuffer->PopPacket(getPacket))
+    while (m_packetBuffer->PopPacket(getPacket))
     {
         ///Todo. 여기에서 패킷을 받았다.
         ///이제 어디로 넘겨줘야 할 것인가...?
@@ -52,8 +52,8 @@ void BufferPopper::OnStopped()
     m_popThread->Shutdown();
 }
 
-void BufferPopper::SlotRegistBuffer(std::shared_ptr<SimpleBuffer> buffer)
+void BufferPopper::SlotRegistBuffer(std::shared_ptr<PacketBuffer> buffer)
 {
     if (buffer)
-        m_simpbuffer = buffer;
+        m_packetBuffer = buffer;
 }
