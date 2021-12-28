@@ -101,6 +101,7 @@ bool LargeFile::Write(const uint8_t *stream, const size_t &length)
 
     binary_ofstream file(GetFullName(), std::ofstream::out | std::ios::app | binary_ofstream::binary);
 
+    //Overlapped todo
     if (!file)
         return false;
 

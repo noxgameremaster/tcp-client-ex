@@ -68,14 +68,39 @@ void CfileDownloaderClientDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 
 	DDX_Control(pDX, MAIN_LOG_VIEWER, m_logViewer);
+	DDX_Control(pDX, LOG_VIEWER_PAGE_DOWN, m_btnPageDown);
+	DDX_Control(pDX, LOG_VIEWER_DOWN, m_btnDown);
+	DDX_Control(pDX, LOG_VIEWER_UP, m_btnUp);
+	DDX_Control(pDX, LOG_VIEWER_PAGEUP, m_btnPageUp);
+	DDX_Control(pDX, LOG_VIEWER_INSERT, m_btnLogTestInsert);
 }
 
 void CfileDownloaderClientDlg::Initialize()
 {
 	EventWorker::Instance().Start();
-	SetWindowText(std::string("Client Application").c_str());
+	SetWindowText(toArray(std::string("Client Application")));
 
-	//m_logViewer.InsertColumn(0, "message", )
+	m_logViewer.CreateColumn("index", 50);
+	m_logViewer.CreateColumn("message", 400);
+	m_logViewer.CreateColumn("datetime", 200);
+
+	m_btnPageUp.ModifyWndName("▲");
+	m_btnUp.ModifyWndName("△");
+	m_btnDown.ModifyWndName("▽");
+	m_btnPageDown.ModifyWndName("▼");
+
+	m_btnPageUp.SetCallback([this]() { this->m_logViewer.ViewerScrolling("pageup"); });
+	m_btnUp.SetCallback([this]() { this->m_logViewer.ViewerScrolling("up"); });
+	m_btnDown.SetCallback([this]() { this->m_logViewer.ViewerScrolling("down"); });
+	m_btnPageDown.SetCallback([this]() { this->m_logViewer.ViewerScrolling("pagedown"); });
+	m_btnLogTestInsert.SetCallback([this]() { this->m_logViewer.CreateNewLog("added log message--!"); m_logViewer.UpdateViewer(); });
+
+	int rep = -1, count = 30;
+
+	while (++rep < count)
+		m_logViewer.CreateNewLog(stringFormat("log message - %d", rep));
+
+	m_logViewer.UpdateViewer();
 }
 
 BEGIN_MESSAGE_MAP(CfileDownloaderClientDlg, CDialogEx)

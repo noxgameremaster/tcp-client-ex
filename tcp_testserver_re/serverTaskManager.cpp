@@ -6,7 +6,10 @@
 #include "serverFileTask.h"
 #include "clientpool.h"
 #include "chatPacket.h"
+#include "fileChunkPacket.h"
+#include "filepacket.h"
 #include "winsocket.h"
+#include "ioFileStream.h"
 #include "loopThread.h"
 #include "printUtil.h"
 #include "stringHelper.h"
@@ -58,13 +61,35 @@ bool ServerTaskManager::InsertServerTask(std::unique_ptr<ServerTask> &&servTask)
     return true;
 }
 
+bool ServerTaskManager::InsertServerSharedTask(const std::string &taskKey, std::shared_ptr<ServerTask> sharedTask)
+{
+    if (GetTask(taskKey) == nullptr)
+    {
+        m_taskmap.emplace(taskKey, sharedTask);
+        return true;
+    }
+    return false;
+}
+
 bool ServerTaskManager::OnInitialize()
 {
+    std::unique_ptr<ServerChatTask> chatTask(new ServerChatTask(this));
+    std::unique_ptr<ServerFileTask> fileTask(new ServerFileTask(this));
+
+    chatTask->OnServerRemoteFileInfo().Connection(&ServerTaskManager::CreateServerFile, this);
+    fileTask->OnReceiveFileInfo().Connection(&ServerTaskManager::FetchFileStream, this);
+    m_OnReleaseFileStream.Connection(&ServerFileTask::SendFileStream, fileTask.get());
+
     if (!InsertServerTask(std::make_unique<ServerEchoTask>(this)))
         return false;
-    if (!InsertServerTask(std::make_unique<ServerChatTask>(this)))
+    if (!InsertServerTask(std::move(chatTask)))
         return false;
-    if (!InsertServerTask(std::make_unique<ServerFileTask>(this)))
+
+    std::shared_ptr<ServerFileTask> sharedFileTask(fileTask.release());
+
+    if (!InsertServerSharedTask(FileChunkPacket::TaskName(), sharedFileTask))
+        return false;
+    if (!InsertServerSharedTask(FilePacket::TaskName(), sharedFileTask))
         return false;
 
     return true;
@@ -83,6 +108,27 @@ void ServerTaskManager::OnStopped()
 {
     m_servTaskThread->StopThread();
     m_ioThread->Shutdown();
+}
+
+void ServerTaskManager::CreateServerFile(const std::string &path, const std::string &filename)
+{
+    m_servFile = std::make_unique<IOFileStream>(stringFormat("%s\\%s", path, filename));
+
+    if (!m_servFile->Open(IOFileStream::OpenMode::ReadOnly))
+        m_servFile.reset();
+}
+
+void ServerTaskManager::FetchFileStream(const std::string &)
+{
+    if (!m_servFile)
+        return;
+    
+    std::vector<uint8_t> buffer(static_cast<const size_t>(1024));
+
+    if (!m_servFile->Read(buffer))
+        return;
+
+    m_OnReleaseFileStream.Emit(buffer, m_servFile->FileName());
 }
 
 void ServerTaskManager::Enqueue(std::unique_ptr<NetPacket> &&packet, TaskIOType ioType)

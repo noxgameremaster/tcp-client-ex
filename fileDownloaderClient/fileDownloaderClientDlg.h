@@ -5,13 +5,18 @@
 #pragma once
 
 #include "logViewer.h"
-
+#include "prettyButton.h"
 
 // CfileDownloaderClientDlg 대화 상자
 class CfileDownloaderClientDlg : public CDialogEx
 {
 private:
 	LogViewer m_logViewer;
+	PrettyButton m_btnPageUp;
+	PrettyButton m_btnUp;
+	PrettyButton m_btnDown;
+	PrettyButton m_btnPageDown;
+	PrettyButton m_btnLogTestInsert;
 
 // 생성입니다.
 public:
@@ -27,7 +32,6 @@ protected:
 
 private:
 	void Initialize();
-
 
 // 구현입니다.
 protected:

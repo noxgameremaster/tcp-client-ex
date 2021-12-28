@@ -4,13 +4,11 @@
 
 #include "serverTask.h"
 
-class IOFileStream;
-
 class ServerFileTask : public ServerTask
 {
 private:
-    std::unique_ptr<IOFileStream> m_servFile;
-    
+    std::string m_filename;
+
 public:
     explicit ServerFileTask(NetObject *parent = nullptr);
     ~ServerFileTask() override;
@@ -20,6 +18,11 @@ private:
     void ServerFileStream(std::unique_ptr<NetPacket> &&fileStream);
     void DoTask(std::unique_ptr<NetPacket> &&packet) override;
     std::string TaskName() const override;
+
+public:
+    void SendFileStream(const std::vector<uint8_t> &stream, const std::string &filename);
+
+    DECLARE_SIGNAL(OnReceiveFileInfo, std::string)
 };
 
 #endif

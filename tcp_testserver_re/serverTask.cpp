@@ -14,7 +14,7 @@ void ServerTask::ExecuteDoTask(ServerTask *task, std::unique_ptr<NetPacket> &&pa
     task->DoTask(std::move(packet));
 }
 
-bool ServerTask::ForwardPacket(std::unique_ptr<NetPacket> &&forwardPacket)
+bool ServerTask::ForwardPacketToManager(std::unique_ptr<NetPacket> &&packet, bool toSelf)
 {
     NetObject *parent = GetParent();
 
@@ -26,6 +26,16 @@ bool ServerTask::ForwardPacket(std::unique_ptr<NetPacket> &&forwardPacket)
     if (taskman == nullptr)
         return false;
 
-    taskman->Enqueue(std::move(forwardPacket), ServerTaskManager::TaskIOType::OUT);
+    taskman->Enqueue(std::move(packet), toSelf ? ServerTaskManager::TaskIOType::IN : ServerTaskManager::TaskIOType::OUT);
     return true;
+}
+
+bool ServerTask::ForwardPacket(std::unique_ptr<NetPacket> &&forwardPacket)
+{
+    return ForwardPacketToManager(std::move(forwardPacket));
+}
+
+bool ServerTask::SendBackPacket(std::unique_ptr<NetPacket> &&comebackPacket)
+{
+    return ForwardPacketToManager(std::move(comebackPacket), true);
 }

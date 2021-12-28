@@ -93,7 +93,7 @@ void ServerChatTask::RemoteCommandSendFile(const std::string &fileCmd, socket_ty
 
     if (!IOFileStream::FileSize(fullname, filesize))
     {
-        SendPrivateMessage(stringFormat("server don't have a file '%s' or directory '%s'", fileName, path), sockId);
+        SendPrivateMessage(stringFormat("server can't find a file '%s' or directory '%s'", fileName, path), sockId);
         return;
     }
 
@@ -105,6 +105,8 @@ void ServerChatTask::RemoteCommandSendFile(const std::string &fileCmd, socket_ty
     sendfile->SetFilePacketDirection(FilePacket::FilePacketDirection::ServerToClient);
 
     ForwardPacket(std::move(sendfile));
+
+    m_OnServerRemoteFileInfo.Emit(path, fileName);
 }
 
 void ServerChatTask::RemoteExecuteCommand(const std::string &cmd, socket_type sockId)

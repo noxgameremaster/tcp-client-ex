@@ -11,6 +11,7 @@ class ServerTaskThread;
 class ServerTask;
 class WinSocket;
 class ClientPool;
+class IOFileStream;
 
 class ServerTaskManager : public NetService
 {
@@ -20,6 +21,8 @@ private:
     std::unique_ptr<LoopThread> m_ioThread;
     std::unique_ptr<ServerTaskThread> m_servTaskThread;
     std::map<std::string, std::shared_ptr<ServerTask>> m_taskmap;
+
+    std::unique_ptr<IOFileStream> m_servFile;
     
 public:
     explicit ServerTaskManager();
@@ -28,10 +31,13 @@ public:
 private:
     void DequeueIOList();
     bool InsertServerTask(std::unique_ptr<ServerTask> &&servTask);
+    bool InsertServerSharedTask(const std::string &taskKey, std::shared_ptr<ServerTask> sharedTask);
     bool OnInitialize() override;
     bool OnStarted() override;
     void OnDeinitialize() override;
     void OnStopped() override;
+    void CreateServerFile(const std::string &path, const std::string &filename);
+    void FetchFileStream(const std::string &filename);
 
 public:
     enum class TaskIOType
@@ -48,6 +54,7 @@ public:
 
 private:
     DECLARE_SIGNAL(OnReleasePacket, std::unique_ptr<NetPacket>&&)
+    DECLARE_SIGNAL(OnReleaseFileStream, std::vector<uint8_t>, std::string)
 
 private:
     std::mutex m_lock;

@@ -32,7 +32,7 @@ public:
 
 private:
     size_t GetCharacterCount() const;
-    size_t ReadImpl(file_stream_pointer_type &getStream, const size_t &length);
+    size_t ReadImpl(file_stream_pointer_type getStream, const size_t &length);
     size_t WriteImpl(const file_stream_pointer_type &srcStream, const size_t &length);
     bool OpenImpl(const std::string &fileurl, OpenMode mode);
 
@@ -75,6 +75,11 @@ public:
     bool FileSize(size_t &destSize)
     {
         return FileSize(destSize);
+    }
+
+    std::string FileName() const
+    {
+        return m_filename;
     }
 };
 

@@ -26,7 +26,7 @@ size_t IOFileStream::GetCharacterCount() const
     return m_fileHandler ? static_cast<size_t>(m_fileHandler->gcount()) : std::string::npos;
 }
 
-size_t IOFileStream::ReadImpl(file_stream_pointer_type &getStream, const size_t &length)
+size_t IOFileStream::ReadImpl(file_stream_pointer_type getStream, const size_t &length)
 {
     if (!m_fileHandler)
         return std::string::npos;

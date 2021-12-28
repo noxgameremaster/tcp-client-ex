@@ -68,7 +68,7 @@ public:
     }
 
 protected:
-    void SetSubCommand(uint8_t subCmd);
+    virtual void SetSubCommand(uint8_t subCmd);
     uint8_t GetSubCommand() const;
 };
 

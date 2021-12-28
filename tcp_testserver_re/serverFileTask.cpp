@@ -2,12 +2,8 @@
 #include "serverFileTask.h"
 #include "filepacket.h"
 #include "fileChunkPacket.h"
-#include "ioFileStream.h"
 
 #include "printUtil.h"
-#include "stringHelper.h"
-
-using namespace _StringHelper;
 
 ServerFileTask::ServerFileTask(NetObject *parent)
     : ServerTask(parent)
@@ -23,13 +19,36 @@ void ServerFileTask::ServerFileMeta(std::unique_ptr<NetPacket> &&fileMeta)
     if (nullptr == fileinfo)
         return;
 
-    PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_WHITE, "!debug!- server sent a packet for file information");
-    PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_WHITE,
-        stringFormat("path: %s, name: %s, size: %d bytes ...", fileinfo->GetFilePath(), fileinfo->GetFileName(), fileinfo->GetFilesize()));
+    m_filename = fileinfo->GetFileName();
+    m_OnReceiveFileInfo.Emit(m_filename);
 }
 
 void ServerFileTask::ServerFileStream(std::unique_ptr<NetPacket> &&fileStream)
-{ }
+{
+    FileChunkPacket *chunkInfo = dynamic_cast<FileChunkPacket *>(fileStream.get());
+
+    if (chunkInfo == nullptr)
+        return;
+
+    bool err = false, end = false;
+    size_t writePos = 0;
+
+    chunkInfo->GetProgressStatus(err, end, writePos);
+
+    if (err)
+    {
+        PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_RED, "something wrong!");
+        return;
+    }
+    if (end)
+    {
+        PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_CYAN, "end of process");
+        return;
+    }
+
+    //PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_WHITE, "serverfiletask::serverfilestream");
+    m_OnReceiveFileInfo.Emit(m_filename);
+}
 
 void ServerFileTask::DoTask(std::unique_ptr<NetPacket> &&packet)
 {
@@ -42,5 +61,18 @@ void ServerFileTask::DoTask(std::unique_ptr<NetPacket> &&packet)
 std::string ServerFileTask::TaskName() const
 {
     return NetPacket::TaskKey<FilePacket>::Get();
+}
+
+void ServerFileTask::SendFileStream(const std::vector<uint8_t> &stream, const std::string &filename)
+{
+    //PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_WHITE, "server sent file stream");
+
+    std::unique_ptr<FileChunkPacket> chunk(new FileChunkPacket);
+
+    chunk->SetFileChunk(stream);
+    chunk->SetFileUrl(filename);
+    chunk->SetSubCommand(0);
+
+    ForwardPacket(std::move(chunk));
 }
 

@@ -24,6 +24,8 @@ private:
     void DoTask(std::unique_ptr<NetPacket> &&packet) override;
 
     std::string TaskName() const override;
+
+    DECLARE_SIGNAL(OnServerRemoteFileInfo, std::string, std::string)
 };
 
 #endif
