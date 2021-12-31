@@ -51,18 +51,19 @@ bool FileChunkPacket::ServerWrite()
     return true;
 }
 
+bool FileChunkPacket::ToFileServerWrite()
+{
+    return true;
+}
+
 bool FileChunkPacket::OnWritePacket()
 {
-    switch (GetSubCommand())
+    switch (SubCommand())
     {
-    case 1:
-        return ClientWrite();
-
-    case 0:
-        return ServerWrite();
-
-    default:
-        return false;
+    case PacketSubCmd::PrevToClient: return ServerWrite();
+    case PacketSubCmd::PrevToServer: return ClientWrite();
+    case PacketSubCmd::SendToServer: return ToFileServerWrite();
+    default: return false;
     }
 }
 
@@ -70,12 +71,16 @@ size_t FileChunkPacket::PacketSize(Mode mode)
 {
     if (mode == Mode::Write)
     {
-        switch (GetSubCommand())
+        switch (SubCommand())
         {
-        case 1:
+        case PacketSubCmd::PrevToClient:
+            return sizeof(m_chunkLength) + m_chunkLength + m_filenameLength +sizeof(m_filenameLength);
+        case PacketSubCmd::PrevToServer:
             return sizeof(m_isError) + sizeof(m_isCompleted) + sizeof(m_writePos);
-        case 0:
-            return sizeof(m_filenameLength) + m_filenameLength + sizeof(m_chunkLength) + m_chunkLength;
+        case PacketSubCmd::SendToClient:
+            return sizeof(m_chunkLength) + m_chunkLength;
+        case PacketSubCmd::SendToServer:
+            return 0;
         }
     }
     return 0;
@@ -125,11 +130,6 @@ void FileChunkPacket::SetReportParam(bool isError, bool isCompleted, const size_
     m_writePos = writeAmount;
 }
 
-void FileChunkPacket::SetSubCommand(uint8_t subCmd)
-{
-    NetPacket::SetSubCommand(subCmd);
-}
-
 void FileChunkPacket::GetProgressStatus(bool &err, bool &end, size_t &writePos)
 {
     err = m_isError;
@@ -158,7 +158,6 @@ bool FileChunkPacket::ClientRead()
     {
         return fail;
     }
-
     return true;
 }
 
@@ -181,16 +180,30 @@ bool FileChunkPacket::ServerRead()
     return true;
 }
 
+bool FileChunkPacket::FileServerRead()
+{
+    try
+    {
+        ReadCtx(m_chunkLength);
+        for (decltype(m_chunkLength) u = 0 ; u < m_chunkLength ; ++u)
+            ReadCtx(m_filechunk[u]);
+    }
+    catch (const bool &fail)
+    {
+        return fail;
+    }
+    return true;
+}
+
 bool FileChunkPacket::OnReadPacket()
 {
-    switch (GetSubCommand())
+    switch (SubCommand())
     {
-    case 0:
-        return ClientRead();
-    case 1:
-        return ServerRead();
-    default:
-        return false;
+    case PacketSubCmd::PrevToClient: return ClientRead();
+    case PacketSubCmd::PrevToServer: return ServerRead();
+    case PacketSubCmd::SendEndChunkToClient:
+    case PacketSubCmd::SendToClient: return FileServerRead();
+    default: return false;
     }
 }
 
@@ -199,3 +212,32 @@ uint8_t FileChunkPacket::GetPacketId() const
     return static_cast<uint8_t>(PacketOrderTable<FileChunkPacket>::GetId());
 }
 
+void FileChunkPacket::ChangeSubCommand(PacketSubCmd subcmd)
+{
+    auto setter = [](PacketSubCmd sub)->uint8_t
+    {
+        switch (sub)
+        {
+        case PacketSubCmd::SendToServer: return 1;
+        case PacketSubCmd::SendToClient: return 2;
+        case PacketSubCmd::SendEndChunkToClient: return 4;
+        case PacketSubCmd::PrevToServer: return 100;
+        case PacketSubCmd::PrevToClient: return 101;
+        default: return 0;
+        }
+    };
+    SetSubCommand(setter(subcmd));
+}
+
+FileChunkPacket::PacketSubCmd FileChunkPacket::SubCommand() const
+{
+    switch (GetSubCommand())
+    {
+    case 1: return PacketSubCmd::SendToServer;
+    case 2: return PacketSubCmd::SendToClient;
+    case 4: return PacketSubCmd::SendEndChunkToClient;
+    case 100: return PacketSubCmd::PrevToServer;
+    case 101: return PacketSubCmd::PrevToClient;
+    default: return PacketSubCmd::None;
+    }
+}

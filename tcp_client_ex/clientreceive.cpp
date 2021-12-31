@@ -5,7 +5,7 @@
 #include "iobuffer.h"
 #include "socketset.h"
 #include "winsocket.h"
-#include "printutil.h"
+#include "netLogObject.h"
 #include <ws2tcpip.h>
 
 ClientReceive::ClientReceive(std::shared_ptr<WinSocket> &sock, NetObject *parent)
@@ -78,7 +78,8 @@ void ClientReceive::DoTask()
         }
         else if (status < 0)
         {
-            PrintUtil::PrintMessage("ClientReceive::DoTask - error");
+            //PrintUtil::PrintMessage("ClientReceive::DoTask - error");
+            NetLogObject::LogObject().AppendLogMessage("ClientReceive::DoTask - error");
             break;
         }
         else
@@ -87,7 +88,8 @@ void ClientReceive::DoTask()
                 break;
         }
     }
-    PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_RED, "receive thread halted");
+    //PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_RED, "receive thread halted");
+    NetLogObject::LogObject().AppendLogMessage("receive thread halted", PrintUtil::ConsoleColor::COLOR_RED);
 }
 
 bool ClientReceive::OnInitialize()

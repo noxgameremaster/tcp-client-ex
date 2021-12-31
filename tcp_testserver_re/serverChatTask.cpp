@@ -73,12 +73,12 @@ bool ServerChatTask::ServerRemoteParseFileCommand(const std::string &remoteFileC
 
 void ServerChatTask::RemoteCommandEcho(socket_type sockId)
 {
-    EchoPacket *echo = new EchoPacket;
+    std::unique_ptr<EchoPacket> echo(new EchoPacket);
 
     echo->SetEchoMessage("server response as echo...");
     echo->SetSenderSocketId(sockId);
 
-    ForwardPacket(std::unique_ptr<NetPacket>(echo));
+    ForwardPacket(std::move(echo));
 }
 
 void ServerChatTask::RemoteCommandSendFile(const std::string &fileCmd, socket_type sockId)

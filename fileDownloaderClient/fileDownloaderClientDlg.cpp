@@ -8,10 +8,13 @@
 #include "fileDownloaderClientDlg.h"
 #include "afxdialogex.h"
 
-#include "eventworker.h"
+#include "coreui.h"
+#include "pageManager.h"
+#include "logPanel.h"
 #include "stringHelper.h"
 
 #pragma comment(lib, "tcpCommonSource.lib")
+#pragma comment(lib, "tcp_client_ex.lib")
 
 using namespace _StringHelper;
 
@@ -19,6 +22,24 @@ using namespace _StringHelper;
 #define new DEBUG_NEW
 #endif
 
+class CfileDownloaderClientDlg::MainWndCC : public CCObject
+{
+private:
+	CfileDownloaderClientDlg *m_parent;
+
+public:
+	MainWndCC(CfileDownloaderClientDlg *parent)
+		: CCObject(), m_parent(parent)
+	{ }
+
+	~MainWndCC() override
+	{ }
+
+	void GetNetLogMessage(const std::string &msg, uint32_t colr)
+	{
+		m_parent->AppendLogViewMessage(msg, colr);
+	}
+};
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
 
@@ -61,46 +82,58 @@ CfileDownloaderClientDlg::CfileDownloaderClientDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_FILEDOWNLOADERCLIENT_DIALOG, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_wndcc = std::make_unique<MainWndCC>(this);
+	m_coreUi = std::make_unique<CoreUi>();
 }
+
+CfileDownloaderClientDlg::~CfileDownloaderClientDlg()
+{ }
 
 void CfileDownloaderClientDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 
-	DDX_Control(pDX, MAIN_LOG_VIEWER, m_logViewer);
-	DDX_Control(pDX, LOG_VIEWER_PAGE_DOWN, m_btnPageDown);
-	DDX_Control(pDX, LOG_VIEWER_DOWN, m_btnDown);
-	DDX_Control(pDX, LOG_VIEWER_UP, m_btnUp);
-	DDX_Control(pDX, LOG_VIEWER_PAGEUP, m_btnPageUp);
 	DDX_Control(pDX, LOG_VIEWER_INSERT, m_btnLogTestInsert);
+	DDX_Control(pDX, LOG_VIEWER_TEST_START, m_btnStartTest);
+	DDX_Control(pDX, LOG_VIEWER_FOCUS_TOEND, m_btnFocusToEnd);
+	DDX_Control(pDX, MAIN_PAGE_PANEL, m_mainPanel);
+	DDX_Control(pDX, MAIN_LOG_PANEL, m_logPanel);
+}
+
+void CfileDownloaderClientDlg::AppendLogViewMessage(const std::string &message, uint32_t color)
+{
+	//m_logViewer.CreateNewLog(message, color);
+	OutputDebugString(toArray(message));
+}
+
+void CfileDownloaderClientDlg::InitPageManager()
+{
+	CWnd *logPanelFrame = GetDlgItem(MAIN_LOG_PANEL);
+
+	m_logPanelLoader = std::make_unique<PageManager>(*logPanelFrame, this);
+
+	std::unique_ptr<CWnd> logView(new LogPanel(IDD_LOGVIEW_PANEL, this));
+
+	m_logPanelLoader->MakePage("logview", std::move(logView));
+	m_logPanelLoader->ShowPage("logview");
 }
 
 void CfileDownloaderClientDlg::Initialize()
 {
-	EventWorker::Instance().Start();
+	m_coreUi->Initialize();
+	m_coreUi->OnForwardMessage().Connection(&MainWndCC::GetNetLogMessage, m_wndcc.get());
+
 	SetWindowText(toArray(std::string("Client Application")));
 
-	m_logViewer.CreateColumn("index", 50);
-	m_logViewer.CreateColumn("message", 400);
-	m_logViewer.CreateColumn("datetime", 200);
+	InitPageManager();
+	m_btnLogTestInsert.SetCallback([this]() { this->m_coreUi->DoTestEcho(); });
+	m_btnStartTest.SetCallback([this]() { this->m_coreUi->DoTestFilePacket(); });
 
-	m_btnPageUp.ModifyWndName("▲");
-	m_btnUp.ModifyWndName("△");
-	m_btnDown.ModifyWndName("▽");
-	m_btnPageDown.ModifyWndName("▼");
+	m_btnLogTestInsert.ModifyWndName("echo test");
+	m_btnStartTest.ModifyWndName("file req");
+	m_btnStartTest.ModifyWndName("go to end");
 
-	m_btnPageUp.SetCallback([this]() { this->m_logViewer.ViewerScrolling("pageup"); });
-	m_btnUp.SetCallback([this]() { this->m_logViewer.ViewerScrolling("up"); });
-	m_btnDown.SetCallback([this]() { this->m_logViewer.ViewerScrolling("down"); });
-	m_btnPageDown.SetCallback([this]() { this->m_logViewer.ViewerScrolling("pagedown"); });
-	m_btnLogTestInsert.SetCallback([this]() { this->m_logViewer.CreateNewLog("added log message--!"); m_logViewer.UpdateViewer(); });
-
-	int rep = -1, count = 30;
-
-	while (++rep < count)
-		m_logViewer.CreateNewLog(stringFormat("log message - %d", rep));
-
-	m_logViewer.UpdateViewer();
+	m_coreUi->StartNetClient();
 }
 
 BEGIN_MESSAGE_MAP(CfileDownloaderClientDlg, CDialogEx)
@@ -208,8 +241,17 @@ BOOL CfileDownloaderClientDlg::PreTranslateMessage(MSG *pMsg)
 
 void CfileDownloaderClientDlg::OnClose()
 {
-	EventWorker::Instance().Stop();
+	ShowWindow(SW_HIDE);
+	if (m_logPanelLoader)
+		m_logPanelLoader.reset();
 
+	//m_logViewer.StopLogViewThread();
+	if (m_coreUi)
+	{
+		m_coreUi->Deinitialize();
+		m_coreUi.reset();
+	}
+	OutputDebugString("shutdown app");
 	CDialogEx::OnClose();
 }
 

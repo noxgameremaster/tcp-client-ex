@@ -75,6 +75,18 @@
     <ClCompile Include="ioFileStream.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="netLogObject.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="runClock.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="filepacketupload.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="downloadCompletePacket.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="winsocket.h">
@@ -138,6 +150,18 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="ioFileStream.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="netLogObject.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="runClock.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="filepacketupload.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="downloadCompletePacket.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

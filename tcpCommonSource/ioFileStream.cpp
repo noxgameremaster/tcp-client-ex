@@ -86,3 +86,17 @@ bool IOFileStream::FileSize(const std::string &fileUrl, size_t &destSize)
     destSize = static_cast<size_t>(NAMESPACE_FILESYSTEM::file_size(fileUrl));
     return true;
 }
+
+void IOFileStream::UrlSeparatePathAndName(const std::string &url, std::string &path, std::string &name)
+{
+    size_t findpos = url.find_last_of('\\');
+    bool hasDirToken = std::string::npos == findpos;
+
+    path = hasDirToken ? "" : url.substr(0, findpos);
+    name = hasDirToken ? url : url.substr(findpos);
+}
+
+void IOFileStream::UrlSeparatePathAndName(std::string &path, std::string &name)
+{
+    UrlSeparatePathAndName(m_filename, path, name);
+}

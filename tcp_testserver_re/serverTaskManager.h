@@ -29,6 +29,7 @@ public:
     ~ServerTaskManager() override;
 
 private:
+    bool CheckHasIO() const;
     void DequeueIOList();
     bool InsertServerTask(std::unique_ptr<ServerTask> &&servTask);
     bool InsertServerSharedTask(const std::string &taskKey, std::shared_ptr<ServerTask> sharedTask);
@@ -57,7 +58,7 @@ private:
     DECLARE_SIGNAL(OnReleaseFileStream, std::vector<uint8_t>, std::string)
 
 private:
-    std::mutex m_lock;
+    mutable std::mutex m_lock;
 };
 
 #endif

@@ -81,6 +81,9 @@ public:
     {
         return m_filename;
     }
+
+    static void UrlSeparatePathAndName(const std::string &url, std::string &path, std::string &name);
+    void UrlSeparatePathAndName(std::string &path, std::string &name);
 };
 
 #endif

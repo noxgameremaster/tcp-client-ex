@@ -25,6 +25,7 @@ public:
     ~NetFlowControl();
 
 private:
+    bool CheckHasIO() const;
     void CheckIOList();
     virtual bool OnInitialize();
     virtual void OnDeinitialize();
@@ -48,9 +49,12 @@ public:
         OUT
     };
     void Enqueue(std::unique_ptr<NetPacket> &&packet, IOType ioType);
+    void SendEchoToServer(const std::string &echoMsg);
+
+    void TestSendFilePacket(const std::string &fileInfo);
 
 private:
-    std::mutex m_lock;
+    mutable std::mutex m_lock;
 };
 
 #endif

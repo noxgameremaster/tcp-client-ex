@@ -86,8 +86,8 @@ bool LargeFile::SetFileParams(const std::string &fileName, const std::string &pa
         return fail;
     }
 
-    if (!fileSize)
-        return false;
+    /*if (!fileSize)
+        return false;*/
 
     *bRet = true;
     m_filesize = fileSize;
@@ -127,12 +127,12 @@ void LargeFile::SlotSetFileParams(const std::string &fileName, const std::string
     SetFileParams(fileName, pathName, fileSize);
 }
 
-void LargeFile::SlotWriteChunk(const std::vector<uint8_t> &srcChunk)
+void LargeFile::SlotWriteChunk(const std::vector<uint8_t> &srcChunk, bool ended)
 {
     bool result = Write(srcChunk.data(), srcChunk.size());
 
     if (result)
         m_writeAmount += srcChunk.size();
-    EventWorker::Instance().AppendTask(&m_OnWriteChunk, result ? false : true, m_writeAmount, m_filesize);
+    EventWorker::Instance().AppendTask(&m_OnWriteChunk, result ? false : true, m_writeAmount, m_filesize, ended);
 }
 

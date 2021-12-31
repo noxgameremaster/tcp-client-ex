@@ -7,6 +7,8 @@
 #include "testpacket.h"
 #include "echopacket.h"
 #include "filepacket.h"
+#include "filepacketupload.h"
+#include "downloadCompletePacket.h"
 #include "filechunkpacket.h"
 
 PacketProducer::PacketProducer()
@@ -33,36 +35,21 @@ bool PacketProducer::PacketPostProc()
     return bReadok;
 }
 
-bool PacketProducer::CreatePacket(const char &packetId)
+std::unique_ptr<NetPacket> PacketProducer::CreatePacket(const char &packetId)
 {
     m_createdPacket.reset();
 
-    do
+    switch (packetId)
     {
-        switch (packetId)
-        {
-        case PacketOrderTable<ChatPacket>::GetId():
-            m_createdPacket = std::make_unique<ChatPacket>();
-            break;
-        case PacketOrderTable<TestPacket>::GetId():
-            m_createdPacket = std::make_unique<TestPacket>();
-            break;
-        case PacketOrderTable<EchoPacket>::GetId():
-            m_createdPacket = std::make_unique<EchoPacket>();
-            break;
-        case PacketOrderTable<FilePacket>::GetId():
-            m_createdPacket = std::make_unique<FilePacket>();
-            break;
-        case PacketOrderTable<FileChunkPacket>::GetId():
-            m_createdPacket = std::make_unique<FileChunkPacket>();
-            break;
-        default:
-            return false;
-        }
+    case PacketOrderTable<ChatPacket>::GetId(): return std::make_unique<ChatPacket>();
+    case PacketOrderTable<TestPacket>::GetId(): return std::make_unique<TestPacket>();
+    case PacketOrderTable<EchoPacket>::GetId(): return std::make_unique<EchoPacket>();
+    case PacketOrderTable<FilePacket>::GetId(): return std::make_unique<FilePacket>();
+    case PacketOrderTable<FileChunkPacket>::GetId(): return std::make_unique<FileChunkPacket>();
+    case PacketOrderTable<FilePacketUpload>::GetId(): return std::make_unique<FilePacketUpload>();
+    case PacketOrderTable<DownloadCompletePacket>::GetId(): return std::make_unique<DownloadCompletePacket>();
+    default: return nullptr;
     }
-    while (false);
-
-    return true;
 }
 
 bool PacketProducer::MakePacketImpl(uint32_t offset)
@@ -81,8 +68,13 @@ bool PacketProducer::MakePacketImpl(uint32_t offset)
 
     m_headerdata->GetProperty<HeaderData::FieldInfo::MAIN_CMD_TYPE>(type);
 
-    if (!CreatePacket(type))
-        return false;       //unknown packet here
+    {
+        auto createdPacket = CreatePacket(type);
+
+        if (!createdPacket)
+            return false;       //unknown packet here
+        m_createdPacket = std::move(createdPacket);
+    }
 
     size_t length = 0;
 
@@ -146,6 +138,9 @@ void PacketProducer::Scan()
         }
         m_tempStxposList.push_back(readpos);
         readpos += sizeof(stx);
+
+        if (m_tempStxposList.size() > 10000) //testing
+            m_tempStxposList.clear(); //testing
 
         int length = 0;
 

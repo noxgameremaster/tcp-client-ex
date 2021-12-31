@@ -20,8 +20,10 @@ void ServerEchoTask::SendEchoResponse(const socket_type &senderId, const std::st
     std::unique_ptr<ChatPacket> msg(new ChatPacket);
 
     msg->SetChatMessage(stringFormat("server response: %s", echoMsg));
-    msg->SetColorId(static_cast<uint8_t>(PrintUtil::ConsoleColor::COLOR_DARKBLUE));
+    msg->SetColorId(static_cast<uint8_t>(PrintUtil::ConsoleColor::COLOR_BLUE));
     msg->SetSenderSocketId(senderId);
+
+    ForwardPacket(std::move(msg));
 }
 
 void ServerEchoTask::DoTask(std::unique_ptr<NetPacket> &&packet)

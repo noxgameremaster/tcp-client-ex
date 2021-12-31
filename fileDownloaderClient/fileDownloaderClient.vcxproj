@@ -95,7 +95,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>..\tcpCommonSource;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\tcpCommonSource;..\tcp_client_ex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -145,7 +145,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>..\tcpCommonSource;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\tcpCommonSource;..\tcp_client_ex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -191,19 +191,32 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="cbufferdc.h" />
+    <ClInclude Include="coreui.h" />
+    <ClInclude Include="cTabPage.h" />
     <ClInclude Include="fileDownloaderClient.h" />
     <ClInclude Include="fileDownloaderClientDlg.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="groupbox.h" />
+    <ClInclude Include="logPanel.h" />
     <ClInclude Include="logViewer.h" />
+    <ClInclude Include="mymemdc.h" />
+    <ClInclude Include="pageManager.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="prettyButton.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="cbufferdc.cpp" />
+    <ClCompile Include="coreui.cpp" />
+    <ClCompile Include="cTabPage.cpp" />
     <ClCompile Include="fileDownloaderClient.cpp" />
     <ClCompile Include="fileDownloaderClientDlg.cpp" />
+    <ClCompile Include="groupbox.cpp" />
+    <ClCompile Include="logPanel.cpp" />
     <ClCompile Include="logViewer.cpp" />
+    <ClCompile Include="pageManager.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

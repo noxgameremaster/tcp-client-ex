@@ -5,8 +5,12 @@
 #include "clientsend.h"
 #include "winsocket.h"
 #include "eventworker.h"
+#include "stringHelper.h"
+#include "netLogObject.h"
 
 #include <iostream>
+
+using namespace _StringHelper;
 
 NetClient::NetClient()
     : NetService()
@@ -34,13 +38,14 @@ void NetClient::ToggleEventManager(bool isOn)
 void NetClient::OnError(const std::string &title, const std::string &errorMessage)
 {
     if ("serverError" == title)
-        std::cout << errorMessage << std::endl;
+        NetLogObject::LogObject().AppendLogMessage(errorMessage, PrintUtil::ConsoleColor::COLOR_RED);
 }
 
 bool NetClient::StandBySocket()
 {
     std::unique_ptr<WinSocket> sock(new WinSocket);
 
+    ShareOption(sock.get());
     if (!sock->CreateSocket())
         return false;
     if (!sock->Connect())
@@ -85,7 +90,8 @@ bool NetClient::OnInitialize()
             throw false;
     };
 
-    SetNetOption("127.0.0.1", 18590);
+    //SetNetOption("125.180.25.219", 8282);
+    SetNetOption("192.168.0.14", 8282);
 
     try
     {
@@ -103,8 +109,11 @@ bool NetClient::OnInitialize()
 
 bool NetClient::OnStarted()
 {
-    m_flowcontrol->Startup();
-    return true;
+    bool end = m_flowcontrol->Startup();
+
+    NetLogObject::LogObject().AppendLogMessage(stringFormat("netclient::onstarted::show_result::%s", end ? "ok" : "ng"),
+        end ? PrintUtil::ConsoleColor::COLOR_BLUE : PrintUtil::ConsoleColor::COLOR_RED);
+    return end;
 }
 
 void NetClient::OnStopped()
@@ -121,4 +130,16 @@ void NetClient::SlotReceivePacket(std::unique_ptr<NetPacket> &&packet)
 {
     if (m_flowcontrol)
         m_flowcontrol->Enqueue(std::move(packet), NetFlowControl::IOType::IN);
+}
+
+void NetClient::ClientSendEcho()
+{
+    if (m_flowcontrol)
+        m_flowcontrol->SendEchoToServer("echo test message");
+}
+
+void NetClient::ClientTestSendFileRequest(const std::string &req)
+{
+    if (m_flowcontrol)
+        m_flowcontrol->TestSendFilePacket(req);
 }

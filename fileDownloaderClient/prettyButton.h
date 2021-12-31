@@ -17,6 +17,9 @@ public:
     explicit PrettyButton();
     ~PrettyButton() override;
 
+private:
+    void DrawStuff(CDC &dc);
+
 protected:
     afx_msg void OnPaint();
     DECLARE_MESSAGE_MAP()

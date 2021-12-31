@@ -140,7 +140,26 @@ void FilePacket::SetFilePacketDirection(FilePacketDirection dir)
 
 bool FilePacket::ClientWrite()
 {
+    SetSubCommand(1);
+
+    std::array<char, 255> data;
+
+    data.fill(0);
+    std::copy(m_filename.begin(), m_filename.end(), data.begin());
+
     try
+    {
+        for (const auto &c : data)
+            WriteCtx(c);
+    }
+    catch (const bool &fail)
+    {
+        return fail;
+    }
+    return true;
+
+
+    /*try
     {
         WriteCtx(m_reportError);
         WriteCtx(m_filenameLength);
@@ -151,7 +170,7 @@ bool FilePacket::ClientWrite()
     {
         return fail;
     }
-    return true;
+    return true;*/
 }
 
 bool FilePacket::ServerWrite()

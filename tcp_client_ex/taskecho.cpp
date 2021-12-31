@@ -2,7 +2,7 @@
 #include "taskecho.h"
 #include "echopacket.h"
 #include "stringhelper.h"
-#include "printutil.h"
+#include "netLogObject.h"
 
 using namespace _StringHelper;
 
@@ -23,7 +23,8 @@ void TaskEcho::ReversalEchoPacket()
 
 void TaskEcho::PrintEchoMessage(const std::string &echoMessage) const
 {
-    PrintUtil::PrintMessage(stringFormat("echo message: %s", echoMessage));
+    //PrintUtil::PrintMessage(stringFormat("echo message: %s", echoMessage));
+    NetLogObject::LogObject().AppendLogMessage(stringFormat("echo message: %s", echoMessage));
 }
 
 void TaskEcho::DoTask(std::unique_ptr<NetPacket>&& packet)

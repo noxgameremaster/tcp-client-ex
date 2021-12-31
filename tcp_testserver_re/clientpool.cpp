@@ -56,6 +56,7 @@ bool ClientPool::Erase(WinSocket *sock)
         return false;
 
     EventWorker::Instance().AppendTask(&m_OnExitUser, sockId);
+    return true;
 }
 
 bool ClientPool::FindUserFromId(socket_type socketId, std::weak_ptr<WinSocket> &getsocket)

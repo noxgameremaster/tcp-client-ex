@@ -10,8 +10,8 @@
 class HeaderData : public BinaryStream
 {
 public:
-    static constexpr int header_stx = 0xdeadface;
-    static constexpr int header_terminal = 0xfadeface;
+    static constexpr int header_stx = 0xfafefefa; //0xdeadface;
+    static constexpr int header_terminal = 0xfefafafe; //0xfadeface;
 
 private:
     struct HeaderVariantBase

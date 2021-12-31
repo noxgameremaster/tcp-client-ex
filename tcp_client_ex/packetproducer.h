@@ -32,7 +32,7 @@ public:
 
 private:
     bool PacketPostProc();
-    bool CreatePacket(const char &packetId);
+    std::unique_ptr<NetPacket> CreatePacket(const char &packetId);
 
     bool MakePacketImpl(uint32_t offset);
 

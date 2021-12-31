@@ -71,7 +71,7 @@ void ServerFileTask::SendFileStream(const std::vector<uint8_t> &stream, const st
 
     chunk->SetFileChunk(stream);
     chunk->SetFileUrl(filename);
-    chunk->SetSubCommand(0);
+    chunk->ChangeSubCommand(FileChunkPacket::PacketSubCmd::PrevToClient);
 
     ForwardPacket(std::move(chunk));
 }

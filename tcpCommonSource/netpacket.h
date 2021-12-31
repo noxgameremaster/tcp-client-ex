@@ -68,8 +68,9 @@ public:
     }
 
 protected:
-    virtual void SetSubCommand(uint8_t subCmd);
+    void SetSubCommand(uint8_t subCmd);
     uint8_t GetSubCommand() const;
+    bool PacketError(Mode workType);
 };
 
 #endif

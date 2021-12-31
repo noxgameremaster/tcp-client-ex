@@ -2,7 +2,7 @@
 #include "taskchatmessage.h"
 #include "chatpacket.h"
 #include "stringhelper.h"
-#include "printutil.h"
+#include "netLogObject.h"
 
 using namespace _StringHelper;
 
@@ -23,9 +23,9 @@ void TaskChatMessage::PrintMessage(const std::string &message, uint8_t colr)
     std::string form = stringFormat("message: %s", message);
 
     if (CheckValidColor(colr))
-        PrintUtil::PrintMessage(static_cast<PrintUtil::ConsoleColor>(colr), form);
+        NetLogObject::LogObject().AppendLogMessage(form, static_cast<PrintUtil::ConsoleColor>(colr));
     else
-        PrintUtil::PrintMessage(form);
+        NetLogObject::LogObject().AppendLogMessage(form);
 }
 
 void TaskChatMessage::DoTask(std::unique_ptr<NetPacket> &&packet)

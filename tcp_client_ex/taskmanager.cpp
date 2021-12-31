@@ -8,6 +8,7 @@
 #include "iobuffer.h"
 #include "echopacket.h"
 #include "filechunkpacket.h"
+#include "filepacketupload.h"
 #include "largefile.h"
 
 TaskManager::TaskManager(NetObject *parent)
@@ -53,6 +54,7 @@ bool TaskManager::OnInitialize()
 
     InsertSharedTask(sharedFileTask->TaskName(), sharedFileTask);
     InsertSharedTask(FileChunkPacket::TaskName(), sharedFileTask);
+    InsertSharedTask(FilePacketUpload::TaskName(), sharedFileTask);
     return true;
 }
 
@@ -93,10 +95,10 @@ void TaskManager::OnStopped()
 
 void TaskManager::SendOnInitial()
 {
-    std::unique_ptr<EchoPacket> packet(new EchoPacket);
+    /*std::unique_ptr<EchoPacket> packet(new EchoPacket);
 
     packet->SetEchoMessage("connect completed");
-    m_taskthread->PushBack(std::move(packet));
+    m_taskthread->PushBack(std::move(packet));*/
 }
 
 void TaskManager::InputTask(std::unique_ptr<NetPacket> &&packet)

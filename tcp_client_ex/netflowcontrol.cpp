@@ -2,7 +2,9 @@
 #include "netflowcontrol.h"
 #include "taskmanager.h"
 #include "iobuffer.h"
-#include "netpacket.h"
+#include "echoPacket.h"
+#include "filepacket.h"
+#include "filepacketupload.h"
 #include "loopThread.h"
 
 NetFlowControl::NetFlowControl()
@@ -11,14 +13,23 @@ NetFlowControl::NetFlowControl()
     m_taskmanager = std::make_shared<TaskManager>(this);
     m_ioThread = std::make_unique<LoopThread>();
 
+    m_ioThread->SetWaitCondition([this]() { return this->CheckHasIO(); });
     m_ioThread->SetTaskFunction([this]() { this->CheckIOList(); });
 }
 
 NetFlowControl::~NetFlowControl()
 { }
 
+bool NetFlowControl::CheckHasIO() const
+{
+    std::lock_guard<std::mutex> guard(m_lock);
+
+    return (m_inpacketList.size() + m_outpacketList.size()) > 0;
+}
+
 void NetFlowControl::CheckIOList()
 {
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
     {
         std::lock_guard<std::mutex> lock(m_lock);
         while (m_inpacketList.size())
@@ -36,7 +47,6 @@ void NetFlowControl::CheckIOList()
             m_outpacketList.pop_front();
         }
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(30));
 }
 
 bool NetFlowControl::OnInitialize()
@@ -98,7 +108,24 @@ void NetFlowControl::Enqueue(std::unique_ptr<NetPacket>&& packet, IOType ioType)
 
             ioList->push_back(std::move(packet));
         }
+        m_ioThread->Notify();
     }
     while (false);
 }
 
+void NetFlowControl::SendEchoToServer(const std::string &echoMsg)
+{
+    std::unique_ptr<EchoPacket> echo(new EchoPacket);
+
+    echo->SetEchoMessage(echoMsg);
+    Enqueue(std::move(echo), IOType::IN);
+}
+
+void NetFlowControl::TestSendFilePacket(const std::string &fileInfo)
+{
+    std::unique_ptr<FilePacketUpload> filepack(new FilePacketUpload);
+
+    filepack->SetUploadPath(fileInfo);
+    filepack->ChangeSubCommand(FilePacketUpload::PacketSubCmd::TestSendToServer);
+    Enqueue(std::move(filepack), IOType::IN);
+}

@@ -6,7 +6,9 @@ class ChatPacket;
 class EchoPacket;
 class TestPacket;
 class FilePacket;
+class FilePacketUpload;
 class FileChunkPacket;
+class DownloadCompletePacket;
 
 #ifndef SET_PACKET_ORDER
 #define SET_PACKET_ORDER(_Ty, val) \
@@ -25,10 +27,12 @@ private:
     { };
 
     SET_PACKET_ORDER(ChatPacket, 1);
-    SET_PACKET_ORDER(EchoPacket, 2);
-    SET_PACKET_ORDER(TestPacket, 3);
-    SET_PACKET_ORDER(FilePacket, 4);
-    SET_PACKET_ORDER(FileChunkPacket, 5);
+    SET_PACKET_ORDER(FilePacketUpload, 2);
+    SET_PACKET_ORDER(FilePacket, 3);
+    SET_PACKET_ORDER(FileChunkPacket, 4);
+    SET_PACKET_ORDER(DownloadCompletePacket, 5);
+    SET_PACKET_ORDER(TestPacket, 6);
+    SET_PACKET_ORDER(EchoPacket, 7);
 
 public:
     static constexpr int GetId()

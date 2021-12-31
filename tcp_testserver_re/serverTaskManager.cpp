@@ -20,6 +20,7 @@ ServerTaskManager::ServerTaskManager()
     : NetService()
 {
     m_ioThread = std::make_unique<LoopThread>();
+    m_ioThread->SetWaitCondition([this]() { return this->CheckHasIO(); });
     m_ioThread->SetTaskFunction([this]() { this->DequeueIOList(); });
     m_servTaskThread = std::make_unique<ServerTaskThread>(this);
 }
@@ -27,8 +28,16 @@ ServerTaskManager::ServerTaskManager()
 ServerTaskManager::~ServerTaskManager()
 { }
 
+bool ServerTaskManager::CheckHasIO() const
+{
+    std::lock_guard scope(m_lock);
+
+    return (m_inpacketList.size() + m_outpacketList.size()) > 0;
+}
+
 void ServerTaskManager::DequeueIOList()
 {
+    std::this_thread::sleep_for(std::chrono::microseconds(3));
     std::unique_ptr<NetPacket> packet;
     {
         std::lock_guard<std::mutex> guard(m_lock);
@@ -47,7 +56,6 @@ void ServerTaskManager::DequeueIOList()
             m_outpacketList.pop_front();
         }
     }
-    std::this_thread::sleep_for(std::chrono::microseconds(30));
 }
 
 bool ServerTaskManager::InsertServerTask(std::unique_ptr<ServerTask> &&servTask)
@@ -123,7 +131,7 @@ void ServerTaskManager::FetchFileStream(const std::string &)
     if (!m_servFile)
         return;
     
-    std::vector<uint8_t> buffer(static_cast<const size_t>(1024));
+    std::vector<uint8_t> buffer(static_cast<const size_t>(4096));
 
     if (!m_servFile->Read(buffer))
         return;
@@ -149,6 +157,7 @@ void ServerTaskManager::Enqueue(std::unique_ptr<NetPacket> &&packet, TaskIOType 
 
             ioList->push_back(std::move(packet));
         }
+        m_ioThread->Notify();
     }
     while (false);
 }

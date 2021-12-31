@@ -1,6 +1,9 @@
 
 #include "pch.h"
 #include "logViewer.h"
+#include "cbufferdc.h"
+#include "resource.h"
+#include "loopThread.h"
 #include "stringHelper.h"
 
 #include <chrono>
@@ -24,6 +27,8 @@ class LogViewer::LogData
 private:
     bool m_selected;
     int m_index;
+    COLORREF m_textColor;
+    COLORREF m_backgroundColor;
     std::string m_message;
     std::string m_datetime;
     std::shared_ptr<LogDataAlive> m_alive;
@@ -32,25 +37,16 @@ public:
     LogData()
         : m_alive(new LogDataAlive)
     {
-        m_alive->m_parent = this;
         m_selected = false;
+        m_alive->m_parent = this;
         m_index = ++s_increaseIndex;
+        m_textColor = RGB(0, 0, 0);
+        m_backgroundColor = RGB(255, 255, 255);
     }
 };
 
-struct LogViewer::ViewerImpl
-{
-    COLORREF m_bkColor;
-    COLORREF m_foreColor;
-
-public:
-    ViewerImpl()
-        : m_bkColor(RGB(255, 0, 255)), m_foreColor(RGB(0, 255, 0))
-    { }
-};
-
 LogViewer::LogViewer()
-    : CListCtrl(), m_viewImpl(new ViewerImpl)
+    : CListCtrl()
 {
     m_logdataPos = m_logdataList.cbegin();
 
@@ -58,6 +54,10 @@ LogViewer::LogViewer()
     m_scrollMap.emplace("pageup", [this]() { return this->PageUpViewer(); });
     m_scrollMap.emplace("down", [this]() { return this->DownViewer(); });
     m_scrollMap.emplace("pagedown", [this]() { return this->PageDownViewer(); });
+    m_scrollMap.emplace("end", [this]() { return this->MoveToPageEnd(); });
+    m_addMsg = 0;
+    m_updateThread = std::make_unique<LoopThread>();
+    m_goToEnd = true;
 }
 
 LogViewer::~LogViewer()
@@ -65,22 +65,53 @@ LogViewer::~LogViewer()
 
 void LogViewer::UpdateViewer()
 {
-    SetRedraw(false);
-
-    DeleteAllItems();
     std::list<log_data_ty>::const_iterator walkpos = m_logdataPos;
     int maxCount = max_appear_slot_count;
     int curCount = 0;
 
     while (walkpos != m_logdataList.cend() && maxCount--)
     {
-        InsertItem(curCount, toArray(std::to_string(walkpos->get()->m_index)));
-        SetItemText(curCount, 1, toArray(walkpos->get()->m_message));
-        SetItemText(curCount, 2, toArray(walkpos->get()->m_datetime));
-        ++curCount;
-        ++walkpos;
+        if (walkpos != m_logdataList.cend())
+        {
+            if (GetItemState(curCount, LVIS_FOCUSED | LVIS_SELECTED))
+                SetItemState(curCount, 0, LVIS_FOCUSED | LVIS_SELECTED);
+            SetItemText(curCount, 0, toArray(std::to_string(walkpos->get()->m_index)));
+            SetItemText(curCount, 1, toArray(walkpos->get()->m_message));
+            SetItemText(curCount, 2, toArray(walkpos->get()->m_datetime));
+            ++curCount;
+            ++walkpos;
+        }
+        else
+        {
+            SetItemText(curCount, 0, "");
+            SetItemText(curCount, 1, "");
+            SetItemText(curCount, 2, "");
+        }
     }
-    SetRedraw(true);
+}
+
+void LogViewer::ConditionalUpdateViewer()
+{
+    std::lock_guard<std::mutex> guard(m_lock);
+
+    if (std::distance(m_logdataPos, m_logdataList.cend()) <= max_appear_slot_count)
+        UpdateViewer();
+}
+
+bool LogViewer::IsUpdateItem() const
+{
+    return m_addMsg > 0;
+}
+
+void LogViewer::UpdateThreadTask()
+{
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+    m_addMsg = 0;
+    if (m_goToEnd)
+        ViewerScrolling("end");
+    else
+        ConditionalUpdateViewer();
 }
 
 std::string LogViewer::CurrentLocalTime()
@@ -95,27 +126,35 @@ std::string LogViewer::CurrentLocalTime()
     return buffer;
 }
 
-void LogViewer::CreateNewLog(const std::string &message)
+void LogViewer::CreateNewLog(const std::string &message, uint32_t msgColor)
 {
     log_data_ty log(new LogData);
 
     log->m_message = message;
     log->m_datetime = CurrentLocalTime();
+    log->m_textColor = msgColor;
 
-    m_logdataList.push_back(std::move(log));
-    if (m_logdataPos == m_logdataList.cend())
-        m_logdataPos = m_logdataList.cbegin();
-    m_logdataEndpos = m_logdataPos;
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
 
-    int count = max_appear_slot_count;
+        m_logdataList.push_back(std::move(log));
+        if (m_logdataPos == m_logdataList.cend())
+            m_logdataPos = m_logdataList.cbegin();
+        m_logdataEndpos = m_logdataPos;
 
-    while (m_logdataEndpos != m_logdataList.cend() && count--)
-        ++m_logdataEndpos;
+        int count = max_appear_slot_count;
+
+        while (m_logdataEndpos != m_logdataList.cend() && count--)
+            ++m_logdataEndpos;
+    }
+
+    ++m_addMsg;
+    m_updateThread->Notify();
 }
 
 void LogViewer::CreateColumn(const std::string &columnName, const int &width)
-{
-    InsertColumn(s_columnIndex++, toArray(columnName), LVCFMT_LEFT | LVCFMT_FIXED_WIDTH, width);
+{    
+    InsertColumn(s_columnIndex++, toArray(columnName), LVCFMT_LEFT, width);
 }
 
 bool LogViewer::UpViewer()
@@ -174,6 +213,22 @@ bool LogViewer::PageDownViewer()
     return count != max_appear_slot_count;
 }
 
+bool LogViewer::MoveToPageEnd()
+{
+    if (m_logdataList.empty())
+        return false;
+
+    auto endPos = m_logdataList.cend();
+    auto startPos = endPos;
+    int count = max_appear_slot_count;
+
+    while (startPos != m_logdataList.cbegin() && (count--))
+        --startPos;
+    m_logdataPos = startPos;
+    m_logdataEndpos = endPos;
+    return true;
+}
+
 LogViewer::LogData *LogViewer::GetLogData(int index)
 {
     if (index < 0)
@@ -182,17 +237,15 @@ LogViewer::LogData *LogViewer::GetLogData(int index)
     if (m_logdataPos == m_logdataList.cend())
         return nullptr;
 
-    int count = index + 1;
+    int count = 0;
     auto dataPos = m_logdataPos;
 
-    while (count --)
+    while (count < index)
     {
         ++dataPos;
         if (dataPos == m_logdataList.cend())
-        {
-            --dataPos;
-            break;
-        }
+            return nullptr;
+        count++;
     }
 
     return dataPos->get();
@@ -200,6 +253,7 @@ LogViewer::LogData *LogViewer::GetLogData(int index)
 
 void LogViewer::ViewerScrolling(const std::string &action)
 {
+    std::lock_guard<std::mutex> guard(m_lock);
     auto scrollIterator = m_scrollMap.find(action);
 
     if (scrollIterator == m_scrollMap.cend())
@@ -209,8 +263,33 @@ void LogViewer::ViewerScrolling(const std::string &action)
         UpdateViewer();
 }
 
+void LogViewer::SetFocusToEnd()
+{
+    m_goToEnd = true;
+}
+
+void LogViewer::StopLogViewThread()
+{
+    if (m_updateThread)
+    {
+        m_updateThread->Notify();
+        m_updateThread->Shutdown();
+    }
+}
+
+void LogViewer::DrawStuff(CDC &pDC)
+{
+    CRect rc;
+
+    GetWindowRect(&rc);
+    ScreenToClient(&rc);
+    pDC.FillSolidRect(rc, ::GetSysColor(COLOR_WINDOW));
+}
+
 BEGIN_MESSAGE_MAP(LogViewer, CListCtrl)
     ON_WM_PAINT()
+    ON_WM_ERASEBKGND()
+    ON_WM_LBUTTONDOWN()
     ON_NOTIFY_REFLECT(NM_CUSTOMDRAW, OnNMCustomdraw)
 END_MESSAGE_MAP()
 
@@ -238,76 +317,112 @@ BOOL LogViewer::PreTranslateMessage(MSG *pMsg)
 
 void LogViewer::PreSubclassWindow()
 {
-    SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+    SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_SINGLEROW | LVS_EX_DOUBLEBUFFER);
+
+    CRect headerRect;
+    auto headCtrl = GetHeaderCtrl();
+
+    headCtrl->GetClientRect(&headerRect);
+
+    CreateColumn("Index", 50);
+    CreateColumn("message", 400);
+    CreateColumn("datetime", 200);
+
+    GetClientRect(&m_updateLocation);
+    m_updateLocation.top = headerRect.bottom;
+    m_updateThread->SetTaskFunction([this]() { this->UpdateThreadTask(); });
+    m_updateThread->SetWaitCondition([this]() { return this->IsUpdateItem(); });
+    m_updateThread->Startup();
+
+    int count = max_appear_slot_count;
+
+    while (count--)
+        InsertItem(count, "");
+
+    headCtrl->LockWindowUpdate();
+}
+
+BOOL LogViewer::OnEraseBkgnd(CDC */*pDC*/)
+{
+    return TRUE;
 }
 
 void LogViewer::OnPaint()
 {
-    CListCtrl::OnPaint();
-    CClientDC cdc(this);
-    CBrush brush;
-    CPen pen(PS_SOLID, 2, RGB(112, 146, 190));
-    CPen *oldpen = cdc.SelectObject(&pen);
-    CRect rect;
+    CBufferDC cdc(this);
 
-    brush.CreateStockObject(NULL_BRUSH);
-    //brush.CreateSolidBrush(RGB(0, 162, 232));
+    DrawStuff(cdc);
+    //CRect rcClient;         //here
+    //GetClientRect(rcClient);
 
-    CBrush *oldBrush = cdc.SelectObject(&brush);
+    //CPaintDC dc(this);
+    //CDC dcMem;
+    //dcMem.CreateCompatibleDC(&dc);
 
-    GetClientRect(&rect);
-    cdc.Rectangle(&rect);
+    //CBitmap bmMem;
+    //bmMem.CreateCompatibleBitmap(&dc, rcClient.Width(), rcClient.Height());
+    //CBitmap *pbmOld = dcMem.SelectObject(&bmMem);
 
-    int oldMode = SetBkMode(cdc, TRANSPARENT);
+    //DrawStuff(&dcMem);
 
-    cdc.SetTextColor(RGB(241, 241, 241));
+    //this->DefWindowProc(WM_PAINT, (WPARAM)dcMem.m_hDC, (LPARAM)0);
 
-    //DrawText(cdc, m_name.c_str(), m_name.length(), rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    //dc.BitBlt(0, 0, rcClient.Width(), rcClient.Height(), &dcMem, 0, 0, SRCCOPY);
+    //dcMem.SelectObject(pbmOld);
 
-    SetBkMode(cdc, oldMode);
-    cdc.SelectObject(oldpen);
-    cdc.SelectObject(oldBrush);
+    //CHeaderCtrl *pCtrl = this->GetHeaderCtrl();
+    //if (::IsWindow(pCtrl->GetSafeHwnd()))
+    //{
+    //    CRect aHeaderRect;
+
+    //    pCtrl->GetClientRect(&aHeaderRect);
+    //    pCtrl->RedrawWindow(&aHeaderRect);
+    //}
+}
+
+void LogViewer::OnLButtonDown(UINT nFlags, CPoint point)
+{
+    CListCtrl::OnLButtonDown(nFlags, point);
+
+    if (m_goToEnd)
+        m_goToEnd = false;
 }
 
 void LogViewer::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)
 {
     LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
     NMTVCUSTOMDRAW *pLVCD = reinterpret_cast<NMTVCUSTOMDRAW *>(pNMHDR);
+
     switch (pNMCD->dwDrawStage)
     {
     case CDDS_PREPAINT:
         // Item prepaint notification.
         *pResult = CDRF_NOTIFYITEMDRAW;
         break;
+
     case CDDS_ITEMPREPAINT:
-    {
-        OutputDebugString(toArray(std::to_string(pNMCD->dwItemSpec)));
-        LogData *logData = GetLogData(pNMCD->dwItemSpec);
-
-        if (logData == nullptr)
-            break;
-        if (GetItemState(pNMCD->dwItemSpec, LVIS_FOCUSED | LVIS_SELECTED) == (LVIS_FOCUSED | LVIS_SELECTED))
         {
-            if (!m_latestSelectSel.expired())
+            LogData *logData = GetLogData(pNMCD->dwItemSpec);
+
+            if (logData == nullptr)
+                break;
+
+            if (pNMCD->uItemState & (LVIS_SELECTED | LVIS_FOCUSED))
+                logData->m_selected ^= true;
+
+            if (logData->m_selected)
             {
-                auto prevSel = m_latestSelectSel.lock();
-
-                prevSel->m_parent->m_selected = false;
+                pNMCD->uItemState = CDIS_DEFAULT;
+                pLVCD->clrText = RGB(0, 255, 0);
+                pLVCD->clrTextBk = RGB(255, 0, 255);
             }
-            m_latestSelectSel = logData->m_alive;
-            logData->m_selected = true;
+            else
+            {
+                pLVCD->clrText = logData->m_textColor;
+                pLVCD->clrTextBk = logData->m_backgroundColor;
+            }
+            *pResult = CDRF_DODEFAULT;
+            break;
         }
-        if (logData->m_selected)
-        {
-            pNMCD->uItemState = CDIS_DEFAULT;
-            pLVCD->clrText = m_viewImpl->m_foreColor;
-            pLVCD->clrTextBk = m_viewImpl->m_bkColor;
-        }
-    }
-    break;
-
-    default:
-        *pResult = CDRF_DODEFAULT;
-        break;
     }
 }

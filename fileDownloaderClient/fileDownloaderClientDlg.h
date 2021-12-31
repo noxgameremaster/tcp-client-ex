@@ -4,23 +4,33 @@
 
 #pragma once
 
-#include "logViewer.h"
 #include "prettyButton.h"
+#include "groupbox.h"
+
+#include <memory>
+
+class CoreUi;
+class PageManager;
 
 // CfileDownloaderClientDlg 대화 상자
 class CfileDownloaderClientDlg : public CDialogEx
 {
+	class MainWndCC;
 private:
-	LogViewer m_logViewer;
-	PrettyButton m_btnPageUp;
-	PrettyButton m_btnUp;
-	PrettyButton m_btnDown;
-	PrettyButton m_btnPageDown;
+	GroupBox m_mainPanel;
+	GroupBox m_logPanel;
 	PrettyButton m_btnLogTestInsert;
+	PrettyButton m_btnStartTest;
+	PrettyButton m_btnFocusToEnd;
+	std::unique_ptr<CoreUi> m_coreUi;
+
+	std::unique_ptr<MainWndCC> m_wndcc;
+	std::unique_ptr<PageManager> m_logPanelLoader;
 
 // 생성입니다.
 public:
 	CfileDownloaderClientDlg(CWnd* pParent = nullptr);	// 표준 생성자입니다.
+	~CfileDownloaderClientDlg() override;
 
 // 대화 상자 데이터입니다.
 #ifdef AFX_DESIGN_TIME
@@ -30,7 +40,11 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 지원입니다.
 
+public:
+	void AppendLogViewMessage(const std::string &message, uint32_t colr);
+
 private:
+	void InitPageManager();
 	void Initialize();
 
 // 구현입니다.

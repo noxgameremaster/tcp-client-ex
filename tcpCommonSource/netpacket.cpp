@@ -1,9 +1,13 @@
 
 #include "netpacket.h"
 #include "headerdata.h"
+#include "netLogObject.h"
+#include "stringHelper.h"
+
+using namespace _StringHelper;
 
 NetPacket::NetPacket()
-    : BinaryStream(65536)
+    : BinaryStream(32786)
 {
     m_senderSocketId = static_cast<socket_type>(-1);
     m_headerData = std::make_unique<HeaderData>();
@@ -35,7 +39,10 @@ void NetPacket::SetHeaderData(std::unique_ptr<HeaderData> &&headerData)
 bool NetPacket::Read()
 {
     SetSeekpoint(m_headerData->DataSectionOffset());
-    return OnReadPacket();
+    if (!OnReadPacket())
+        return PacketError(Mode::Read);
+
+    return true;
 }
 
 bool NetPacket::WriteHeaderData()
@@ -66,10 +73,10 @@ bool NetPacket::Write()
     BufferResize(sizeAll);    //@brief. 패킷의 총 길이를 먼저 설정합니다
 
     if (!WriteHeaderData())
-        return false;
+        return PacketError(Mode::Write);
 
     if (!OnWritePacket())
-        return false;
+        return PacketError(Mode::Write);
 
     int etx = 0;
 
@@ -97,4 +104,13 @@ uint8_t NetPacket::GetSubCommand() const
 
     m_headerData->GetProperty<HeaderData::FieldInfo::SUB_CMD_TYPE>(subCmd);
     return subCmd;
+}
+
+bool NetPacket::PacketError(Mode workType)
+{
+    NetLogObject::LogObject().AppendLogMessage(stringFormat("task: %s, packet error in %s", 
+        (workType == Mode::Read) ? "read" : (workType==Mode::Write ? "write" : "none"), ClassName()),
+        PrintUtil::ConsoleColor::COLOR_DARKRED);
+
+    return false;
 }

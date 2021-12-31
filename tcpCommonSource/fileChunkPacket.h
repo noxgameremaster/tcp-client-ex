@@ -7,10 +7,21 @@
 
 class FileChunkPacket : public NetPacket
 {
+public:
+    enum class PacketSubCmd
+    {
+        None,
+        PrevToServer,
+        PrevToClient,
+        SendToServer,
+        SendToClient,
+        SendEndChunkToClient
+    };
+
 private:
     std::string m_filename;
-    uint16_t m_chunkLength;
-    std::array<uint8_t, 65536> m_filechunk;
+    uint32_t m_chunkLength;
+    std::array<uint8_t, 16384> m_filechunk;
     uint8_t m_filenameLength;
 
     //writeOnly
@@ -25,6 +36,7 @@ public:
 private:
     bool ClientWrite();
     bool ServerWrite();
+    bool ToFileServerWrite();
     bool OnWritePacket() override;
     size_t PacketSize(Mode mode) override;
 
@@ -38,7 +50,6 @@ public:
     void SetFileChunk(const std::vector<uint8_t> &src);
     void SetFileUrl(const std::string &fileUrl);
     void SetReportParam(bool isError, bool isCompleted, const size_t &writeAmount);
-    void SetSubCommand(uint8_t subCmd) override;
     void GetProgressStatus(bool &err, bool &end, size_t &writePos);
 
 private:
@@ -48,10 +59,14 @@ private:
     }
     bool ClientRead();
     bool ServerRead();
+    bool FileServerRead();
 
     bool OnReadPacket() override;
     uint8_t GetPacketId() const override;
+
+public:
+    void ChangeSubCommand(PacketSubCmd subcmd);
+    PacketSubCmd SubCommand() const;
 };
 
 #endif
-
