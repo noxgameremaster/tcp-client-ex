@@ -10,7 +10,6 @@ class PartitionPool : public NetObject
 {
     class Partition;
 private:
-    size_t m_size;
     std::stack<int> m_stack;
     std::vector<Partition> m_mempool;
 
