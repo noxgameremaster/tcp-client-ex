@@ -35,6 +35,8 @@ private:
 
     void SlotForwardPacket(std::unique_ptr<NetPacket> &&packet);
     void SlotSendPacket(std::unique_ptr<NetPacket> &&packet);
+
+    void SlotServerPrintLog(const std::string &msg, uint32_t colr);
 };
 
 #endif

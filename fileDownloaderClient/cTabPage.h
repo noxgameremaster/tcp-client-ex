@@ -35,7 +35,7 @@ public:
     }
 
 protected:
-    void DoDataExchange(CDataExchange *pDX) override;
+    virtual void DoDataExchange(CDataExchange *pDX) override;
     afx_msg HBRUSH OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor);
     //afx_msg 
     DECLARE_MESSAGE_MAP()

@@ -37,6 +37,7 @@ public:
     void SlotReceivePacket(std::unique_ptr<NetPacket> &&packet);
     void ClientSendEcho();
     void ClientTestSendFileRequest(const std::string &req);
+    void ClientSendChat(const std::string &say);
 };
 
 #endif

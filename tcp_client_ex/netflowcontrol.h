@@ -52,6 +52,7 @@ public:
     void SendEchoToServer(const std::string &echoMsg);
 
     void TestSendFilePacket(const std::string &fileInfo);
+    void SendChatMessage(const std::string &msg);
 
 private:
     mutable std::mutex m_lock;

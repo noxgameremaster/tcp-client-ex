@@ -103,6 +103,7 @@ void ServerChatTask::RemoteCommandSendFile(const std::string &fileCmd, socket_ty
     sendfile->SetSavePath(path);
     sendfile->SetFilesize(filesize);
     sendfile->SetFilePacketDirection(FilePacket::FilePacketDirection::ServerToClient);
+    sendfile->SetSenderSocketId(sockId);
 
     ForwardPacket(std::move(sendfile));
 

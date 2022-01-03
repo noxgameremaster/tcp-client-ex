@@ -53,5 +53,11 @@ void CoreUi::DoTestEcho()
 void CoreUi::DoTestFilePacket()
 {
     if (m_netMain)
-        m_netMain->ClientTestSendFileRequest("E:\\2021\\IUFileServer\\x64\\Debug\\DOWNLOAD\\TEST\\A.iso");
+        m_netMain->ClientTestSendFileRequest("C:\\Users\\인스유틸\\source\\repos\\tcp_client_ex\\tcp_client_ex\\serverfile\\maple.map");
+}
+
+void CoreUi::SendCommandToServer(const std::string &cmd)
+{
+    if (m_netMain)
+        m_netMain->ClientSendChat(cmd);
 }

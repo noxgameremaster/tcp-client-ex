@@ -26,6 +26,8 @@ public:
     void DoTestEcho();
     void DoTestFilePacket();
 
+    void SendCommandToServer(const std::string &cmd);
+
     DECLARE_SIGNAL(OnForwardMessage, std::string, uint32_t)
 };
 

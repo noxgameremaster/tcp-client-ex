@@ -8,6 +8,7 @@
 #include "clientpool.h"
 #include "winsocket.h"
 #include "eventworker.h"
+#include "netLogObject.h"
 
 ExampleServer::ExampleServer()
     : NetService()
@@ -41,6 +42,8 @@ bool ExampleServer::OnInitialize()
         return false;
     if (!MakeServerSocket())
         return false;
+
+    NetLogObject::LogObject().OnReleaseLogMessage().Connection(&ExampleServer::SlotServerPrintLog, this);
 
     std::shared_ptr<ClientPool> cliPool(new ClientPool);
 
@@ -112,3 +115,9 @@ void ExampleServer::SlotSendPacket(std::unique_ptr<NetPacket> &&packet)
     if (m_servSend)
         m_servSend->Commit(std::move(packet));
 }
+
+void ExampleServer::SlotServerPrintLog(const std::string &msg, uint32_t colr)
+{
+    PrintUtil::PrintMessage(PrintUtil::GetPrintColor(colr), msg);
+}
+

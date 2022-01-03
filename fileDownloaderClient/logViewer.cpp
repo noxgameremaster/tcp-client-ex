@@ -61,7 +61,9 @@ LogViewer::LogViewer()
 }
 
 LogViewer::~LogViewer()
-{ }
+{
+    StopLogViewThread();
+}
 
 void LogViewer::UpdateViewer()
 {
@@ -349,35 +351,13 @@ BOOL LogViewer::OnEraseBkgnd(CDC */*pDC*/)
 
 void LogViewer::OnPaint()
 {
-    CBufferDC cdc(this);
+    /*CBufferDC cdc(this);
 
-    DrawStuff(cdc);
-    //CRect rcClient;         //here
-    //GetClientRect(rcClient);
+    DrawStuff(cdc);*/
 
-    //CPaintDC dc(this);
-    //CDC dcMem;
-    //dcMem.CreateCompatibleDC(&dc);
+    CListCtrl::OnPaint();
 
-    //CBitmap bmMem;
-    //bmMem.CreateCompatibleBitmap(&dc, rcClient.Width(), rcClient.Height());
-    //CBitmap *pbmOld = dcMem.SelectObject(&bmMem);
-
-    //DrawStuff(&dcMem);
-
-    //this->DefWindowProc(WM_PAINT, (WPARAM)dcMem.m_hDC, (LPARAM)0);
-
-    //dc.BitBlt(0, 0, rcClient.Width(), rcClient.Height(), &dcMem, 0, 0, SRCCOPY);
-    //dcMem.SelectObject(pbmOld);
-
-    //CHeaderCtrl *pCtrl = this->GetHeaderCtrl();
-    //if (::IsWindow(pCtrl->GetSafeHwnd()))
-    //{
-    //    CRect aHeaderRect;
-
-    //    pCtrl->GetClientRect(&aHeaderRect);
-    //    pCtrl->RedrawWindow(&aHeaderRect);
-    //}
+    CClientDC(this);
 }
 
 void LogViewer::OnLButtonDown(UINT nFlags, CPoint point)

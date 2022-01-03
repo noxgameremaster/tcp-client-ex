@@ -51,7 +51,12 @@ void CTabPage::Show(bool show)
 
 bool CTabPage::CreatePage(const CRect &location, CCreateContext *pContext)
 {
-    return Create(nullptr, nullptr, WS_CHILD | WS_VSCROLL | WS_HSCROLL, location, m_parentWnd, pContext) & true;
+    bool result = Create(nullptr, nullptr, WS_CHILD | WS_VSCROLL | WS_HSCROLL, location, m_parentWnd, pContext) & true;
+
+    if (result)
+        UpdateData(false);
+
+    return result;
 }
 
 void CTabPage::DoDataExchange(CDataExchange *pDX)

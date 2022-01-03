@@ -56,7 +56,7 @@ public:
 
 private:
     bool Pulling(const size_t &off);
-    bool PacketInstance();
+    std::unique_ptr<NetPacket> PacketInstance();
     bool MakePacketReal(const size_t &off);
     bool MakePacketHeaderData(const size_t &startOff/*, const size_t &length*/);
     bool ReadSenderInfo();

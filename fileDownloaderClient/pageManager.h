@@ -27,9 +27,9 @@ public:
     bool ShowPage(const std::string &pageKey);
 
     //friend struct ConcretePageManager;
+    void DestroyAll();
 
 private:
-    void DestroyAll();
     void SetSelf(std::shared_ptr<CCObject> self);
 
     CWnd *FindScreen(const std::string &screenName);

@@ -73,6 +73,8 @@ public:
         }
     }
 
+    static ConsoleColor GetPrintColor(uint32_t id);
+
 private:
     static std::mutex s_lock;
 };

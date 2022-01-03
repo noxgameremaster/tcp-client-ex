@@ -5,7 +5,9 @@
 
 LogPanel::LogPanel(UINT nIDTemplate, CWnd *parent)
     : CTabPage(nIDTemplate, parent)
-{ }
+{
+    m_panelRecv = std::make_unique<LogPanelRecv>(this);
+}
 
 LogPanel::~LogPanel()
 { }
@@ -21,6 +23,7 @@ void LogPanel::OnInitialUpdate()
     m_btnDown.SetCallback([this]() { this->ViewerMoveScroll("down"); });
     m_btnUp.SetCallback([this]() { this->ViewerMoveScroll("up"); });
     m_btnPageUp.SetCallback([this]() { this->ViewerMoveScroll("pageup"); });
+    m_btnEndFocus.SetCallback([this]() { this->FocusEndline(); });
 }
 
 void LogPanel::InitCControls()
@@ -29,6 +32,12 @@ void LogPanel::InitCControls()
     m_btnUp.ModifyWndName("¡â");
     m_btnDown.ModifyWndName("¡ä");
     m_btnPageDown.ModifyWndName("¡å");
+    m_btnEndFocus.ModifyWndName("End");
+}
+
+void LogPanel::FocusEndline()
+{
+    m_logViewer.SetFocusToEnd();
 }
 
 BEGIN_MESSAGE_MAP(LogPanel, CTabPage)
@@ -44,6 +53,8 @@ void LogPanel::DoDataExchange(CDataExchange *pDX)
     controlExchange(LOG_PANEL_UP, m_btnUp);
     controlExchange(LOG_PANEL_DOWN, m_btnDown);
     controlExchange(LOG_PANEL_PAGEDOWN, m_btnPageDown);
+    controlExchange(LOG_PANEL_VIEW, m_logViewer);
+    controlExchange(LOG_PANEL_END_FOCUS, m_btnEndFocus);
 
     InitCControls();
 }

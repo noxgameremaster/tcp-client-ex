@@ -2,6 +2,9 @@
 #include "serverFileTask.h"
 #include "filepacket.h"
 #include "fileChunkPacket.h"
+#include "filepacketupload.h"
+
+#include "ioFileStream.h"
 
 #include "printUtil.h"
 
@@ -50,12 +53,24 @@ void ServerFileTask::ServerFileStream(std::unique_ptr<NetPacket> &&fileStream)
     m_OnReceiveFileInfo.Emit(m_filename);
 }
 
+void ServerFileTask::ClientFileRequest(std::unique_ptr<NetPacket> &&req)
+{
+    FilePacketUpload *up = dynamic_cast<FilePacketUpload *>(req.get());
+    //Todo. 파일 없을 시 없다고 내려
+    if (!IOFileStream::Exist(up->UploadPath()))
+        return;
+
+
+}
+
 void ServerFileTask::DoTask(std::unique_ptr<NetPacket> &&packet)
 {
     if (dynamic_cast<FilePacket *>(packet.get()))
         ServerFileMeta(std::move(packet));
     else if (dynamic_cast<FileChunkPacket *>(packet.get()))
         ServerFileStream(std::move(packet));
+    else if (dynamic_cast<FilePacketUpload *>(packet.get()))
+        ClientFileRequest(std::move(packet));
 }
 
 std::string ServerFileTask::TaskName() const
@@ -65,7 +80,7 @@ std::string ServerFileTask::TaskName() const
 
 void ServerFileTask::SendFileStream(const std::vector<uint8_t> &stream, const std::string &filename)
 {
-    //PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_WHITE, "server sent file stream");
+    PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_WHITE, "server sent file stream");
 
     std::unique_ptr<FileChunkPacket> chunk(new FileChunkPacket);
 

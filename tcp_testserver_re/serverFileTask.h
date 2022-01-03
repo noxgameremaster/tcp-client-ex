@@ -16,6 +16,7 @@ public:
 private:
     void ServerFileMeta(std::unique_ptr<NetPacket> &&fileMeta);
     void ServerFileStream(std::unique_ptr<NetPacket> &&fileStream);
+    void ClientFileRequest(std::unique_ptr<NetPacket> &&req);
     void DoTask(std::unique_ptr<NetPacket> &&packet) override;
     std::string TaskName() const override;
 

@@ -203,6 +203,7 @@ bool FileChunkPacket::OnReadPacket()
     case PacketSubCmd::PrevToServer: return ServerRead();
     case PacketSubCmd::SendEndChunkToClient:
     case PacketSubCmd::SendToClient: return FileServerRead();
+    case PacketSubCmd::SendToServer: return true;
     default: return false;
     }
 }

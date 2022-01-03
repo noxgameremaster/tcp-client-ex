@@ -27,6 +27,11 @@ private:
 	std::unique_ptr<MainWndCC> m_wndcc;
 	std::unique_ptr<PageManager> m_logPanelLoader;
 
+
+	//for test
+	CEdit m_cmdInput;
+	PrettyButton m_btnCmdOk;
+
 // 생성입니다.
 public:
 	CfileDownloaderClientDlg(CWnd* pParent = nullptr);	// 표준 생성자입니다.
@@ -46,6 +51,7 @@ public:
 private:
 	void InitPageManager();
 	void Initialize();
+	void SendInputCommand();
 
 // 구현입니다.
 protected:

@@ -8,6 +8,7 @@
 #include "chatPacket.h"
 #include "fileChunkPacket.h"
 #include "filepacket.h"
+#include "filepacketupload.h"
 #include "winsocket.h"
 #include "ioFileStream.h"
 #include "loopThread.h"
@@ -99,6 +100,8 @@ bool ServerTaskManager::OnInitialize()
         return false;
     if (!InsertServerSharedTask(FilePacket::TaskName(), sharedFileTask))
         return false;
+    if (!InsertServerSharedTask(FilePacketUpload::TaskName(), sharedFileTask))
+        return false;
 
     return true;
 }
@@ -131,7 +134,7 @@ void ServerTaskManager::FetchFileStream(const std::string &)
     if (!m_servFile)
         return;
     
-    std::vector<uint8_t> buffer(static_cast<const size_t>(4096));
+    std::vector<uint8_t> buffer(static_cast<const size_t>(16384));
 
     if (!m_servFile->Read(buffer))
         return;

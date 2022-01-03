@@ -19,7 +19,7 @@ size_t FilePacketUpload::PacketSize(Mode mode)
         {
         case PacketSubCmd::ToFileServer:
         case PacketSubCmd::FileServerToClient:
-            //return sizeof(m_pathLength) + m_pathLength;
+            return sizeof(m_pathLength) + m_pathLength;
         case PacketSubCmd::TestSendToServer:
             return 255;
         }
@@ -52,12 +52,11 @@ bool FilePacketUpload::ReadFromFileServer()
 
 bool FilePacketUpload::OnReadPacket()
 {
-    if (SubCommand() == PacketSubCmd::TestSendToServer)
-        return ReadSendTesting();
     switch (SubCommand())
     {
     case PacketSubCmd::TestSendToServer: return ReadSendTesting();
     case PacketSubCmd::FileServerToClient: return ReadFromFileServer();
+    case PacketSubCmd::ToFileServer: return ReadSendTesting();
     default: return false;
     }
 }
@@ -101,7 +100,8 @@ bool FilePacketUpload::OnWritePacket()
     switch (SubCommand())
     {
     case PacketSubCmd::TestSendToServer: return TestSendWrite();
-    case PacketSubCmd::ToFileServer: return TestSendWrite(); //return ToFileServerWrite();
+    case PacketSubCmd::FileServerToClient:
+    case PacketSubCmd::ToFileServer: /*return TestSendWrite();*/ return ToFileServerWrite();
     default: return false;
     }
 }

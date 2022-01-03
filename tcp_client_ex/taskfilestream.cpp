@@ -32,14 +32,11 @@ void TaskFileStream::WriteFileMetaData()
 
 void TaskFileStream::ReportFileMetaReceiveCompleted()
 {
-    if (m_uploadPath.empty())
-        return;
+    std::unique_ptr<FilePacket> report(new FilePacket);
 
-    std::unique_ptr<FilePacketUpload> up(new FilePacketUpload);
-
-    up->SetUploadPath(m_uploadPath);
-    up->ChangeSubCommand(FilePacketUpload::PacketSubCmd::ToFileServer);
-    ForwardPacketToManager(std::move(up));
+    report->SetFilePacketDirection(FilePacket::FilePacketDirection::ClientToServer);
+    report->SetFileName(m_filename);
+    ForwardPacketToManager(std::move(report));
 }
 
 void TaskFileStream::SendDownloadEnd()
@@ -76,18 +73,18 @@ void TaskFileStream::ReportWriteChunk(bool isError, const size_t &writeAmount, c
     }
     std::unique_ptr<FileChunkPacket> reportChunk(new FileChunkPacket);
 
-    //reportChunk->SetReportParam(isError, (writeAmount >= totalSize), writeAmount);
-    //reportChunk->SetSubCommand(1);
+    reportChunk->SetReportParam(isError, (writeAmount >= totalSize), writeAmount);
+    /*reportChunk->SetSubCommand(1);*/
 
     reportChunk->ChangeSubCommand(FileChunkPacket::PacketSubCmd::SendToServer);
 
     ForwardPacketToManager(std::move(reportChunk));
 
-    //if (writeAmount >= totalSize)
-    //{
-    //    std::string elapsedTime = m_timeCounter->Show(true);
-    //    //NetLogObject::LogObject().AppendLogMessage(stringFormat("download complete. %s seconds", elapsedTime), PrintUtil::ConsoleColor::COLOR_VIOLET);
-    //}
+    if (writeAmount >= totalSize)
+    {
+        std::string elapsedTime = m_timeCounter->Show(true);
+        NetLogObject::LogObject().AppendLogMessage(stringFormat("download complete. %s seconds", elapsedTime), PrintUtil::ConsoleColor::COLOR_VIOLET);
+    }
 }
 
 void TaskFileStream::ProcessFileMeta(std::unique_ptr<NetPacket> &&packet)
@@ -98,7 +95,7 @@ void TaskFileStream::ProcessFileMeta(std::unique_ptr<NetPacket> &&packet)
         return;
 
     m_filename = metadata->GetFileName();
-    m_pathname = metadata->GetFilePath();
+    m_pathname = "downloads"; //metadata->GetFilePath();
     m_filesize = metadata->GetFilesize();
 
     WriteFileMetaData();
@@ -125,6 +122,7 @@ void TaskFileStream::ProcessFileChunk(std::unique_ptr<NetPacket> &&packet)
         ended = true;
         //break;
 
+    case FileChunkPacket::PacketSubCmd::PrevToClient:
     case FileChunkPacket::PacketSubCmd::SendToClient:
         std::vector<uint8_t> fileChunk;
 

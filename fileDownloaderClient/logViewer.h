@@ -15,7 +15,7 @@ class LoopThread;
 class LogViewer : public CListCtrl
 {
     DECLARE_DYNAMIC(LogViewer)
-    static constexpr int max_appear_slot_count = 9;
+    static constexpr int max_appear_slot_count = 10;
     struct LogDataAlive;
     class LogData;
     using log_data_ty = std::unique_ptr<LogData>;

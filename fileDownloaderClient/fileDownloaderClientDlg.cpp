@@ -98,11 +98,15 @@ void CfileDownloaderClientDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, LOG_VIEWER_FOCUS_TOEND, m_btnFocusToEnd);
 	DDX_Control(pDX, MAIN_PAGE_PANEL, m_mainPanel);
 	DDX_Control(pDX, MAIN_LOG_PANEL, m_logPanel);
+
+	DDX_Control(pDX, MAIN_INPUT, m_cmdInput);
+	DDX_Control(pDX, MAIN_INPUT_OK, m_btnCmdOk);
 }
 
 void CfileDownloaderClientDlg::AppendLogViewMessage(const std::string &message, uint32_t color)
 {
 	//m_logViewer.CreateNewLog(message, color);
+
 	OutputDebugString(toArray(message));
 }
 
@@ -112,7 +116,9 @@ void CfileDownloaderClientDlg::InitPageManager()
 
 	m_logPanelLoader = std::make_unique<PageManager>(*logPanelFrame, this);
 
-	std::unique_ptr<CWnd> logView(new LogPanel(IDD_LOGVIEW_PANEL, this));
+	std::unique_ptr<LogPanel> logView(new LogPanel(IDD_LOGVIEW_PANEL, this));
+
+	m_coreUi->OnForwardMessage().Connection(&LogPanel::LogPanelRecv::SlotAddLog, logView->ReceiveObject());
 
 	m_logPanelLoader->MakePage("logview", std::move(logView));
 	m_logPanelLoader->ShowPage("logview");
@@ -128,12 +134,27 @@ void CfileDownloaderClientDlg::Initialize()
 	InitPageManager();
 	m_btnLogTestInsert.SetCallback([this]() { this->m_coreUi->DoTestEcho(); });
 	m_btnStartTest.SetCallback([this]() { this->m_coreUi->DoTestFilePacket(); });
+	m_btnCmdOk.SetCallback([this]() { this->SendInputCommand(); });
 
 	m_btnLogTestInsert.ModifyWndName("echo test");
 	m_btnStartTest.ModifyWndName("file req");
-	m_btnStartTest.ModifyWndName("go to end");
+	m_btnFocusToEnd.ModifyWndName("go to end");
+
+	m_btnCmdOk.ModifyWndName("send");
 
 	m_coreUi->StartNetClient();
+}
+
+void CfileDownloaderClientDlg::SendInputCommand()
+{
+	CString cmd;
+
+	m_cmdInput.GetWindowTextA(cmd);
+	if (m_coreUi)
+	{
+		m_coreUi->SendCommandToServer(cmd.GetBuffer());
+		m_cmdInput.SetWindowTextA("");
+	}
 }
 
 BEGIN_MESSAGE_MAP(CfileDownloaderClientDlg, CDialogEx)
@@ -243,7 +264,9 @@ void CfileDownloaderClientDlg::OnClose()
 {
 	ShowWindow(SW_HIDE);
 	if (m_logPanelLoader)
+	{
 		m_logPanelLoader.reset();
+	}
 
 	//m_logViewer.StopLogViewThread();
 	if (m_coreUi)

@@ -5,7 +5,7 @@
 
 class LocalBuffer : public BinaryStream
 {
-    static constexpr size_t local_buffer_reserve = 65536 * 32;
+    static constexpr size_t local_buffer_reserve = 65536 * 10;
 private:
     std::vector<uint8_t> m_buffer;
     uint32_t m_seekpoint;

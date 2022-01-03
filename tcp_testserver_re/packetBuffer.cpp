@@ -5,6 +5,7 @@
 #include "echoPacket.h"
 #include "filepacket.h"
 #include "fileChunkPacket.h"
+#include "filepacketupload.h"
 #include "headerdata.h"
 #include "packetOrderTable.h"
 
@@ -81,37 +82,32 @@ bool PacketBuffer::Pulling(const size_t &off)
     return true;
 }
 
-bool PacketBuffer::PacketInstance()
+std::unique_ptr<NetPacket> PacketBuffer::PacketInstance()
 {
     uint8_t packetId = 0;
 
     if (!m_headerData->GetProperty<HeaderData::FieldInfo::MAIN_CMD_TYPE>(packetId))
-        return false;
+        return nullptr;
 
     switch (packetId)
     {
-    case PacketOrderTable<ChatPacket>::GetId():
-        m_createdPacket = std::make_unique<ChatPacket>();
-        break;
-    case PacketOrderTable<EchoPacket>::GetId():
-        m_createdPacket = std::make_unique<EchoPacket>();
-        break;
-    case PacketOrderTable<FilePacket>::GetId():
-        m_createdPacket = std::make_unique<FilePacket>();
-        break;
-    case PacketOrderTable<FileChunkPacket>::GetId():
-        m_createdPacket = std::make_unique<FileChunkPacket>();
-        break;
-    default:
-        return false;
+    case PacketOrderTable<ChatPacket>::GetId(): return std::make_unique<ChatPacket>();
+    case PacketOrderTable<EchoPacket>::GetId(): return std::make_unique<EchoPacket>();
+    case PacketOrderTable<FilePacket>::GetId(): return std::make_unique<FilePacket>();
+    case PacketOrderTable<FileChunkPacket>::GetId(): return std::make_unique<FileChunkPacket>();
+    case PacketOrderTable<FilePacketUpload>::GetId(): return std::make_unique<FilePacketUpload>();
+    default: return nullptr;
     }
-    return true;
 }
 
 bool PacketBuffer::MakePacketReal(const size_t &off)
 {
-    if (!PacketInstance())
+    auto pack = PacketInstance();
+
+    if (!pack)
         return false;
+
+    m_createdPacket = std::move(pack);
 
     size_t length = 0;
 
@@ -179,7 +175,7 @@ bool PacketBuffer::ReadPacketInfo()
     if (!ReadChunk(endSymbol))
         return false;
 
-    if (endSymbol != 0xfadeface)
+    if (endSymbol != HeaderData::header_terminal)
         return true;
 
     if (MakePacketHeaderData(stxOff/*, length*/))
@@ -210,7 +206,7 @@ bool PacketBuffer::PopAsPacket()
                 return Pulling(readcPos);
             break;
 
-        case 0xdeadface:
+        case HeaderData::header_stx:
             m_readSeekpoint += sizeof(readc);
             if (!ReadPacketInfo())
                 return Pulling(readcPos);

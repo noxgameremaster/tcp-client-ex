@@ -4,6 +4,7 @@
 #include "iobuffer.h"
 #include "echoPacket.h"
 #include "filepacket.h"
+#include "chatPacket.h"
 #include "filepacketupload.h"
 #include "loopThread.h"
 
@@ -128,4 +129,12 @@ void NetFlowControl::TestSendFilePacket(const std::string &fileInfo)
     filepack->SetUploadPath(fileInfo);
     filepack->ChangeSubCommand(FilePacketUpload::PacketSubCmd::TestSendToServer);
     Enqueue(std::move(filepack), IOType::IN);
+}
+
+void NetFlowControl::SendChatMessage(const std::string &msg)
+{
+    std::unique_ptr<ChatPacket> chat(new ChatPacket);
+
+    chat->SetChatMessage(msg);
+    Enqueue(std::move(chat), IOType::OUT);
 }

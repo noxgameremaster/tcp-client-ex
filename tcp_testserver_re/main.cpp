@@ -3,6 +3,7 @@
 
 #include "exampleServer.h"
 #include "stringHelper.h"
+#include "netLogObject.h"
 #include <iostream>
 
 #pragma comment(lib, "tcpcommonsource.lib")
@@ -12,12 +13,14 @@ using namespace _StringHelper;
 int main()
 {
     ExampleServer serv;
+    NetLogObject::LogObject().Startup();
     bool isWork = serv.Startup();
 
     std::cout << stringFormat("server status: %s\n", isWork ? "ok" : "ng");
     std::getchar();
 
     serv.Shutdown();
+    NetLogObject::LogObject().Shutdown();
 
     return 0;
 }
