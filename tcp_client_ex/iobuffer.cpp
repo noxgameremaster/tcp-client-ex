@@ -1,5 +1,5 @@
 #include "iobuffer.h"
-#include "localbuffer.h"
+//#include "localbuffer.h"
 #include <functional>
 #include <memory>
 
@@ -113,6 +113,8 @@ bool IOBuffer::SetLargeBufferScale(size_t scale)
 
 bool IOBuffer::IsEmpty() const
 {
+    std::lock_guard<std::mutex> guard(m_lock);
+
     return m_indexes.empty();
 }
 
@@ -137,22 +139,22 @@ bool IOBuffer::SetTrigger(NetObject *trigger, std::function<void()> &&fn)
     return true;
 }
 
-void IOBuffer::MoveBuffer(std::shared_ptr<LocalBuffer> localbuffer)
-{
-    size_t readsize = 0;
-
-    while (true)
-    {
-        {
-            std::unique_ptr<uint8_t[]> alloc;
-
-            if (!PopBufferAlloc(std::move(alloc), readsize))
-                break;
-
-            if (!localbuffer->Append(alloc.get(), readsize))
-                break;
-        }
-    }
-}
+//void IOBuffer::MoveBuffer(std::shared_ptr<LocalBuffer> localbuffer)
+//{
+//    size_t readsize = 0;
+//
+//    while (true)
+//    {
+//        {
+//            std::unique_ptr<uint8_t[]> alloc;
+//
+//            if (!PopBufferAlloc(std::move(alloc), readsize))
+//                break;
+//
+//            if (!localbuffer->Append(alloc.get(), readsize))
+//                break;
+//        }
+//    }
+//}
 
 

@@ -93,6 +93,7 @@ bool WinSocket::ReceiveImpl(uint8_t *buff, const size_t length, int &readbytes)
 {
     readbytes = recv(*m_socket, reinterpret_cast<char *>(buff), length, 0);
 
+    OutputDebugString("server receive\n");
     if (readbytes <= 0)
         return false;
 
@@ -101,6 +102,7 @@ bool WinSocket::ReceiveImpl(uint8_t *buff, const size_t length, int &readbytes)
 
 bool WinSocket::SendImpl(const char *buffer, const size_t length, int &sendbytes)
 {
+    OutputDebugString("server sent\n");
     sendbytes = send(*m_socket, buffer, length, 0);
 
     return sendbytes != SOCKET_ERROR;

@@ -30,9 +30,6 @@
     <ClCompile Include="serverReceiveEx.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="packetBuffer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="bufferPopper.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -69,9 +66,6 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="serverReceiveEx.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="packetBuffer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="bufferPopper.h">

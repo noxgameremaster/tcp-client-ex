@@ -110,18 +110,41 @@ void ServerChatTask::RemoteCommandSendFile(const std::string &fileCmd, socket_ty
     m_OnServerRemoteFileInfo.Emit(path, fileName);
 }
 
+void ServerChatTask::RemoteCommandTripleMessage(const std::string &cmd, socket_type sockId)
+{
+    int rep = 3;
+
+    while (rep--)
+        SendPrivateMessage(stringFormat("triple message: %s", cmd), sockId);
+}
+
 void ServerChatTask::RemoteExecuteCommand(const std::string &cmd, socket_type sockId)
 {
     size_t findPos = cmd.find("/echo");
 
     if (findPos != std::string::npos)
+    {
         RemoteCommandEcho(sockId);
+        return;
+    }
 
     const std::string fileKey = "/sendfile";
 
     findPos = cmd.find(fileKey);
     if (findPos != std::string::npos)
+    {
         RemoteCommandSendFile(cmd.substr(findPos + fileKey.length()), sockId);
+        return;
+    }
+
+    const std::string tripleMsgKey = "/triplemsg";
+
+    findPos = cmd.find(tripleMsgKey);
+    if (findPos != std::string::npos)
+    {
+        RemoteCommandTripleMessage(cmd.substr(findPos + fileKey.length()), sockId);
+        return;
+    }
 }
 
 void ServerChatTask::ConfirmMessage(const std::string &message, socket_type sockId)
@@ -131,6 +154,7 @@ void ServerChatTask::ConfirmMessage(const std::string &message, socket_type sock
 
     if (cmdEntry != std::string::npos)
     {
+        //assert(false);
         RemoteExecuteCommand(message.substr(cmdEntry + cmdKey.length()), sockId);
         return;
     }

@@ -2,19 +2,29 @@
 #include "clientreceive.h"
 #include "netflowcontrol.h"
 #include "clientworker.h"
-#include "iobuffer.h"
+#include "packetBuffer.h"
 #include "socketset.h"
 #include "winsocket.h"
 #include "netLogObject.h"
+#include "loopThread.h"
+#include "eventworker.h"
+#include "stringHelper.h"
+#include <assert.h>
 #include <ws2tcpip.h>
+
+using namespace _StringHelper;
 
 ClientReceive::ClientReceive(std::shared_ptr<WinSocket> &sock, NetObject *parent)
     : NetService(parent)
 {
     m_netsocket = sock;
-    m_terminated = false;
     m_readFds = std::make_unique<SocketSet>();
     m_readFds->SetTimeInterval(1, 0);
+
+    m_packetBuffer = std::make_unique<PacketBuffer>();
+    m_receiveThread = std::make_unique<LoopThread>();
+
+    m_receiveThread->SetTaskFunction([this]() { this->DoTask(); });
 }
 
 ClientReceive::~ClientReceive()
@@ -37,59 +47,35 @@ bool ClientReceive::NotifyErrorToOwner()
     return true;
 }
 
-bool ClientReceive::ErrorDisconnected()
-{
-    NotifyErrorToOwner();
-
-    return false;
-}
-
 bool ClientReceive::ErrorBufferIsFull()
 {
+    NetLogObject::LogObject().AppendLogMessage("the receive buffer is fully", PrintUtil::ConsoleColor::COLOR_RED);
+
     return false;
 }
 
-bool ClientReceive::Receiving()
+void ClientReceive::OnDisconnected(WinSocket *sock)
 {
-    std::vector<uint8_t> receiveVector(IOBuffer::receive_buffer_max_size, 0);
-    std::list<WinSocket *> notifiers = m_readFds->NotifiedClientList();
+    NotifyErrorToOwner();
+    NetLogObject::LogObject().AppendLogMessage(stringFormat("the user %d has disconnect with me", sock->GetFd()), 
+        PrintUtil::ConsoleColor::COLOR_RED);
+}
 
-    for (WinSocket *sock : notifiers)
-    {
-        if (!sock->Receive(receiveVector))
-            return ErrorDisconnected();             //서버가 끊어지면 -1이 들어옴
+void ClientReceive::ReceiveFrom(WinSocket *sock)
+{
+    std::vector<uint8_t> receiveVector(read_receive_buffer_count, 0);
 
-        if (!m_receivebuffer->PushBuffer(receiveVector))
-            return ErrorBufferIsFull();
-    }
-
-    return true;
+    if (!sock->Receive(receiveVector))
+        OnDisconnected(sock);
+    else if (!m_packetBuffer->PushBack(sock, receiveVector))
+        ErrorBufferIsFull();
+    else
+        EventWorker::Instance().AppendTask(&m_OnReceivePushStream);
 }
 
 void ClientReceive::DoTask()
 {
-    while (!m_terminated)
-    {
-        int status = select(0, m_readFds->Raw(), nullptr, nullptr, m_readFds->Interval());
-
-        if (status == 0)
-        {
-            //time_out
-        }
-        else if (status < 0)
-        {
-            //PrintUtil::PrintMessage("ClientReceive::DoTask - error");
-            NetLogObject::LogObject().AppendLogMessage("ClientReceive::DoTask - error");
-            break;
-        }
-        else
-        {
-            if (!Receiving())
-                break;
-        }
-    }
-    //PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_RED, "receive thread halted");
-    NetLogObject::LogObject().AppendLogMessage("receive thread halted", PrintUtil::ConsoleColor::COLOR_RED);
+    m_readFds->DoSelect([this](WinSocket *s) { this->ReceiveFrom(s); });
 }
 
 bool ClientReceive::OnInitialize()
@@ -99,12 +85,11 @@ bool ClientReceive::OnInitialize()
 
     m_readFds->Append(m_netsocket.get());
 
-    m_receivebuffer = std::make_shared<IOBuffer>();
-    m_receivebuffer->SetLargeBufferScale(IOBuffer::receive_buffer_max_size);
-
     m_networker = std::make_unique<ClientWorker>(GetParent());
-    m_networker->SetReceiveBuffer(m_receivebuffer);
+    m_networker->SetReceiveBuffer(m_packetBuffer);
     m_networker->Startup();
+
+    m_OnReceivePushStream.Connection(&ClientWorker::BufferOnPushed, m_networker.get());
 
     return true;
 }
@@ -120,22 +105,12 @@ void ClientReceive::OnDeinitialize()
 
 bool ClientReceive::OnStarted()
 {
-    m_recvThread = std::thread([this]() { this->DoTask(); });
-
-    return true;
-}
-
-void ClientReceive::HaltReceiveThread()
-{
-    m_terminated = true;
-
-    if (m_recvThread.joinable())
-        m_recvThread.join();
+    return m_receiveThread->Startup();
 }
 
 void ClientReceive::OnStopped()
 {
-    HaltReceiveThread();
+    m_receiveThread->Shutdown();
 }
 
 

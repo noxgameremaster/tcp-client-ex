@@ -87,6 +87,9 @@
     <ClCompile Include="downloadCompletePacket.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="packetBuffer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="winsocket.h">
@@ -162,6 +165,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="downloadCompletePacket.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="packetBuffer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

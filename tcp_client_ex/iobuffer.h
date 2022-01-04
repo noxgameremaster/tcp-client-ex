@@ -8,12 +8,12 @@
 #include <functional>
 #include <mutex>
 
-class LocalBuffer;
+//class LocalBuffer;
 
 class IOBuffer : public PartitionPool
 {
 public:
-    static constexpr size_t receive_buffer_max_size = 65536;
+    static constexpr size_t receive_buffer_max_size = 256;
 
 private:
     std::vector<uint8_t> m_largeBuffer;
@@ -46,10 +46,10 @@ public:
 
     bool SetTrigger(NetObject *trigger, std::function<void()> &&fn);
 
-    void MoveBuffer(std::shared_ptr<LocalBuffer> localbuffer);
+    //void MoveBuffer(std::shared_ptr<LocalBuffer> localbuffer);
 
 private:
-    std::mutex m_lock;
+    mutable std::mutex m_lock;
 };
 
 #endif

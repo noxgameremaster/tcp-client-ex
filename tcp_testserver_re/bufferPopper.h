@@ -25,6 +25,8 @@ private:
     void OnDeinitialize() override;
     void OnStopped() override;
 
+    static std::unique_ptr<NetPacket> DistinguishPacket(uint8_t packetId);
+
 public:
     void SlotRegistBuffer(std::shared_ptr<PacketBuffer> buffer);
 

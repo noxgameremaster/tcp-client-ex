@@ -5,32 +5,27 @@
 #include "netservice.h"
 #include <vector>
 
-class IOBuffer;
-class LocalBuffer;
-class PacketProducer;
 class NetPacket;
 class LoopThread;
+class PacketBuffer;
 
 class ClientWorker : public NetService
 {
 private:
-    std::shared_ptr<IOBuffer> m_recvbuffer;
-    std::shared_ptr<LocalBuffer> m_localbuffer;
-    std::unique_ptr<PacketProducer> m_produce;
     std::unique_ptr<LoopThread> m_workThread;
+    std::shared_ptr<PacketBuffer> m_packetBuffer;
 
 public:
     explicit ClientWorker(NetObject *parent);
     ~ClientWorker() override;
 
 private:
-    void InterceptPacket(std::unique_ptr<NetPacket> &&pack);
-    void FillLocalBuffer();
+    bool IsContained() const;
     void FetchFromBuffer();
-    void BufferOnPushed();
 
 public:
-    void SetReceiveBuffer(std::shared_ptr<IOBuffer> recvBuffer);
+    void BufferOnPushed();
+    void SetReceiveBuffer(std::shared_ptr<PacketBuffer> packetBuffer);
 
 private:
     bool InitPacketForwarding();
@@ -39,6 +34,8 @@ private:
     bool OnStarted() override;
     void HaltWorkThread();
     void OnStopped() override;
+
+    static std::unique_ptr<NetPacket> DistinguishPacket(uint8_t packetId);
 
     DECLARE_SIGNAL(OnReleasePacket, std::unique_ptr<NetPacket>&&)
 };

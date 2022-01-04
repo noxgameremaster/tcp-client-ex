@@ -161,6 +161,7 @@
     <ClCompile Include="netobject.cpp" />
     <ClCompile Include="netpacket.cpp" />
     <ClCompile Include="netservice.cpp" />
+    <ClCompile Include="packetBuffer.cpp" />
     <ClCompile Include="packetOrderTable.cpp" />
     <ClCompile Include="partitionpool.cpp" />
     <ClCompile Include="printUtil.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="netobject.h" />
     <ClInclude Include="netpacket.h" />
     <ClInclude Include="netservice.h" />
+    <ClInclude Include="packetBuffer.h" />
     <ClInclude Include="packetOrderTable.h" />
     <ClInclude Include="partitionpool.h" />
     <ClInclude Include="printUtil.h" />

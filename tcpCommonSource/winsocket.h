@@ -12,6 +12,9 @@ struct sockaddr_in;
 class WinSocket : public NetObject
 {
     using socket_deleter_type = std::function<void(socket_type *)>;
+public:
+    static constexpr socket_type invalid_socket = static_cast<socket_type>(-1);
+
 private:
     std::unique_ptr<socket_type, socket_deleter_type> m_socket;
     /*std::string m_ipAddr;
@@ -107,7 +110,7 @@ public:
 
         if (receiveResult)
             dest.resize(readbytes);
-
+        
         return receiveResult;
     }
 

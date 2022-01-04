@@ -7,19 +7,20 @@
 #include <vector>
 
 class WinSocket;
-class IOBuffer;
 class SocketSet;
 class ClientWorker;
+class PacketBuffer;
+class LoopThread;
 
 class ClientReceive : public NetService
 {
+    static constexpr size_t read_receive_buffer_count = 32;
 private:
     std::shared_ptr<WinSocket> m_netsocket;
     std::unique_ptr<SocketSet> m_readFds;
-    std::shared_ptr<IOBuffer> m_receivebuffer;
+    std::shared_ptr<PacketBuffer> m_packetBuffer;
     std::unique_ptr<ClientWorker> m_networker;
-    std::thread m_recvThread;
-    bool m_terminated;
+    std::unique_ptr<LoopThread> m_receiveThread;
 
 public:
     explicit ClientReceive(std::shared_ptr<WinSocket> &sock, NetObject *parent = nullptr);
@@ -27,18 +28,18 @@ public:
 
 private:
     bool NotifyErrorToOwner();
-    bool ErrorDisconnected();
     bool ErrorBufferIsFull();
-    bool Receiving();
+    void OnDisconnected(WinSocket *sock);
+    void ReceiveFrom(WinSocket *sock);
     void DoTask();
 
     bool OnInitialize() override;
     void OnDeinitialize() override;
     bool OnStarted() override;
-    void HaltReceiveThread();
     void OnStopped() override;
 
-
+private:
+    DECLARE_SIGNAL(OnReceivePushStream)
 };
 
 #endif

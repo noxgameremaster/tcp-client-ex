@@ -1,18 +1,14 @@
 
 #include "packetBuffer.h"
 #include "winsocket.h"
-#include "chatPacket.h"
-#include "echoPacket.h"
-#include "filepacket.h"
-#include "fileChunkPacket.h"
-#include "filepacketupload.h"
+#include "netpacket.h"
 #include "headerdata.h"
-#include "packetOrderTable.h"
+#include <assert.h>
 
 PacketBuffer::PacketBuffer()
-    : BinaryStream(256)
+    : BinaryStream(1)
 {
-    m_latestSocketId = static_cast<socket_type>(-1);
+    m_latestSocketId = WinSocket::invalid_socket;
     m_buffer.resize(max_buffer_length);
     SetContext(&m_buffer);
     ResetSeekPoint();
@@ -38,8 +34,8 @@ bool PacketBuffer::AppendSenderInfo(WinSocket *sock)
 {
     socket_type sockId = sock->GetFd();
 
-    if (sockId == -1)
-        return true;
+    /*if (sockId == -1)
+        return true;*/
 
     if (m_latestSocketId == sockId)
         return true;
@@ -47,28 +43,33 @@ bool PacketBuffer::AppendSenderInfo(WinSocket *sock)
     if (!CheckCapacity(sizeof(sockId) * 3))
         return false;
 
-    WriteChunk(0x89abcdef);
-    WriteChunk(0x56781234);
+    WriteChunk(sender_field_front);
+    WriteChunk(sender_field_back);
     WriteChunk(sockId);
     return true;
 }
 
 bool PacketBuffer::PushBack(WinSocket *sock, const std::vector<uint8_t> &stream)
 {
-    if (!AppendSenderInfo(sock))
-        return false;
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
 
-    if (!CheckCapacity(stream.size()))
-        return false;
+        if (!AppendSenderInfo(sock))
+            return false;
 
-    std::copy(stream.cbegin(), stream.cend(), m_buffer.begin() + m_writeSeekpoint);
-    m_writeSeekpoint += stream.size();
+        if (!CheckCapacity(stream.size()))
+            return false;
+
+        std::copy(stream.cbegin(), stream.cend(), m_buffer.begin() + m_writeSeekpoint);
+        m_writeSeekpoint += stream.size();
+    }
     return true;
 }
 
 //마지막 읽은 위치로 부터 끝까지를 임시버퍼에??
-bool PacketBuffer::Pulling(const size_t &off)
+bool PacketBuffer::Pulling(size_t off)
 {
+    m_readSeekpoint = 0;
     if (!m_writeSeekpoint)
         return false;
     if (!off)
@@ -78,7 +79,6 @@ bool PacketBuffer::Pulling(const size_t &off)
 
     std::copy(m_buffer.cbegin() + off, m_buffer.cbegin() + m_writeSeekpoint, m_buffer.begin());
     m_writeSeekpoint -= off;
-    m_readSeekpoint = 0;
     return true;
 }
 
@@ -89,15 +89,7 @@ std::unique_ptr<NetPacket> PacketBuffer::PacketInstance()
     if (!m_headerData->GetProperty<HeaderData::FieldInfo::MAIN_CMD_TYPE>(packetId))
         return nullptr;
 
-    switch (packetId)
-    {
-    case PacketOrderTable<ChatPacket>::GetId(): return std::make_unique<ChatPacket>();
-    case PacketOrderTable<EchoPacket>::GetId(): return std::make_unique<EchoPacket>();
-    case PacketOrderTable<FilePacket>::GetId(): return std::make_unique<FilePacket>();
-    case PacketOrderTable<FileChunkPacket>::GetId(): return std::make_unique<FileChunkPacket>();
-    case PacketOrderTable<FilePacketUpload>::GetId(): return std::make_unique<FilePacketUpload>();
-    default: return nullptr;
-    }
+    return m_instanceFunction ? m_instanceFunction(packetId) : nullptr;
 }
 
 bool PacketBuffer::MakePacketReal(const size_t &off)
@@ -151,7 +143,7 @@ bool PacketBuffer::ReadSenderInfo()
     if (!ReadChunk(sockId))
         return false;
 
-    if (sub == 0x56781234)
+    if (sub == sender_field_back)
         m_latestSocketId = sockId;
     return true;
 }
@@ -165,10 +157,13 @@ bool PacketBuffer::ReadPacketInfo()
         return false;
 
     if (length >= 32768)
+    {
+        assert(false);  //length too long!
         return true;
+    }
 
     //m_readSeekpoint += (length - sizeof(length));   //exclude stx
-    m_readSeekpoint += (length-(sizeof(length)*3));  //include stx
+    m_readSeekpoint += (length - (sizeof(length) * 3));  //include stx
 
     int endSymbol = 0;
 
@@ -193,14 +188,14 @@ bool PacketBuffer::PopAsPacket()
     {
         uint32_t readc = 0;
 
-        if (!GetStreamChunk(readc, m_readSeekpoint))
-            break;
+        if (!PeekChunk(readc))
+            return Pulling(m_readSeekpoint);
 
         size_t readcPos = m_readSeekpoint;
 
         switch (readc)
         {
-        case 0x89abcdef:
+        case sender_field_front:
             m_readSeekpoint += sizeof(readc);
             if (!ReadSenderInfo())
                 return Pulling(readcPos);
@@ -221,11 +216,15 @@ bool PacketBuffer::PopAsPacket()
 
 bool PacketBuffer::IsEmpty() const
 {
+    std::lock_guard<std::mutex> guard(m_lock);
+
     return m_writeSeekpoint == 0;
 }
 
 bool PacketBuffer::PopPacket(std::unique_ptr<NetPacket> &dest)
 {
+    std::lock_guard<std::mutex> guard(m_lock);
+
     PopAsPacket();
 
     if (m_packetList.size())

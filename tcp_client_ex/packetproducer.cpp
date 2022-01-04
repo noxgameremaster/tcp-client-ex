@@ -11,6 +11,8 @@
 #include "downloadCompletePacket.h"
 #include "filechunkpacket.h"
 
+#include <assert.h>
+
 PacketProducer::PacketProducer()
     : NetObject()
 {
@@ -139,8 +141,8 @@ void PacketProducer::Scan()
         m_tempStxposList.push_back(readpos);
         readpos += sizeof(stx);
 
-        if (m_tempStxposList.size() > 10000) //testing
-            m_tempStxposList.clear(); //testing
+        if (m_tempStxposList.size() > 100) //testing
+            assert(false);
 
         int length = 0;
 

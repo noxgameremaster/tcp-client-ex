@@ -160,7 +160,6 @@
     <ClCompile Include="serverFileTask.cpp" />
     <ClCompile Include="serverTaskManager.cpp" />
     <ClCompile Include="serverTaskThread.cpp" />
-    <ClCompile Include="packetBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bufferPopper.h" />
@@ -175,7 +174,6 @@
     <ClInclude Include="serverFileTask.h" />
     <ClInclude Include="serverTaskManager.h" />
     <ClInclude Include="serverTaskThread.h" />
-    <ClInclude Include="packetBuffer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
