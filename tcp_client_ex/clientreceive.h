@@ -14,13 +14,15 @@ class LoopThread;
 
 class ClientReceive : public NetService
 {
-    static constexpr size_t read_receive_buffer_count = 32;
+    static constexpr size_t read_receive_buffer_count = 1024;
 private:
     std::shared_ptr<WinSocket> m_netsocket;
     std::unique_ptr<SocketSet> m_readFds;
     std::shared_ptr<PacketBuffer> m_packetBuffer;
     std::unique_ptr<ClientWorker> m_networker;
     std::unique_ptr<LoopThread> m_receiveThread;
+
+    bool m_stopped;
 
 public:
     explicit ClientReceive(std::shared_ptr<WinSocket> &sock, NetObject *parent = nullptr);

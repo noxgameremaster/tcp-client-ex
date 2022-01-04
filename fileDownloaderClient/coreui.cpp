@@ -53,7 +53,7 @@ void CoreUi::DoTestEcho()
 void CoreUi::DoTestFilePacket()
 {
     if (m_netMain)
-        m_netMain->ClientTestSendFileRequest("C:\\Users\\인스유틸\\source\\repos\\tcp_client_ex\\tcp_client_ex\\serverfile\\maple.map");
+        m_netMain->ClientTestSendFileRequest("C:\\Users\\인스유틸\\Documents\\Debug (3)\\DOWNLOAD\\TEST\\Duel3.map");
 }
 
 void CoreUi::SendCommandToServer(const std::string &cmd)

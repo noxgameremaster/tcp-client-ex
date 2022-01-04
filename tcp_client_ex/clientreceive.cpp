@@ -25,6 +25,8 @@ ClientReceive::ClientReceive(std::shared_ptr<WinSocket> &sock, NetObject *parent
     m_receiveThread = std::make_unique<LoopThread>();
 
     m_receiveThread->SetTaskFunction([this]() { this->DoTask(); });
+
+    m_stopped = false;  //fixme
 }
 
 ClientReceive::~ClientReceive()
@@ -65,17 +67,26 @@ void ClientReceive::ReceiveFrom(WinSocket *sock)
 {
     std::vector<uint8_t> receiveVector(read_receive_buffer_count, 0);
 
-    if (!sock->Receive(receiveVector))
-        OnDisconnected(sock);
-    else if (!m_packetBuffer->PushBack(sock, receiveVector))
-        ErrorBufferIsFull();
-    else
-        EventWorker::Instance().AppendTask(&m_OnReceivePushStream);
+    do
+    {
+        if (!sock->Receive(receiveVector))
+            OnDisconnected(sock);
+        else if (!m_packetBuffer->PushBack(sock, receiveVector))
+            ErrorBufferIsFull();
+        else
+        {
+            EventWorker::Instance().AppendTask(&m_OnReceivePushStream);
+            break;
+        }
+        m_stopped = true;
+    }
+    while (false);
 }
 
 void ClientReceive::DoTask()
 {
-    m_readFds->DoSelect([this](WinSocket *s) { this->ReceiveFrom(s); });
+    if (!m_stopped) //FIXME
+        m_readFds->DoSelect([this](WinSocket *s) { this->ReceiveFrom(s); });
 }
 
 bool ClientReceive::OnInitialize()

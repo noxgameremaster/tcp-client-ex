@@ -5,7 +5,7 @@
 #include "echoPacket.h"
 #include "filepacket.h"
 #include "chatPacket.h"
-#include "filepacketupload.h"
+#include "largeFileRequestPacket.h"
 #include "loopThread.h"
 
 NetFlowControl::NetFlowControl()
@@ -124,10 +124,10 @@ void NetFlowControl::SendEchoToServer(const std::string &echoMsg)
 
 void NetFlowControl::TestSendFilePacket(const std::string &fileInfo)
 {
-    std::unique_ptr<FilePacketUpload> filepack(new FilePacketUpload);
+    std::unique_ptr<LargeFileRequestPacket> filepack(new LargeFileRequestPacket);
 
-    filepack->SetUploadPath(fileInfo);
-    filepack->ChangeSubCommand(FilePacketUpload::PacketSubCmd::TestSendToServer);
+    filepack->SetRequestFileUrl(fileInfo);
+    filepack->ChangeSubCommand(LargeFileRequestPacket::PacketSubCmd::StartTestToServer);
     Enqueue(std::move(filepack), IOType::IN);
 }
 

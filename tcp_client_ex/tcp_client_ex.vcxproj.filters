@@ -63,6 +63,12 @@
     <ClCompile Include="abstractTask.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="taskLargeFile.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="taskReportError.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="netclient.h">
@@ -108,6 +114,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="abstractTask.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="taskLargeFile.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="taskReportError.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

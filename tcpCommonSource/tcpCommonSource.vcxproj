@@ -154,6 +154,9 @@
     <ClCompile Include="headerdata.cpp" />
     <ClCompile Include="ioFileStream.cpp" />
     <ClCompile Include="ipToByte.cpp" />
+    <ClCompile Include="largeFileChunkPacket.cpp" />
+    <ClCompile Include="largeFileCompletePacket.cpp" />
+    <ClCompile Include="largeFileRequestPacket.cpp" />
     <ClCompile Include="localbuffer.cpp" />
     <ClCompile Include="loopThread.cpp" />
     <ClCompile Include="main.cpp" />
@@ -165,6 +168,7 @@
     <ClCompile Include="packetOrderTable.cpp" />
     <ClCompile Include="partitionpool.cpp" />
     <ClCompile Include="printUtil.cpp" />
+    <ClCompile Include="reportErrorPacket.cpp" />
     <ClCompile Include="runClock.cpp" />
     <ClCompile Include="socketset.cpp" />
     <ClCompile Include="winsocket.cpp" />
@@ -182,6 +186,9 @@
     <ClInclude Include="headerdata.h" />
     <ClInclude Include="ioFileStream.h" />
     <ClInclude Include="ipToByte.h" />
+    <ClInclude Include="largeFileChunkPacket.h" />
+    <ClInclude Include="largeFileCompletePacket.h" />
+    <ClInclude Include="largeFileRequestPacket.h" />
     <ClInclude Include="localbuffer.h" />
     <ClInclude Include="loopThread.h" />
     <ClInclude Include="netLogObject.h" />
@@ -192,6 +199,7 @@
     <ClInclude Include="packetOrderTable.h" />
     <ClInclude Include="partitionpool.h" />
     <ClInclude Include="printUtil.h" />
+    <ClInclude Include="reportErrorPacket.h" />
     <ClInclude Include="runClock.h" />
     <ClInclude Include="socketset.h" />
     <ClInclude Include="stringHelper.h" />

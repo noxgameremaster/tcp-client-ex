@@ -2,13 +2,19 @@
 #include "taskmanager.h"
 #include "netflowcontrol.h"
 #include "taskthread.h"
+#include "taskReportError.h"
 #include "taskchatmessage.h"
 #include "taskecho.h"
 #include "taskfilestream.h"
+#include "taskLargeFile.h"
 #include "iobuffer.h"
 #include "echopacket.h"
 #include "filechunkpacket.h"
 #include "filepacketupload.h"
+#include "reportErrorPacket.h"
+#include "largeFileChunkPacket.h"
+#include "largeFileCompletePacket.h"
+#include "largeFileRequestPacket.h"
 #include "largefile.h"
 
 TaskManager::TaskManager(NetObject *parent)
@@ -55,6 +61,15 @@ bool TaskManager::OnInitialize()
     InsertSharedTask(sharedFileTask->TaskName(), sharedFileTask);
     InsertSharedTask(FileChunkPacket::TaskName(), sharedFileTask);
     InsertSharedTask(FilePacketUpload::TaskName(), sharedFileTask);
+
+    std::shared_ptr<AbstractTask> largeFileTask(new TaskLargeFile(this));
+
+    InsertSharedTask(LargeFileChunkPacket::TaskName(), largeFileTask);
+    InsertSharedTask(LargeFileCompletePacket::TaskName(), largeFileTask);
+    InsertSharedTask(LargeFileRequestPacket::TaskName(), largeFileTask);
+
+    InsertTask(std::make_unique<TaskReportError>(this));
+
     return true;
 }
 

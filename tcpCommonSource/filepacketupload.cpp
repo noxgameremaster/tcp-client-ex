@@ -115,7 +115,7 @@ void FilePacketUpload::SetUploadPath(const std::string &upPath)
 {
     m_pathLength = static_cast<decltype(m_pathLength)>(upPath.length());
 
-    decltype(m_pathLength) rep = 0;
+    //decltype(m_pathLength) rep = 0;
 
     m_uploadPath = upPath.substr(0, static_cast<size_t>(m_pathLength));
 }

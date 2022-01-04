@@ -93,7 +93,7 @@ bool NetClient::OnInitialize()
     //SetNetOption("125.180.25.219", 8282);
     //SetNetOption("192.168.0.14", 8282);
     //SetNetOption("192.168.0.20", 8282);
-    SetNetOption("127.0.0.1", 18590);
+    SetNetOption("127.0.0.1", 8282);
 
     try
     {

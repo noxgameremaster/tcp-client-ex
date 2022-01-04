@@ -160,7 +160,9 @@
     <ClCompile Include="taskchatmessage.cpp" />
     <ClCompile Include="taskecho.cpp" />
     <ClCompile Include="taskfilestream.cpp" />
+    <ClCompile Include="taskLargeFile.cpp" />
     <ClCompile Include="taskmanager.cpp" />
+    <ClCompile Include="taskReportError.cpp" />
     <ClCompile Include="taskthread.cpp" />
     <ClCompile Include="testpacket.cpp" />
   </ItemGroup>
@@ -177,7 +179,9 @@
     <ClInclude Include="taskchatmessage.h" />
     <ClInclude Include="taskecho.h" />
     <ClInclude Include="taskfilestream.h" />
+    <ClInclude Include="taskLargeFile.h" />
     <ClInclude Include="taskmanager.h" />
+    <ClInclude Include="taskReportError.h" />
     <ClInclude Include="taskthread.h" />
     <ClInclude Include="testpacket.h" />
   </ItemGroup>

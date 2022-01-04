@@ -33,7 +33,7 @@ public:
 private:
     size_t GetCharacterCount() const;
     size_t ReadImpl(file_stream_pointer_type getStream, const size_t &length);
-    size_t WriteImpl(const file_stream_pointer_type &srcStream, const size_t &length);
+    size_t WriteImpl(const uint8_t *srcStream, const size_t &length);
     bool OpenImpl(const std::string &fileurl, OpenMode mode);
 
 public:

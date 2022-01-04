@@ -7,6 +7,10 @@
 #include "echoPacket.h"
 #include "filepacket.h"
 #include "fileChunkPacket.h"
+#include "largeFileChunkPacket.h"
+#include "largeFileCompletePacket.h"
+#include "largeFileRequestPacket.h"
+#include "reportErrorPacket.h"
 #include "filepacketupload.h"
 #include "packetOrderTable.h"
 #include "loopThread.h"
@@ -103,6 +107,10 @@ std::unique_ptr<NetPacket> ClientWorker::DistinguishPacket(uint8_t packetId)
     case PacketOrderTable<FilePacket>::GetId(): return std::make_unique<FilePacket>();
     case PacketOrderTable<FileChunkPacket>::GetId(): return std::make_unique<FileChunkPacket>();
     case PacketOrderTable<FilePacketUpload>::GetId(): return std::make_unique<FilePacketUpload>();
+    case PacketOrderTable<LargeFileChunkPacket>::GetId(): return std::make_unique<LargeFileChunkPacket>();
+    case PacketOrderTable<LargeFileCompletePacket>::GetId(): return std::make_unique<LargeFileCompletePacket>();
+    case PacketOrderTable<LargeFileRequestPacket>::GetId(): return std::make_unique<LargeFileRequestPacket>();
+    case PacketOrderTable<ReportErrorPacket>::GetId(): return std::make_unique<ReportErrorPacket>();
     default: return nullptr;
     }
 }

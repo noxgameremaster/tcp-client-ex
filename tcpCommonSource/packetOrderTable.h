@@ -9,6 +9,10 @@ class FilePacket;
 class FilePacketUpload;
 class FileChunkPacket;
 class DownloadCompletePacket;
+class LargeFileChunkPacket;
+class LargeFileCompletePacket;
+class LargeFileRequestPacket;
+class ReportErrorPacket;
 
 #ifndef SET_PACKET_ORDER
 #define SET_PACKET_ORDER(_Ty, val) \
@@ -26,13 +30,17 @@ private:
     struct PacketGetId
     { };
 
-    SET_PACKET_ORDER(ChatPacket, 1);
-    SET_PACKET_ORDER(FilePacketUpload, 2);
+    SET_PACKET_ORDER(ReportErrorPacket, 1);
+    SET_PACKET_ORDER(LargeFileRequestPacket, 2);
     SET_PACKET_ORDER(FilePacket, 3);
-    SET_PACKET_ORDER(FileChunkPacket, 4);
-    SET_PACKET_ORDER(DownloadCompletePacket, 5);
+    SET_PACKET_ORDER(LargeFileChunkPacket, 4);
+    SET_PACKET_ORDER(LargeFileCompletePacket, 5);
     SET_PACKET_ORDER(TestPacket, 6);
     SET_PACKET_ORDER(EchoPacket, 7);
+    SET_PACKET_ORDER(FilePacketUpload, 8);
+    SET_PACKET_ORDER(FileChunkPacket, 9);
+    SET_PACKET_ORDER(DownloadCompletePacket, 10);
+    SET_PACKET_ORDER(ChatPacket, 11);
 
 public:
     static constexpr int GetId()

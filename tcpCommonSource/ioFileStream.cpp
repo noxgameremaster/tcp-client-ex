@@ -35,7 +35,7 @@ size_t IOFileStream::ReadImpl(file_stream_pointer_type getStream, const size_t &
     return GetCharacterCount();
 }
 
-size_t IOFileStream::WriteImpl(const file_stream_pointer_type &srcStream, const size_t &length)
+size_t IOFileStream::WriteImpl(const uint8_t *srcStream, const size_t &length)
 {
     if (!m_fileHandler)
         return std::string::npos;
