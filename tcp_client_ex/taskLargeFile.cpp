@@ -5,19 +5,27 @@
 #include "largeFileCompletePacket.h"
 #include "netLogObject.h"
 #include "ioFileStream.h"
+#include "stringHelper.h"
+
+using namespace _StringHelper;
 
 TaskLargeFile::TaskLargeFile(NetObject *parent)
     : AbstractTask(parent)
-{ }
+{
+    m_accumulate = 0;
+}
 
 TaskLargeFile::~TaskLargeFile()
 { }
 
 bool TaskLargeFile::CreateDownloadFile(const std::string &url)
 {
-    m_file = std::make_unique<IOFileStream>(url);
+    std::string filename, path;
+    IOFileStream::UrlSeparatePathAndName(url, path, filename);
 
-    return true;
+    m_file = std::make_unique<IOFileStream>(stringFormat("%s\\%s", "downloads", filename));
+
+    return m_file->Open(IOFileStream::OpenMode::WriteOnly);
 }
 
 void TaskLargeFile::RequestChunkData()
@@ -30,8 +38,17 @@ void TaskLargeFile::RequestChunkData()
 
 void TaskLargeFile::ReportDownloadComplete()
 {
+    std::unique_ptr<IOFileStream> file(m_file.release());
     std::unique_ptr<LargeFileCompletePacket> complete(new LargeFileCompletePacket);
+    //uint64_t resultSize = 0;
 
+    /*if (!file->FileSize(resultSize))
+    {
+        NetLogObject::LogObject().AppendLogMessage("something wrong happen!", PrintUtil::ConsoleColor::COLOR_DARKRED);
+        return;
+    }*/
+    complete->SetSubCmd();
+    complete->SetLargeFileSize(static_cast<uint64_t>(m_accumulate), 0);
     ForwardPacketToManager(std::move(complete));
 }
 
@@ -45,11 +62,13 @@ void TaskLargeFile::LargeFileRequest(std::unique_ptr<NetPacket> &&reqPacket)
         NetLogObject::LogObject().AppendLogMessage("sent request packet to server!");
         req->ChangeSubCommand(LargeFileRequestPacket::PacketSubCmd::SendToServer);
         ForwardPacketToManager(std::move(reqPacket));
-        CreateDownloadFile(req->RequestFileUrl());
+        if (!CreateDownloadFile(req->RequestFileUrl()))
+            NetLogObject::LogObject().AppendLogMessage("open fail!");
         break;
     case LargeFileRequestPacket::PacketSubCmd::SendToClient:
         NetLogObject::LogObject().AppendLogMessage("receive msg from server. i will request a chunk data!");
         RequestChunkData();
+        m_accumulate = 0;
         break;
     }
 }
@@ -63,15 +82,19 @@ void TaskLargeFile::LargeFileGetChunk(std::unique_ptr<NetPacket> &&pack)
     {
     case LargeFileChunkPacket::PacketSubCmd::SendToClient:
         chunk->GetFileStream(stream);
-        m_file->Write(stream);
+        if (!m_file->Write(stream))
+            NetLogObject::LogObject().AppendLogMessage(stringFormat("error %d", stream.size()));
         
         RequestChunkData();
+        m_accumulate += stream.size();
         break;
     case LargeFileChunkPacket::PacketSubCmd::SentLastDataToClient:
         chunk->GetFileStream(stream);
-        m_file->Write(stream);
+        if (!m_file->Write(stream))
+            NetLogObject::LogObject().AppendLogMessage(stringFormat("error %d", stream.size()));
+        m_accumulate += stream.size();
         ReportDownloadComplete();
-        NetLogObject::LogObject().AppendLogMessage("end all!");
+        NetLogObject::LogObject().AppendLogMessage(stringFormat("end all %d bytes", m_accumulate));
         break;
     }
 }

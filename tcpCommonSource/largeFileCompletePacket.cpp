@@ -25,9 +25,9 @@ bool LargeFileCompletePacket::WriteReportToServer()
 {
     try
     {
+        WriteCtx(m_fileCrc);
         WriteCtx(m_fileSizeLow);
         WriteCtx(m_fileSizeHigh);
-        WriteCtx(m_fileCrc);
     }
     catch (const bool &fail)
     {
@@ -49,5 +49,19 @@ bool LargeFileCompletePacket::OnReadPacket()
 uint8_t LargeFileCompletePacket::GetPacketId() const
 {
     return static_cast<uint8_t>(PacketOrderTable<LargeFileCompletePacket>::GetId());
+}
+
+void LargeFileCompletePacket::SetSubCmd()
+{
+    SetSubCommand(1);
+}
+
+void LargeFileCompletePacket::SetLargeFileSize(const uint64_t &totalSize, uint32_t crc)
+{
+    static constexpr uint32_t dword_mask = 0xffffffff;
+
+    m_fileSizeLow = totalSize & dword_mask;
+    m_fileSizeHigh = (totalSize >> 32) & dword_mask;
+    m_fileCrc = crc;
 }
 

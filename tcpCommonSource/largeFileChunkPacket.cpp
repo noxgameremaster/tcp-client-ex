@@ -6,6 +6,7 @@ LargeFileChunkPacket::LargeFileChunkPacket()
     : NetPacket()
 {
     m_streamLength = 0;
+    m_fileStream.fill(0);
 }
 
 LargeFileChunkPacket::~LargeFileChunkPacket()
@@ -48,7 +49,8 @@ bool LargeFileChunkPacket::OnReadPacket()
 {
     switch (SubCommand())
     {
-    case PacketSubCmd::SendToServer: return ReadStreamFromServer();
+    case PacketSubCmd::SentLastDataToClient:
+    case PacketSubCmd::SendToClient: return ReadStreamFromServer();
     default: return false;
     }
 }

@@ -11,6 +11,7 @@ class TaskLargeFile : public AbstractTask
 {
 private:
     std::unique_ptr<IOFileStream> m_file;
+    uint32_t m_accumulate;
 
 public:
     explicit TaskLargeFile(NetObject *parent);

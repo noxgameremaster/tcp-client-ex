@@ -12,7 +12,7 @@ ServerAccept::ServerAccept(std::shared_ptr<WinSocket> &listenSocket)
     m_socketset = std::make_unique<SocketSet>();
     m_socketset->SetTimeInterval(1, 0);
     m_acceptThread = std::make_unique<LoopThread>();
-    m_acceptThread->SetTaskFunction([this]() { this->AcceptFromClient(); });
+    m_acceptThread->SetTaskFunction([this]() { return this->AcceptFromClient(); });
     m_listenSocket = listenSocket;
 }
 
@@ -31,9 +31,11 @@ void ServerAccept::AcceptClient(WinSocket *client)
     }
 }
 
-void ServerAccept::AcceptFromClient()
+bool ServerAccept::AcceptFromClient()
 {
     m_socketset->DoSelect([this](WinSocket *c) { this->AcceptClient(c); });
+
+    return true;
 }
 
 bool ServerAccept::OnInitialize()

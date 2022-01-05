@@ -105,7 +105,7 @@ bool LogViewer::IsUpdateItem() const
     return m_addMsg > 0;
 }
 
-void LogViewer::UpdateThreadTask()
+bool LogViewer::UpdateThreadTask()
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
@@ -114,6 +114,8 @@ void LogViewer::UpdateThreadTask()
         ViewerScrolling("end");
     else
         ConditionalUpdateViewer();
+
+    return true;
 }
 
 std::string LogViewer::CurrentLocalTime()
@@ -332,7 +334,7 @@ void LogViewer::PreSubclassWindow()
 
     GetClientRect(&m_updateLocation);
     m_updateLocation.top = headerRect.bottom;
-    m_updateThread->SetTaskFunction([this]() { this->UpdateThreadTask(); });
+    m_updateThread->SetTaskFunction([this]() { return this->UpdateThreadTask(); });
     m_updateThread->SetWaitCondition([this]() { return this->IsUpdateItem(); });
     m_updateThread->Startup();
 

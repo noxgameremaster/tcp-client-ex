@@ -13,7 +13,7 @@ ServerReceiveEx::ServerReceiveEx()
     m_socketSet->SetTimeInterval(1, 0);
     m_recvBuffer.reserve(reserve_recv_buffer);
     m_receiveThread = std::make_unique<LoopThread>();
-    m_receiveThread->SetTaskFunction([this]() { this->ReceiveData(); });
+    m_receiveThread->SetTaskFunction([this]() { return this->ReceiveData(); });
 }
 
 ServerReceiveEx::~ServerReceiveEx()
@@ -40,9 +40,11 @@ void ServerReceiveEx::ReceiveFromClient(WinSocket *client)
         m_packetBuffer->PushBack(client, m_recvBuffer);
 }
 
-void ServerReceiveEx::ReceiveData()
+bool ServerReceiveEx::ReceiveData()
 {
     m_socketSet->DoSelect([this](WinSocket *s) { this->ReceiveFromClient(s); });
+
+    return true;
 }
 
 bool ServerReceiveEx::OnInitialize()

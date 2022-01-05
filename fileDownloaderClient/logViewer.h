@@ -42,7 +42,7 @@ public:
     void UpdateViewer();
     void ConditionalUpdateViewer();
     bool IsUpdateItem() const;
-    void UpdateThreadTask();
+    bool UpdateThreadTask();
 
 private:
     std::string CurrentLocalTime();

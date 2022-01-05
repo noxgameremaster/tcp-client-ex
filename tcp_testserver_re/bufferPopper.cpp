@@ -13,20 +13,20 @@ BufferPopper::BufferPopper()
     : NetService()
 {
     m_popThread = std::make_unique<LoopThread>();
-    m_popThread->SetTaskFunction([this]() { this->PopData(); });
+    m_popThread->SetTaskFunction([this]() { return this->PopData(); });
 }
 
 BufferPopper::~BufferPopper()
 { }
 
-void BufferPopper::PopData()
+bool BufferPopper::PopData()
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
     if (!m_packetBuffer)
-        return;
+        return false;
     if (m_packetBuffer->IsEmpty())
-        return;
+        return true;
 
     std::unique_ptr<NetPacket> getPacket;
 
@@ -37,6 +37,7 @@ void BufferPopper::PopData()
         /// 그냥 여기에서 처리
         m_OnReleasePacket.Emit(std::move(getPacket));
     }
+    return true;
 }
 
 bool BufferPopper::OnInitialize()

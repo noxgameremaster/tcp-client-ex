@@ -10,7 +10,7 @@ ClientSend::ClientSend(std::shared_ptr<WinSocket> &sock, NetObject *parent)
 {
     m_netsocket = sock;
     m_sendThread = std::make_unique<LoopThread>();
-    m_sendThread->SetTaskFunction([this]() { this->StreamSend(); });
+    m_sendThread->SetTaskFunction([this]() { return this->StreamSend(); });
     m_sendThread->SetWaitCondition([this]() { return !this->m_sendbuffer->IsEmpty(); });
 }
 
@@ -22,15 +22,16 @@ void ClientSend::BufferOnPushed()
     m_sendThread->Notify();
 }
 
-void ClientSend::StreamSend()
+bool ClientSend::StreamSend()
 {
     std::unique_ptr<uint8_t[]> stream;
     size_t buffersize = 0;
 
     if (!m_sendbuffer->PopBufferAlloc(std::move(stream), buffersize))
-        return;
+        return true;
 
     m_netsocket->Send(stream.get(), buffersize);
+    return true;
 }
 
 bool ClientSend::OnInitialize()

@@ -34,6 +34,10 @@ private:
 
     bool OnReadPacket() override;
     uint8_t GetPacketId() const override;
+
+public:
+    void SetSubCmd();
+    void SetLargeFileSize(const uint64_t &totalSize, uint32_t crc);
 };
 
 #endif

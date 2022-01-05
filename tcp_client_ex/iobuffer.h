@@ -13,7 +13,7 @@
 class IOBuffer : public PartitionPool
 {
 public:
-    static constexpr size_t receive_buffer_max_size = 256;
+    static constexpr size_t receive_buffer_max_size = 1024;
 
 private:
     std::vector<uint8_t> m_largeBuffer;

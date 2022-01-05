@@ -24,7 +24,7 @@ ClientReceive::ClientReceive(std::shared_ptr<WinSocket> &sock, NetObject *parent
     m_packetBuffer = std::make_unique<PacketBuffer>();
     m_receiveThread = std::make_unique<LoopThread>();
 
-    m_receiveThread->SetTaskFunction([this]() { this->DoTask(); });
+    m_receiveThread->SetTaskFunction([this]() { return this->DoTask(); });
 
     m_stopped = false;  //fixme
 }
@@ -83,10 +83,11 @@ void ClientReceive::ReceiveFrom(WinSocket *sock)
     while (false);
 }
 
-void ClientReceive::DoTask()
+bool ClientReceive::DoTask()
 {
-    if (!m_stopped) //FIXME
-        m_readFds->DoSelect([this](WinSocket *s) { this->ReceiveFrom(s); });
+    m_readFds->DoSelect([this](WinSocket *s) { this->ReceiveFrom(s); });
+
+    return !m_stopped;
 }
 
 bool ClientReceive::OnInitialize()

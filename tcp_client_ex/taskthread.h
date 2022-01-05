@@ -22,7 +22,7 @@ public:
 private:
     bool IsMessageList() const;
     void ExecuteTask(std::unique_ptr<NetPacket> &&msg);
-    void Dequeue();
+    bool Dequeue();
     void DoTask(std::unique_ptr<NetPacket> &&packet) override;
 
 public:

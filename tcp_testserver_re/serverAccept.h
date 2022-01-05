@@ -23,7 +23,7 @@ public:
 
 private:
     void AcceptClient(WinSocket *client);
-    void AcceptFromClient();
+    bool AcceptFromClient();
     bool OnInitialize() override;
     bool OnStarted() override;
     void OnDeinitialize() override;

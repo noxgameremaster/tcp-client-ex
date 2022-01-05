@@ -17,6 +17,7 @@ public:
 private:
     std::string m_requestFileUrl;
     uint8_t m_fileUrlLength;
+    std::array<char, 255> m_requestUrlArray;
 
 public:
     explicit LargeFileRequestPacket();
@@ -33,8 +34,10 @@ public:
 
 private:
     bool ReadStartTest();
+    bool ReadRequestUrlToServer();
     bool OnReadPacket() override;
     bool WriteStartTest();
+    bool WriteRequestUrlToServer();
     bool OnWritePacket() override;
     uint8_t GetPacketId() const override;
 

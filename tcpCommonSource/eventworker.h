@@ -25,7 +25,7 @@ public:
 
 private:
     bool IsTask() const;
-    void CheckoutEvent();
+    bool CheckoutEvent();
     void Work();
 
 public:

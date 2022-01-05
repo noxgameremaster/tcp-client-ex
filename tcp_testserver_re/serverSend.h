@@ -25,7 +25,7 @@ public:
 private:
     bool EmptySlot() const;
     bool SendPacket(std::unique_ptr<NetPacket> &&msg);
-    void SendLoop();
+    bool SendLoop();
     bool OnInitialize() override;
     bool OnStarted() override;
     void OnDeinitialize() override;

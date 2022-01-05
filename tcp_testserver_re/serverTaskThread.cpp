@@ -8,7 +8,7 @@ ServerTaskThread::ServerTaskThread(NetObject *parent)
     : ServerTask(parent)
 {
     m_taskThread = std::make_unique<LoopThread>();
-    m_taskThread->SetTaskFunction([this]() { this->Dequeue(); });
+    m_taskThread->SetTaskFunction([this]() { return this->Dequeue(); });
     m_taskThread->SetWaitCondition([this]() { return this->IsMessageList(); });
 }
 
@@ -44,7 +44,7 @@ void ServerTaskThread::ExecuteTask(std::unique_ptr<NetPacket> &&msg)
     ExecuteDoTask(task, std::move(msg));
 }
 
-void ServerTaskThread::Dequeue()
+bool ServerTaskThread::Dequeue()
 {
     std::unique_ptr<NetPacket> msg;
 
@@ -63,7 +63,7 @@ void ServerTaskThread::Dequeue()
             continue;
         ExecuteTask(std::move(msg));
     }
-
+    return true;
 }
 
 void ServerTaskThread::DoTask(std::unique_ptr<NetPacket> &&)

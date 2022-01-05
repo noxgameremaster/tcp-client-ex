@@ -22,7 +22,7 @@ ServerTaskManager::ServerTaskManager()
 {
     m_ioThread = std::make_unique<LoopThread>();
     m_ioThread->SetWaitCondition([this]() { return this->CheckHasIO(); });
-    m_ioThread->SetTaskFunction([this]() { this->DequeueIOList(); });
+    m_ioThread->SetTaskFunction([this]() { return this->DequeueIOList(); });
     m_servTaskThread = std::make_unique<ServerTaskThread>(this);
 }
 
@@ -36,7 +36,7 @@ bool ServerTaskManager::CheckHasIO() const
     return (m_inpacketList.size() + m_outpacketList.size()) > 0;
 }
 
-void ServerTaskManager::DequeueIOList()
+bool ServerTaskManager::DequeueIOList()
 {
     std::this_thread::sleep_for(std::chrono::microseconds(3));
     std::unique_ptr<NetPacket> packet;
@@ -57,6 +57,7 @@ void ServerTaskManager::DequeueIOList()
             m_outpacketList.pop_front();
         }
     }
+    return true;
 }
 
 bool ServerTaskManager::InsertServerTask(std::unique_ptr<ServerTask> &&servTask)

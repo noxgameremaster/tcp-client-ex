@@ -15,6 +15,7 @@
 
 #pragma comment(lib, "tcpCommonSource.lib")
 #pragma comment(lib, "tcp_client_ex.lib")
+#pragma comment(lib, "netSystemFile")
 
 using namespace _StringHelper;
 

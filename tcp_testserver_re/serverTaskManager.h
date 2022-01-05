@@ -30,7 +30,7 @@ public:
 
 private:
     bool CheckHasIO() const;
-    void DequeueIOList();
+    bool DequeueIOList();
     bool InsertServerTask(std::unique_ptr<ServerTask> &&servTask);
     bool InsertServerSharedTask(const std::string &taskKey, std::shared_ptr<ServerTask> sharedTask);
     bool OnInitialize() override;

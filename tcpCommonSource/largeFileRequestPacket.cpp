@@ -6,6 +6,7 @@ LargeFileRequestPacket::LargeFileRequestPacket()
     : NetPacket()
 {
     m_fileUrlLength = 0;
+    m_requestUrlArray.fill(0);
 }
 
 LargeFileRequestPacket::~LargeFileRequestPacket()
@@ -16,7 +17,14 @@ size_t LargeFileRequestPacket::PacketSize(Mode mode)
     if (Mode::Write != mode)
         return 0;
 
-    return sizeof(m_fileUrlLength) + m_fileUrlLength;
+    switch (SubCommand())
+    {
+    case PacketSubCmd::StartTestToServer:
+        return sizeof(m_fileUrlLength) + m_fileUrlLength;
+    case PacketSubCmd::SendToServer:
+        return m_requestUrlArray.max_size();
+    default: return 0;
+    }
 }
 
 bool LargeFileRequestPacket::ReadStartTest()
@@ -26,6 +34,20 @@ bool LargeFileRequestPacket::ReadStartTest()
         ReadCtx(m_fileUrlLength);
         m_requestFileUrl.resize(static_cast<decltype(m_fileUrlLength)>(m_fileUrlLength));
         for (auto &c : m_requestFileUrl)
+            ReadCtx(c);
+    }
+    catch (const bool &fail)
+    {
+        return fail;
+    }
+    return true;
+}
+
+bool LargeFileRequestPacket::ReadRequestUrlToServer()
+{
+    try
+    {
+        for (auto &c : m_requestUrlArray)
             ReadCtx(c);
     }
     catch (const bool &fail)
@@ -66,11 +88,25 @@ bool LargeFileRequestPacket::WriteStartTest()
     return true;
 }
 
+bool LargeFileRequestPacket::WriteRequestUrlToServer()
+{
+    try
+    {
+        for (const auto &c : m_requestUrlArray)
+            WriteCtx(c);
+    }
+    catch (const bool &fail)
+    {
+        return fail;
+    }
+    return true;
+}
+
 bool LargeFileRequestPacket::OnWritePacket()
 {
     switch (SubCommand())
     {
-    case PacketSubCmd::SendToServer: return WriteStartTest();
+    case PacketSubCmd::SendToServer: return WriteRequestUrlToServer();
     case PacketSubCmd::StartTestToServer: return WriteStartTest();
     default: return false;
     }
@@ -116,4 +152,7 @@ void LargeFileRequestPacket::SetRequestFileUrl(const std::string &requestFileUrl
         m_requestFileUrl.resize(128, 0);
 
     m_fileUrlLength = static_cast<decltype(m_fileUrlLength)>(m_requestFileUrl.length());
+
+    m_requestUrlArray.fill(0);
+    std::copy(m_requestFileUrl.cbegin(), m_requestFileUrl.cend(), m_requestUrlArray.begin());
 }

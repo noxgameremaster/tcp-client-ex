@@ -15,7 +15,7 @@ NetFlowControl::NetFlowControl()
     m_ioThread = std::make_unique<LoopThread>();
 
     m_ioThread->SetWaitCondition([this]() { return this->CheckHasIO(); });
-    m_ioThread->SetTaskFunction([this]() { this->CheckIOList(); });
+    m_ioThread->SetTaskFunction([this]() { return this->CheckIOList(); });
 }
 
 NetFlowControl::~NetFlowControl()
@@ -28,9 +28,9 @@ bool NetFlowControl::CheckHasIO() const
     return (m_inpacketList.size() + m_outpacketList.size()) > 0;
 }
 
-void NetFlowControl::CheckIOList()
+bool NetFlowControl::CheckIOList()
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(3));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(3));
     {
         std::lock_guard<std::mutex> lock(m_lock);
         while (m_inpacketList.size())
@@ -48,6 +48,7 @@ void NetFlowControl::CheckIOList()
             m_outpacketList.pop_front();
         }
     }
+    return true;
 }
 
 bool NetFlowControl::OnInitialize()

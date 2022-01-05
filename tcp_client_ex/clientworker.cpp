@@ -19,7 +19,7 @@ ClientWorker::ClientWorker(NetObject *parent)
     : NetService(parent)
 {
     m_workThread = std::make_unique<LoopThread>();
-    m_workThread->SetTaskFunction([this]() { this->FetchFromBuffer(); });
+    m_workThread->SetTaskFunction([this]() { return this->FetchFromBuffer(); });
     m_workThread->SetWaitCondition([this]() { return this->IsContained(); });
 
     m_packetBuffer = std::make_unique<PacketBuffer>();
@@ -36,12 +36,14 @@ bool ClientWorker::IsContained() const
     return !m_packetBuffer->IsEmpty();
 }
 
-void ClientWorker::FetchFromBuffer()
+bool ClientWorker::FetchFromBuffer()
 {
     std::unique_ptr<NetPacket> pack;
 
     if (m_packetBuffer->PopPacket(pack))
         m_OnReleasePacket.Emit(std::move(pack));
+
+    return true;
 }
 
 void ClientWorker::BufferOnPushed()

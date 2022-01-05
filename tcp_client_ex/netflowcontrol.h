@@ -26,7 +26,7 @@ public:
 
 private:
     bool CheckHasIO() const;
-    void CheckIOList();
+    bool CheckIOList();
     virtual bool OnInitialize();
     virtual void OnDeinitialize();
     virtual bool OnStarted();

@@ -33,7 +33,7 @@ private:
     bool ErrorBufferIsFull();
     void OnDisconnected(WinSocket *sock);
     void ReceiveFrom(WinSocket *sock);
-    void DoTask();
+    bool DoTask();
 
     bool OnInitialize() override;
     void OnDeinitialize() override;

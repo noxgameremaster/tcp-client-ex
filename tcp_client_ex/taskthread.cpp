@@ -9,7 +9,7 @@ TaskThread::TaskThread(NetObject *parent)
 {
     m_taskThread = std::make_unique<LoopThread>();
     m_taskThread->SetWaitCondition([this]() { return this->IsMessageList(); });
-    m_taskThread->SetTaskFunction([this]() { this->Dequeue(); });
+    m_taskThread->SetTaskFunction([this]() { return this->Dequeue(); });
 }
 
 TaskThread::~TaskThread()
@@ -44,7 +44,7 @@ void TaskThread::ExecuteTask(std::unique_ptr<NetPacket> &&msg)
     ExecuteDoTask(task, std::move(msg));
 }
 
-void TaskThread::Dequeue()
+bool TaskThread::Dequeue()
 {
     std::unique_ptr<NetPacket> msg;
 
@@ -63,7 +63,7 @@ void TaskThread::Dequeue()
             continue;
         ExecuteTask(std::move(msg));
     }
-
+    return true;
 }
 
 void TaskThread::DoTask(std::unique_ptr<NetPacket> &&)

@@ -17,7 +17,7 @@ void LoopThread::WaitCondition()
     m_condvar.wait(waitLock, m_waitCondition);
 }
 
-void LoopThread::DoTask(std::function<void()> task)
+void LoopThread::DoTask(task_function_type task)
 {
     do
     {
@@ -27,7 +27,8 @@ void LoopThread::DoTask(std::function<void()> task)
         if (m_terminated)
             break;
 
-        task();
+        if (!task())
+            break;
     }
     while (true);
     //m_OnTerminatedThread.Emit();
@@ -77,7 +78,7 @@ void LoopThread::SetWaitCondition(std::function<bool()> &&cond)
     };
 }
 
-void LoopThread::SetTaskFunction(std::function<void()> &&task)
+void LoopThread::SetTaskFunction(task_function_type &&task)
 {
     m_taskFunction = std::forward<std::remove_reference<decltype(task)>::type>(task);
 }

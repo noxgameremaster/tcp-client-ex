@@ -21,11 +21,11 @@ private:
 private:
     uint32_t GetLogRealColor(PrintUtil::ConsoleColor colr);
 public:
-    void AppendLogMessage(const std::string &message, PrintUtil::ConsoleColor colr = PrintUtil::ConsoleColor::COLOR_WHITE);
+    void AppendLogMessage(const std::string &message, PrintUtil::ConsoleColor colr = PrintUtil::ConsoleColor::COLOR_MIN);
 
 private:
     bool IsNotEmpty() const;
-    void NavigateLogList();
+    bool NavigateLogList();
 
     bool OnInitialize() override;
     bool OnStarted() override;

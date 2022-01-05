@@ -21,7 +21,7 @@ public:
 
 private:
     void BufferOnPushed();
-    void StreamSend();
+    bool StreamSend();
     bool OnInitialize() override;
     void OnDeinitialize() override;
     bool OnStarted() override;

@@ -6,7 +6,7 @@ EventWorker::EventWorker()
     : CCObject()
 {
     m_eventThread = std::make_unique<LoopThread>();
-    m_eventThread->SetTaskFunction([this]() { this->CheckoutEvent(); });
+    m_eventThread->SetTaskFunction([this]() { return this->CheckoutEvent(); });
     m_eventThread->SetWaitCondition([this]() { return IsTask(); });
 }
 
@@ -22,7 +22,7 @@ bool EventWorker::IsTask() const
     }
 }
 
-void EventWorker::CheckoutEvent()
+bool EventWorker::CheckoutEvent()
 {
     std::function<void()> task;
 
@@ -34,6 +34,8 @@ void EventWorker::CheckoutEvent()
     }
     if (task)
         task();
+
+    return true;
 }
 
 bool EventWorker::Start()

@@ -71,10 +71,10 @@ public:
         return Exist(m_filename);
     }
     void Close();
-    static bool FileSize(const std::string &fileUrl, size_t &destSize);
-    bool FileSize(size_t &destSize)
+    static bool FileSize(const std::string &fileUrl, uint64_t &destSize);
+    bool FileSize(uint64_t &destSize)
     {
-        return FileSize(destSize);
+        return FileSize(m_filename, destSize);
     }
 
     std::string FileName() const

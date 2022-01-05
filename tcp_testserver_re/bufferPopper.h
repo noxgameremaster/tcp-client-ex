@@ -19,7 +19,7 @@ public:
     ~BufferPopper() override;
 
 private:
-    void PopData();
+    bool PopData();
     bool OnInitialize() override;
     bool OnStarted() override;
     void OnDeinitialize() override;

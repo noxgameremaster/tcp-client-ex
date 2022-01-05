@@ -27,7 +27,7 @@ public:
 private:
     void OnDisconnected(WinSocket *client);
     void ReceiveFromClient(WinSocket *client);
-    void ReceiveData();
+    bool ReceiveData();
     bool OnInitialize() override;
     bool OnStarted() override;
     void OnDeinitialize() override;

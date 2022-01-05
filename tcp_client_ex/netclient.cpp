@@ -92,8 +92,9 @@ bool NetClient::OnInitialize()
 
     //SetNetOption("125.180.25.219", 8282);
     //SetNetOption("192.168.0.14", 8282);
-    //SetNetOption("192.168.0.20", 8282);
-    SetNetOption("127.0.0.1", 8282);
+    //SetNetOption("125.180.25.219", 8282);
+    //SetNetOption("127.0.0.1", 8282);
+    //SetNetOption("61.36.35.46", 8282);
 
     try
     {
@@ -151,3 +152,32 @@ void NetClient::ClientSendChat(const std::string &say)
     if (m_flowcontrol)
         m_flowcontrol->SendChatMessage(say);
 }
+
+bool NetClient::SetNetworkParam(const std::string &ip, const std::string &port)
+{
+    if (ip.empty() || port.empty())
+        return false;
+
+    if (port.length() > 5)
+        return false;
+
+    for (const auto &c : port)
+    {
+        switch (c)
+        {
+        case '0': case '1':case '2':case '3':case '4':
+        case '5':case '6':case '7':case '8':case '9':
+            break;
+        default:
+            return false;
+        }
+    }
+    std::stringstream ss(port);
+    uint16_t portId = 0;
+
+    ss >> portId;
+
+    SetNetOption(ip, portId);
+    return true;
+}
+

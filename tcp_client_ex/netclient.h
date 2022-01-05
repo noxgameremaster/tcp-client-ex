@@ -38,6 +38,7 @@ public:
     void ClientSendEcho();
     void ClientTestSendFileRequest(const std::string &req);
     void ClientSendChat(const std::string &say);
+    bool SetNetworkParam(const std::string &ip, const std::string &port);
 };
 
 #endif

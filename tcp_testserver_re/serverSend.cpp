@@ -10,7 +10,7 @@ ServerSend::ServerSend()
 {
     m_sendThread = std::make_unique<LoopThread>();
 
-    m_sendThread->SetTaskFunction([this]() { this->SendLoop(); });
+    m_sendThread->SetTaskFunction([this]() { return this->SendLoop(); });
     m_sendThread->SetWaitCondition([this]() { return (!this->EmptySlot()); });
 }
 
@@ -60,7 +60,7 @@ bool ServerSend::SendPacket(std::unique_ptr<NetPacket> &&msg)
     return destination->Send(stream, length);
 }
 
-void ServerSend::SendLoop()
+bool ServerSend::SendLoop()
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
@@ -73,6 +73,7 @@ void ServerSend::SendLoop()
             m_packetList.pop_front();
         }
     }
+    return true;
 }
 
 bool ServerSend::OnInitialize()

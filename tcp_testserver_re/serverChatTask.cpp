@@ -89,7 +89,7 @@ void ServerChatTask::RemoteCommandSendFile(const std::string &fileCmd, socket_ty
         return;
 
     std::string fullname = stringFormat("%s\\%s", path, fileName);
-    size_t filesize = 0;
+    uint64_t filesize = 0;
 
     if (!IOFileStream::FileSize(fullname, filesize))
     {
@@ -101,7 +101,7 @@ void ServerChatTask::RemoteCommandSendFile(const std::string &fileCmd, socket_ty
 
     sendfile->SetFileName(fileName);
     sendfile->SetSavePath(path);
-    sendfile->SetFilesize(filesize);
+    sendfile->SetFilesize(static_cast<uint32_t>(filesize));
     sendfile->SetFilePacketDirection(FilePacket::FilePacketDirection::ServerToClient);
     sendfile->SetSenderSocketId(sockId);
 

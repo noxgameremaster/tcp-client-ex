@@ -5,11 +5,14 @@
 #include "ccobject.h"
 
 class NetClient;
+class IniFileMan;
 
 class CoreUi : public CCObject
 {
 private:
+    const std::string m_settingFileName;
     std::unique_ptr<NetClient> m_netMain;
+    std::unique_ptr<IniFileMan> m_iniMan;
 
 public:
     explicit CoreUi();

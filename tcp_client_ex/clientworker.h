@@ -21,7 +21,7 @@ public:
 
 private:
     bool IsContained() const;
-    void FetchFromBuffer();
+    bool FetchFromBuffer();
 
 public:
     void BufferOnPushed();

@@ -54,6 +54,7 @@ bool IOFileStream::OpenImpl(const std::string &fileurl, OpenMode mode)
         openmode |= std::ios::out;
 
     m_fileHandler = std::make_unique<file_handler_type>(fileurl, openmode);
+    *m_fileHandler << std::noskipws;
     return m_fileHandler->is_open();
 }
 
@@ -78,12 +79,12 @@ void IOFileStream::Close()
         m_fileHandler.reset();
 }
 
-bool IOFileStream::FileSize(const std::string &fileUrl, size_t &destSize)
+bool IOFileStream::FileSize(const std::string &fileUrl, uint64_t &destSize)
 {
     if (!Exist(fileUrl))
         return false;
 
-    destSize = static_cast<size_t>(NAMESPACE_FILESYSTEM::file_size(fileUrl));
+    destSize = NAMESPACE_FILESYSTEM::file_size(fileUrl);
     return true;
 }
 
@@ -93,7 +94,7 @@ void IOFileStream::UrlSeparatePathAndName(const std::string &url, std::string &p
     bool hasDirToken = std::string::npos == findpos;
 
     path = hasDirToken ? "" : url.substr(0, findpos);
-    name = hasDirToken ? url : url.substr(findpos);
+    name = hasDirToken ? url : url.substr(findpos+1);
 }
 
 void IOFileStream::UrlSeparatePathAndName(std::string &path, std::string &name)
