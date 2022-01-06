@@ -1,5 +1,5 @@
+
 #include "iobuffer.h"
-//#include "localbuffer.h"
 #include <functional>
 #include <memory>
 
@@ -42,17 +42,23 @@ bool IOBuffer::StoreToLargebuffer(const int &srcIndex)
 
 void IOBuffer::TriggeredWhenPush()
 {
-    decltype(m_triggers.cbegin()) triggerIterator = m_triggers.cbegin();
-    std::list<decltype(triggerIterator)> delList;
+    using trig_iterator = decltype(m_triggers.cbegin());
 
-    while (triggerIterator != m_triggers.cend())
+    std::list<trig_iterator> delList;
+
     {
-        if (!(*triggerIterator)())
-            delList.push_back(triggerIterator);
-        ++triggerIterator;
+        std::unique_lock<std::mutex> trgLock(m_trigLock);
+        trig_iterator triggerIterator = m_triggers.cbegin();
+
+        while (triggerIterator != m_triggers.cend())
+        {
+            if (!(*triggerIterator)())
+                delList.push_back(triggerIterator);
+            ++triggerIterator;
+        }
+        for (decltype(triggerIterator) &it : delList)
+            m_triggers.erase(it);
     }
-    for (decltype(triggerIterator) &it : delList)
-        m_triggers.erase(it);
 }
 
 bool IOBuffer::PushBuffer(const uint8_t *buffer, size_t bufferSize)
@@ -126,6 +132,7 @@ bool IOBuffer::SetTrigger(NetObject *trigger, std::function<void()> &&fn)
     if (alive.expired())
         return false;
 
+    std::unique_lock<std::mutex> trgLock(m_trigLock);
     m_triggers.push_back(
         [r = alive, fn = std::move(fn)]
     ()
@@ -139,22 +146,5 @@ bool IOBuffer::SetTrigger(NetObject *trigger, std::function<void()> &&fn)
     return true;
 }
 
-//void IOBuffer::MoveBuffer(std::shared_ptr<LocalBuffer> localbuffer)
-//{
-//    size_t readsize = 0;
-//
-//    while (true)
-//    {
-//        {
-//            std::unique_ptr<uint8_t[]> alloc;
-//
-//            if (!PopBufferAlloc(std::move(alloc), readsize))
-//                break;
-//
-//            if (!localbuffer->Append(alloc.get(), readsize))
-//                break;
-//        }
-//    }
-//}
 
 

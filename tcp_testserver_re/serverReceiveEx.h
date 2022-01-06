@@ -40,6 +40,7 @@ public:
     void RegistClientPool(std::shared_ptr<ClientPool> &cliPool);
 
     DECLARE_SIGNAL(OnShareBuffer, std::shared_ptr<PacketBuffer>)
+    DECLARE_SIGNAL(OnReceiveData)
 
 private:
     std::mutex m_lock;

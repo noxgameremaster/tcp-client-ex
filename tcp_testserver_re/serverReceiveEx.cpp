@@ -38,6 +38,8 @@ void ServerReceiveEx::ReceiveFromClient(WinSocket *client)
         OnDisconnected(client);
     else if (m_packetBuffer)
         m_packetBuffer->PushBack(client, m_recvBuffer);
+
+    m_OnReceiveData.Emit();
 }
 
 bool ServerReceiveEx::ReceiveData()

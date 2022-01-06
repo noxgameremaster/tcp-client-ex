@@ -14,14 +14,23 @@ BufferPopper::BufferPopper()
 {
     m_popThread = std::make_unique<LoopThread>();
     m_popThread->SetTaskFunction([this]() { return this->PopData(); });
+    m_popThread->SetWaitCondition([this]() { return this->HasElement(); });
 }
 
 BufferPopper::~BufferPopper()
 { }
 
+bool BufferPopper::HasElement() const
+{
+    if (!m_packetBuffer)
+        return false;
+
+    return !m_packetBuffer->IsEmpty();
+}
+
 bool BufferPopper::PopData()
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
     if (!m_packetBuffer)
         return false;
@@ -55,6 +64,7 @@ void BufferPopper::OnDeinitialize()
 
 void BufferPopper::OnStopped()
 {
+    m_popThread->Notify();
     m_popThread->Shutdown();
 }
 
@@ -80,3 +90,9 @@ void BufferPopper::SlotRegistBuffer(std::shared_ptr<PacketBuffer> buffer)
         { return BufferPopper::DistinguishPacket(packetId); });
     }
 }
+
+void BufferPopper::SlotBufferPushed()
+{
+    m_popThread->Notify();
+}
+

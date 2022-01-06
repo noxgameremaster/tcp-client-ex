@@ -218,7 +218,7 @@ bool PacketBuffer::IsEmpty() const
 {
     std::lock_guard<std::mutex> guard(m_lock);
 
-    return m_writeSeekpoint == 0;
+    return m_writeSeekpoint == 0 && m_packetList.empty();
 }
 
 bool PacketBuffer::PopPacket(std::unique_ptr<NetPacket> &dest)

@@ -19,6 +19,7 @@ public:
     ~BufferPopper() override;
 
 private:
+    bool HasElement() const;
     bool PopData();
     bool OnInitialize() override;
     bool OnStarted() override;
@@ -29,6 +30,7 @@ private:
 
 public:
     void SlotRegistBuffer(std::shared_ptr<PacketBuffer> buffer);
+    void SlotBufferPushed();
 
     DECLARE_SIGNAL(OnReleasePacket, std::unique_ptr<NetPacket>)
 };

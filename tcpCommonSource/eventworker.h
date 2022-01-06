@@ -26,7 +26,6 @@ public:
 private:
     bool IsTask() const;
     bool CheckoutEvent();
-    void Work();
 
 public:
 
@@ -41,17 +40,24 @@ public:
         if (cobject == nullptr)
             return;
 
+        std::weak_ptr<CCObject::Pimpl> observer((*cobject)());
+
         {
             std::lock_guard<std::mutex> guard(m_lock);
-            m_task.push_back([ref = std::weak_ptr<CCObject::Pimpl>((*cobject)()), args..., signal]()
+
+            if (observer.expired())
+                return;
+
+            m_task.push_back([ref = observer, args..., signal]()
             {
                 if (ref.expired())
                     return;
                 signal->Emit(args...);
             }
             );
-            EventThreadNotify();
+            ////EventThreadNotify();
         }
+        EventThreadNotify();
     }
 
     bool Start();

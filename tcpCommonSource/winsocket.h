@@ -17,9 +17,9 @@ public:
 
 private:
     std::unique_ptr<socket_type, socket_deleter_type> m_socket;
-    /*std::string m_ipAddr;
-    uint16_t m_portId;*/
     std::unique_ptr<sockaddr_in> m_netHint;
+    uint32_t m_recvCount;
+    uint32_t m_sendCount;
 
 public:
     explicit WinSocket(socket_type sock = NetObject::socket_error_val);
@@ -127,6 +127,10 @@ public:
     }
     bool Accept(WinSocket &&dest);
     bool operator==(const WinSocket &other);
+
+private:
+    DECLARE_SIGNAL(OnReceive, uint32_t)
+    DECLARE_SIGNAL(OnSend, uint32_t)
 };
 
 #endif

@@ -9,6 +9,7 @@ class ClientSend;
 class WinSocket;
 class NetFlowControl;
 class NetPacket;
+class NetStatus;
 
 class NetClient : public NetService
 {
@@ -18,12 +19,13 @@ private:
     std::shared_ptr<WinSocket> m_netsocket;
     std::shared_ptr<NetFlowControl> m_flowcontrol;
 
+    std::unique_ptr<NetStatus> m_netStatus;
+
 public:
     explicit NetClient();
     ~NetClient() override;
 
 private:
-    void OnDeinitialize() override;
     void ToggleEventManager(bool isOn);
     void OnError(const std::string &title, const std::string &errorMessage) override;
     bool StandBySocket();
@@ -39,6 +41,11 @@ public:
     void ClientTestSendFileRequest(const std::string &req);
     void ClientSendChat(const std::string &say);
     bool SetNetworkParam(const std::string &ip, const std::string &port);
+
+private:
+    void SlotReportPing(uint32_t recvCount, uint32_t sendCount);
+
+    DECLARE_SIGNAL(OnDeadlockTest)
 };
 
 #endif

@@ -155,6 +155,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="netclient.cpp" />
     <ClCompile Include="netflowcontrol.cpp" />
+    <ClCompile Include="netStatus.cpp" />
     <ClCompile Include="packetproducer.cpp" />
     <ClCompile Include="iobuffer.cpp" />
     <ClCompile Include="taskchatmessage.cpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="largefile.h" />
     <ClInclude Include="netclient.h" />
     <ClInclude Include="netflowcontrol.h" />
+    <ClInclude Include="netStatus.h" />
     <ClInclude Include="packetproducer.h" />
     <ClInclude Include="iobuffer.h" />
     <ClInclude Include="taskchatmessage.h" />

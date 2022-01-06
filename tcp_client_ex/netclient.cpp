@@ -3,12 +3,15 @@
 #include "netflowcontrol.h"
 #include "clientreceive.h"
 #include "clientsend.h"
+#include "netStatus.h"
 #include "winsocket.h"
 #include "eventworker.h"
 #include "stringHelper.h"
 #include "netLogObject.h"
 
 #include <iostream>
+#include <assert.h>
+#include <cassert>
 
 using namespace _StringHelper;
 
@@ -20,13 +23,6 @@ NetClient::NetClient()
 
 NetClient::~NetClient()
 { }
-
-void NetClient::OnDeinitialize()
-{
-    NetService::OnDeinitialize();
-
-    ToggleEventManager(false);
-}
 
 void NetClient::ToggleEventManager(bool isOn)
 {
@@ -81,9 +77,9 @@ bool NetClient::SenderInit()
 
 bool NetClient::OnInitialize()
 {
+    NetService::OnInitialize();
     ToggleEventManager(true);
 
-    NetService::OnInitialize();
     auto checkException = [](bool cond)
     {
         if (!cond)
@@ -106,7 +102,17 @@ bool NetClient::OnInitialize()
     {
         return fail;
     }
+    catch (...)
+    {
+        assert(false);
+    }
     m_sender->SharedSendBuffer(m_flowcontrol.get(), &NetFlowControl::SetSendBuffer);
+
+    m_netStatus = std::make_unique<NetStatus>();
+
+    m_netsocket->OnReceive().Connection(&NetStatus::SlotOnReceive, m_netStatus.get());
+    m_netsocket->OnSend().Connection(&NetStatus::SlotOnSend, m_netStatus.get());
+    m_netStatus->OnReportPing().Connection(&NetClient::SlotReportPing, this);
     return true;
 }
 
@@ -116,6 +122,7 @@ bool NetClient::OnStarted()
 
     NetLogObject::LogObject().AppendLogMessage(stringFormat("netclient::onstarted::show_result::%s", end ? "ok" : "ng"),
         end ? PrintUtil::ConsoleColor::COLOR_BLUE : PrintUtil::ConsoleColor::COLOR_RED);
+    m_netStatus->Startup();
     return end;
 }
 
@@ -127,6 +134,10 @@ void NetClient::OnStopped()
         m_sender->Shutdown();
     if (m_flowcontrol)
         m_flowcontrol->Shutdown();
+    if (m_netStatus)
+        m_netStatus->Shutdown();
+
+    ToggleEventManager(false);
 }
 
 void NetClient::SlotReceivePacket(std::unique_ptr<NetPacket> &&packet)
@@ -181,3 +192,11 @@ bool NetClient::SetNetworkParam(const std::string &ip, const std::string &port)
     return true;
 }
 
+void NetClient::SlotReportPing(uint32_t recvCount, uint32_t sendCount)
+{
+    std::string report = stringFormat("server not response (receive: %d, send: %d)", recvCount, sendCount);
+
+    NetLogObject::LogObject().AppendLogMessage(report, PrintUtil::ConsoleColor::COLOR_GREY);
+
+    //EventWorker::Instance().AppendTask(&m_OnDeadlockTest);  //will cause deadlock
+}

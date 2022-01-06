@@ -131,21 +131,23 @@ public:
     template <class... SlotArgs>
     void Emit(SlotArgs&&... args)
     {
-        slot_iterator travsCur = m_slots.begin();
         std::list<slot_iterator> removeSlotList;
-
-        while (travsCur != m_slots.end())
         {
-            if (!(*travsCur)->Expired())
-                (*travsCur)->Emit(std::forward<SlotArgs>(args)...);
-            else
-                removeSlotList.push_back(travsCur);
-            ++travsCur;
-        }
+            std::lock_guard<std::mutex> lock(m_lock);
+            slot_iterator travsCur = m_slots.begin();
 
-        std::lock_guard<std::mutex> lock(m_lock);
-        for (const auto &iter : removeSlotList)
-            m_slots.erase(iter);
+            while (travsCur != m_slots.end())
+            {
+                if (!(*travsCur)->Expired())
+                    (*travsCur)->Emit(std::forward<SlotArgs>(args)...);
+                else
+                    removeSlotList.push_back(travsCur);
+                ++travsCur;
+            }
+
+            for (const auto &iter : removeSlotList)
+                m_slots.erase(iter);
+        }
     }
 
 private:

@@ -8,9 +8,13 @@
 #pragma warning(disable:4996)
 
 WinSocket::WinSocket(socket_type sock)
+    : NetObject()
 {
     if (sock != INVALID_SOCKET)
         m_socket = decltype(m_socket)(new socket_type(sock), [](socket_type *s) { closesocket(*s); delete s; });
+
+    m_recvCount = 0;
+    m_sendCount = 0;
 }
 
 WinSocket::~WinSocket()
@@ -93,19 +97,23 @@ bool WinSocket::ReceiveImpl(uint8_t *buff, const size_t length, int &readbytes)
 {
     readbytes = recv(*m_socket, reinterpret_cast<char *>(buff), length, 0);
 
-    OutputDebugString("server receive\n");
     if (readbytes <= 0)
         return false;
 
+    m_OnReceive.Emit(++m_recvCount);
     return true;
 }
 
 bool WinSocket::SendImpl(const char *buffer, const size_t length, int &sendbytes)
 {
-    OutputDebugString("server sent\n");
     sendbytes = send(*m_socket, buffer, length, 0);
 
-    return sendbytes != SOCKET_ERROR;
+    if (sendbytes != SOCKET_ERROR)
+    {
+        m_OnSend.Emit(++m_sendCount);
+        return true;
+    }
+    return false;
 }
 
 bool WinSocket::SendAll(const char *buffer, const size_t length)

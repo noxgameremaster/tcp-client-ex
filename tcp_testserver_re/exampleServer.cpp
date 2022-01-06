@@ -62,6 +62,8 @@ bool ExampleServer::OnInitialize()
     m_servWorker->OnReleasePacket().Connection(&ExampleServer::SlotForwardPacket, this);
     m_serverTaskManager->OnReleasePacket().Connection(&ExampleServer::SlotSendPacket, this);
 
+    m_receive->OnReceiveData().Connection(&BufferPopper::SlotBufferPushed, m_servWorker.get());
+
     return true;
 }
 
@@ -84,8 +86,6 @@ bool ExampleServer::OnStarted()
 
 void ExampleServer::OnDeinitialize()
 {
-    NetService::OnDeinitialize();
-
     auto netServiceStop = [](std::unique_ptr<NetService> &&service)
     {
         if (service)
@@ -97,6 +97,8 @@ void ExampleServer::OnDeinitialize()
     netServiceStop(std::move(m_servWorker));
     netServiceStop(std::move(m_serverTaskManager));
     netServiceStop(std::move(m_servSend));
+
+    NetService::OnDeinitialize();
 }
 
 void ExampleServer::OnStopped()

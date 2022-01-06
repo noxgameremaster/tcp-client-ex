@@ -19,6 +19,8 @@ ServerSend::~ServerSend()
 
 bool ServerSend::EmptySlot() const
 {
+    std::lock_guard<std::mutex> guard(m_lock);
+
     return m_packetList.empty();
 }
 
@@ -62,7 +64,7 @@ bool ServerSend::SendPacket(std::unique_ptr<NetPacket> &&msg)
 
 bool ServerSend::SendLoop()
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
     {
         std::lock_guard<std::mutex> guard(m_lock);

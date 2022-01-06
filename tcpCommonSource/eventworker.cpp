@@ -7,7 +7,7 @@ EventWorker::EventWorker()
 {
     m_eventThread = std::make_unique<LoopThread>();
     m_eventThread->SetTaskFunction([this]() { return this->CheckoutEvent(); });
-    m_eventThread->SetWaitCondition([this]() { return IsTask(); });
+    m_eventThread->SetWaitCondition([this]() { return this->IsTask(); });
 }
 
 EventWorker::~EventWorker()
@@ -34,7 +34,6 @@ bool EventWorker::CheckoutEvent()
     }
     if (task)
         task();
-
     return true;
 }
 

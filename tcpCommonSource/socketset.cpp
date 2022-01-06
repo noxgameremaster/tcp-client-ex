@@ -18,8 +18,7 @@ SocketSet::SocketSet()
 }
 
 SocketSet::~SocketSet()
-{
-}
+{ }
 
 bool SocketSet::FindSocket(socket_type socketId, WinSocket **findsocket)
 {
@@ -129,10 +128,10 @@ bool SocketSet::DoSelect(std::function<void(WinSocket *)> &&f)
 {
     if (m_pimpl->m_socketmap.empty())
         return false;
-    
+
     int result = select(0, Raw(), nullptr, nullptr, m_timeInterval.get());
 
-    int error = WSAGetLastError();
+    //int error = WSAGetLastError();
     if (SOCKET_ERROR == result)
         return false;
     if (!result)

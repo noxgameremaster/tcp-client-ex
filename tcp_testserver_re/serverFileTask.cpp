@@ -80,7 +80,7 @@ std::string ServerFileTask::TaskName() const
 
 void ServerFileTask::SendFileStream(const std::vector<uint8_t> &stream, const std::string &filename)
 {
-    PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_WHITE, "server sent file stream");
+    //PrintUtil::PrintMessage(PrintUtil::ConsoleColor::COLOR_WHITE, "server sent file stream");
 
     std::unique_ptr<FileChunkPacket> chunk(new FileChunkPacket);
 

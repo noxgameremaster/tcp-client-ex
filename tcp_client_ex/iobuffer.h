@@ -8,8 +8,6 @@
 #include <functional>
 #include <mutex>
 
-//class LocalBuffer;
-
 class IOBuffer : public PartitionPool
 {
 public:
@@ -39,17 +37,15 @@ public:
         return PushBuffer(src.data(), src.size());
     }
 
-    //bool PopBuffer(const uint8_t *&destptr, size_t &bufferSize);
     bool PopBufferAlloc(std::unique_ptr<uint8_t[]> &&destptr, size_t &bufferSize);
     bool SetLargeBufferScale(size_t scale);
     bool IsEmpty() const;
 
     bool SetTrigger(NetObject *trigger, std::function<void()> &&fn);
 
-    //void MoveBuffer(std::shared_ptr<LocalBuffer> localbuffer);
-
 private:
     mutable std::mutex m_lock;
+    std::mutex m_trigLock;
 };
 
 #endif

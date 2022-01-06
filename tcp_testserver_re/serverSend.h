@@ -38,7 +38,7 @@ public:
     void RegistClientPool(std::weak_ptr<ClientPool> cliPool);
 
 private:
-    std::mutex m_lock;
+    mutable std::mutex m_lock;
 };
 
 #endif

@@ -38,7 +38,7 @@ bool ServerTaskManager::CheckHasIO() const
 
 bool ServerTaskManager::DequeueIOList()
 {
-    std::this_thread::sleep_for(std::chrono::microseconds(3));
+    //std::this_thread::sleep_for(std::chrono::microseconds(3));
     std::unique_ptr<NetPacket> packet;
     {
         std::lock_guard<std::mutex> guard(m_lock);
@@ -135,7 +135,7 @@ void ServerTaskManager::FetchFileStream(const std::string &)
     if (!m_servFile)
         return;
     
-    std::vector<uint8_t> buffer(static_cast<const size_t>(16384));
+    std::vector<uint8_t> buffer(static_cast<const size_t>(10240));
 
     if (!m_servFile->Read(buffer))
         return;
