@@ -3,6 +3,7 @@
 #define LARGE_FILE_CHUNK_PACKET_H__
 
 #include "netpacket.h"
+#include <array>
 
 class LargeFileChunkPacket : public NetPacket
 {
@@ -16,7 +17,7 @@ public:
     };
 
 private:
-    std::array<char, 4096> m_fileStream;
+    std::array<char, 8192> m_fileStream;
     uint32_t m_streamLength;
 
 public:

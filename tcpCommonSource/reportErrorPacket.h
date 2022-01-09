@@ -4,6 +4,8 @@
 
 #include "netpacket.h"
 
+#include <array>
+
 class ReportErrorPacket : public NetPacket
 {
 private:

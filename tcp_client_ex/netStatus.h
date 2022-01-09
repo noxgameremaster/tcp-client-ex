@@ -15,8 +15,10 @@ private:
     uint32_t m_sendCount;
     uint32_t m_lastIoTime;
 
+    NetObject *m_parent; //debug only
+
 public:
-    explicit NetStatus();
+    explicit NetStatus(NetObject *parent);
     ~NetStatus() override;
 
 private:

@@ -4,6 +4,8 @@
 
 #include "netobject.h"
 #include <functional>
+#include <atomic>
+
 struct WSAData;
 
 class NetService : public NetObject
@@ -11,10 +13,11 @@ class NetService : public NetObject
     using wsa_deleter = std::function<void(WSAData *)>;
 private:
     std::unique_ptr<WSAData, wsa_deleter> m_wsaData;
+    std::atomic<bool> m_turnOn;
 
 public:
     NetService(NetObject *parent = nullptr);
-    ~NetService();
+    ~NetService() override;
 
 private:
     bool WsaStartup();

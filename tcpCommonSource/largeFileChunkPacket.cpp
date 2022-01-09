@@ -1,6 +1,10 @@
 
 #include "largeFileChunkPacket.h"
 #include "packetOrderTable.h"
+#include "netLogObject.h"
+#include "stringHelper.h"
+
+using namespace _StringHelper;
 
 LargeFileChunkPacket::LargeFileChunkPacket()
     : NetPacket()
@@ -35,6 +39,13 @@ bool LargeFileChunkPacket::ReadStreamFromServer()
     try
     {
         ReadCtx(m_streamLength);
+        if (m_streamLength > m_fileStream.max_size())
+        {
+            std::string errmsg = stringFormat("chunk buffer to small! receive: %d bytes", m_streamLength);
+
+            NetLogObject::LogObject().AppendLogMessage(errmsg);
+            return false;
+        }
         while (counter < m_streamLength)
             ReadCtx(m_fileStream[counter++]);
     }

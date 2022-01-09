@@ -216,7 +216,7 @@ bool FileEngine::GetMapExtra(uint8_t *pAddr, uint32_t &iExtra)
 
 bool FileEngine::Filesize(uint64_t &getsize)
 {
-	WIN32_FILE_ATTRIBUTE_DATA attrData({});
+    WIN32_FILE_ATTRIBUTE_DATA attrData = { };
 
 	if (!GetFileAttributesExA(m_filename.c_str(), GetFileExInfoStandard, &attrData))
 		return false;

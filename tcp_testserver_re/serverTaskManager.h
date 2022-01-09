@@ -4,6 +4,7 @@
 
 #include "netservice.h"
 #include <map>
+#include <vector>
 
 class NetPacket;
 class LoopThread;

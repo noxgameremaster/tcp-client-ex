@@ -2,7 +2,8 @@
 #include "clientreceive.h"
 #include "netflowcontrol.h"
 #include "clientworker.h"
-#include "packetBuffer.h"
+//#include "packetBuffer.h"
+#include "packetBufferFix.h"
 #include "socketset.h"
 #include "winsocket.h"
 #include "netLogObject.h"
@@ -17,11 +18,13 @@ using namespace _StringHelper;
 ClientReceive::ClientReceive(std::shared_ptr<WinSocket> &sock, NetObject *parent)
     : NetService(parent)
 {
+    static_assert(read_receive_buffer_count >= 4, "a receive count must be equal or greator than 4");
+
     m_netsocket = sock;
     m_readFds = std::make_unique<SocketSet>();
     m_readFds->SetTimeInterval(1, 0);
 
-    m_packetBuffer = std::make_unique<PacketBuffer>();
+    m_packetBuffer = std::make_unique<PacketBufferFix>();
     m_receiveThread = std::make_unique<LoopThread>();
 
     m_receiveThread->SetTaskFunction([this]() { return this->DoTask(); });

@@ -2,7 +2,8 @@
 #include "clientworker.h"
 #include "netclient.h"
 #include "iobuffer.h"
-#include "packetBuffer.h"
+//#include "packetBuffer.h"
+#include "packetBufferFix.h"
 #include "chatPacket.h"
 #include "echoPacket.h"
 #include "filepacket.h"
@@ -22,7 +23,7 @@ ClientWorker::ClientWorker(NetObject *parent)
     m_workThread->SetTaskFunction([this]() { return this->FetchFromBuffer(); });
     m_workThread->SetWaitCondition([this]() { return this->IsContained(); });
 
-    m_packetBuffer = std::make_unique<PacketBuffer>();
+    m_packetBuffer = std::make_unique<PacketBufferFix>();
 }
 
 ClientWorker::~ClientWorker()
@@ -51,7 +52,7 @@ void ClientWorker::BufferOnPushed()
     m_workThread->Notify();
 }
 
-void ClientWorker::SetReceiveBuffer(std::shared_ptr<PacketBuffer> packetBuffer)
+void ClientWorker::SetReceiveBuffer(std::shared_ptr<PacketBufferFix> packetBuffer)
 {
     m_packetBuffer = packetBuffer;
     m_packetBuffer->SetInstanceFunction([](uint8_t packetId) 

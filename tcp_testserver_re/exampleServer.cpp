@@ -48,7 +48,7 @@ bool ExampleServer::OnInitialize()
     std::shared_ptr<ClientPool> cliPool(new ClientPool);
 
     m_accept = std::make_unique<ServerAccept>(m_listenSocket);
-    m_receive = std::make_unique<ServerReceiveEx>();
+    m_receive = std::make_unique<ServerReceiveEx>(m_listenSocket);
     m_servWorker = std::make_unique<BufferPopper>();
     m_servSend = std::make_unique<ServerSend>();
     m_serverTaskManager = std::make_unique<ServerTaskManager>();

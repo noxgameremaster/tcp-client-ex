@@ -19,6 +19,7 @@ private:
 
 protected:
     afx_msg void OnPaint();
+    BOOL OnEraseBkgnd(CDC *pDC);
     afx_msg HBRUSH CtlColor(CDC *pDC, UINT nCtlColor);
     DECLARE_MESSAGE_MAP()
 };

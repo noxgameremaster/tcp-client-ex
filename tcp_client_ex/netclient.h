@@ -35,6 +35,8 @@ private:
     bool OnStarted() override;
     void OnStopped() override;
 
+    bool NetDebugInit();
+
 public:
     void SlotReceivePacket(std::unique_ptr<NetPacket> &&packet);
     void ClientSendEcho();

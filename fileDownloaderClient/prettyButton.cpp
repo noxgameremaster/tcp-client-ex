@@ -50,6 +50,11 @@ void PrettyButton::OnPaint()
     DrawStuff(cdc);
 }
 
+BOOL PrettyButton::OnEraseBkgnd(CDC */*pDC*/)
+{
+    return TRUE;
+}
+
 void PrettyButton::OnLButtonDown(UINT nFlags, CPoint point)
 {
     if (m_onClicked)
@@ -79,4 +84,5 @@ void PrettyButton::ModifyWndName(const std::string &text)
 BEGIN_MESSAGE_MAP(PrettyButton, CMFCButton)
     ON_WM_LBUTTONDOWN()
     ON_WM_PAINT()
+    ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()

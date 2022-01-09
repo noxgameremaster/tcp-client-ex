@@ -3,12 +3,14 @@
 #include "loopThread.h"
 #include "eventworker.h"
 
-NetStatus::NetStatus()
-    : NetService()
+NetStatus::NetStatus(NetObject *parent)
+    : NetService(parent)
 {
     m_recvCount = 0;
     m_sendCount = 0;
     m_lastIoTime = 0;
+
+    m_parent = parent;
 }
 
 NetStatus::~NetStatus()
@@ -16,6 +18,9 @@ NetStatus::~NetStatus()
 
 bool NetStatus::CheckNetStatus()
 {
+    static decltype(m_recvCount) s_recvCount = 0;
+    static decltype(m_sendCount) s_sendCount = 0;
+
     {
         std::lock_guard<std::mutex> guard(m_lock);
         if (m_lastIoTime)
@@ -26,7 +31,18 @@ bool NetStatus::CheckNetStatus()
         {
             m_lastIoTime = ping_time_rate;
 
-            EventWorker::Instance().AppendTask(&m_OnReportPing, m_recvCount, m_sendCount);
+            do
+            {
+                if (m_recvCount == s_recvCount && m_sendCount == s_sendCount)
+                    break;
+
+                if (m_recvCount != s_recvCount)
+                    s_recvCount = m_recvCount;
+                if (m_sendCount != s_sendCount)
+                    s_sendCount = m_sendCount;
+                EventWorker::Instance().AppendTask(&m_OnReportPing, m_recvCount, m_sendCount);
+            }
+            while (false);
         }
     }
 

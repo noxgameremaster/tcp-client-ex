@@ -3,6 +3,7 @@
 #define SERVER_FILE_TASK_H__
 
 #include "serverTask.h"
+#include <vector>
 
 class ServerFileTask : public ServerTask
 {

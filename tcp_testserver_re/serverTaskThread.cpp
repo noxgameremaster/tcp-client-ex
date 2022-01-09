@@ -20,7 +20,7 @@ bool ServerTaskThread::IsMessageList() const
     {
         std::lock_guard<std::mutex> guard(m_lock);
 
-        return m_msglist.size();
+        return m_msglist.size() != 0;
     }
 }
 

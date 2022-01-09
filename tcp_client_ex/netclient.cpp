@@ -10,8 +10,8 @@
 #include "netLogObject.h"
 
 #include <iostream>
-#include <assert.h>
 #include <cassert>
+#include <sstream>
 
 using namespace _StringHelper;
 
@@ -95,6 +95,7 @@ bool NetClient::OnInitialize()
     try
     {
         checkException(StandBySocket());
+        checkException(NetDebugInit());
         checkException(ReceiverInit());
         checkException(SenderInit());
     }
@@ -108,11 +109,6 @@ bool NetClient::OnInitialize()
     }
     m_sender->SharedSendBuffer(m_flowcontrol.get(), &NetFlowControl::SetSendBuffer);
 
-    m_netStatus = std::make_unique<NetStatus>();
-
-    m_netsocket->OnReceive().Connection(&NetStatus::SlotOnReceive, m_netStatus.get());
-    m_netsocket->OnSend().Connection(&NetStatus::SlotOnSend, m_netStatus.get());
-    m_netStatus->OnReportPing().Connection(&NetClient::SlotReportPing, this);
     return true;
 }
 
@@ -138,6 +134,19 @@ void NetClient::OnStopped()
         m_netStatus->Shutdown();
 
     ToggleEventManager(false);
+}
+
+bool NetClient::NetDebugInit()
+{
+    m_netStatus = std::make_unique<NetStatus>(this);
+
+    if (!m_netsocket)
+        return false;
+
+    m_netsocket->OnReceive().Connection(&NetStatus::SlotOnReceive, m_netStatus.get());
+    m_netsocket->OnSend().Connection(&NetStatus::SlotOnSend, m_netStatus.get());
+    m_netStatus->OnReportPing().Connection(&NetClient::SlotReportPing, this);
+    return true;
 }
 
 void NetClient::SlotReceivePacket(std::unique_ptr<NetPacket> &&packet)

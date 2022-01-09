@@ -6,7 +6,7 @@
 #include "packetBuffer.h"
 #include "loopThread.h"
 
-ServerReceiveEx::ServerReceiveEx()
+ServerReceiveEx::ServerReceiveEx(std::shared_ptr<WinSocket> &servSock)
     : NetService()
 {
     m_socketSet = std::make_unique<SocketSet>();
@@ -14,6 +14,8 @@ ServerReceiveEx::ServerReceiveEx()
     m_recvBuffer.reserve(reserve_recv_buffer);
     m_receiveThread = std::make_unique<LoopThread>();
     m_receiveThread->SetTaskFunction([this]() { return this->ReceiveData(); });
+    m_socketSet->Append(servSock.get());
+    m_servSock = servSock;
 }
 
 ServerReceiveEx::~ServerReceiveEx()
@@ -32,6 +34,12 @@ void ServerReceiveEx::OnDisconnected(WinSocket *client)
 
 void ServerReceiveEx::ReceiveFromClient(WinSocket *client)
 {
+    if (!m_servSock)
+        return;
+
+    if (*client == *m_servSock)
+        return;
+
     m_recvBuffer.resize(reserve_recv_buffer);
 
     if (!client->Receive(m_recvBuffer))

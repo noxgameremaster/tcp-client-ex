@@ -144,7 +144,9 @@ void TaskFileStream::ProcessFileUpload(std::unique_ptr<NetPacket> &&packet)
             m_uploadPath = uploadInfo->UploadPath();
 
             IOFileStream::UrlSeparatePathAndName(m_uploadPath, m_pathname, m_filename);
-            EventWorker::Instance().AppendTask(&m_OnReportFileMetaInfo, m_filename, "downloads", 0);
+            std::string downloadPath = "downloads";
+
+            EventWorker::Instance().AppendTask(&m_OnReportFileMetaInfo, m_filename, downloadPath, 0);
         }
         break;
     case FilePacketUpload::PacketSubCmd::FileServerToClient:

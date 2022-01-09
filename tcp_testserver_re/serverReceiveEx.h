@@ -3,6 +3,7 @@
 #define SERVER_RECEIVE_EX_H__
 
 #include "netservice.h"
+#include <vector>
 
 class LoopThread;
 class WinSocket;
@@ -19,9 +20,10 @@ private:
     std::unique_ptr<SocketSet> m_socketSet;
     std::vector<uint8_t> m_recvBuffer;
     std::shared_ptr<PacketBuffer> m_packetBuffer;
+    std::shared_ptr<WinSocket> m_servSock;
 
 public:
-    explicit ServerReceiveEx();
+    explicit ServerReceiveEx(std::shared_ptr<WinSocket> &servSock);
     ~ServerReceiveEx() override;
 
 private:

@@ -4,7 +4,9 @@
 
 NetService::NetService(NetObject *parent)
     : NetObject(parent)
-{ }
+{
+    m_turnOn = false;
+}
 
 NetService::~NetService()
 { }
@@ -85,12 +87,21 @@ void NetService::NotifyOccurError(NetService *net, const std::string &errorTitle
 
 bool NetService::Startup()
 {
-    return OnInitialize() ? OnStarted() : false;
+    if (m_turnOn)
+        return false;
+
+    m_turnOn = OnInitialize() ? OnStarted() : false;
+
+    return m_turnOn;
 }
 
 void NetService::Shutdown()
 {
+    if (!m_turnOn)
+        return;
+
     OnStopped();
     OnDeinitialize();
+    m_turnOn = true;
 }
 

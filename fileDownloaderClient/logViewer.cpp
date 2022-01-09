@@ -122,7 +122,7 @@ std::string LogViewer::CurrentLocalTime()
 {
     std::chrono::system_clock::time_point n = std::chrono::system_clock::now();
 
-    std::time_t currentTime = std::chrono::system_clock::to_time_t(n);
+    time_t currentTime = std::chrono::system_clock::to_time_t(n);
 
     char buffer[256] = { };
 

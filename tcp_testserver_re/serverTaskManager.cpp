@@ -31,7 +31,7 @@ ServerTaskManager::~ServerTaskManager()
 
 bool ServerTaskManager::CheckHasIO() const
 {
-    std::lock_guard scope(m_lock);
+    std::lock_guard<std::mutex> scope(m_lock);
 
     return (m_inpacketList.size() + m_outpacketList.size()) > 0;
 }

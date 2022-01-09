@@ -97,6 +97,7 @@ void CfileDownloaderClientDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, LOG_VIEWER_INSERT, m_btnLogTestInsert);
 	DDX_Control(pDX, LOG_VIEWER_TEST_START, m_btnStartTest);
 	DDX_Control(pDX, LOG_VIEWER_FOCUS_TOEND, m_btnFocusToEnd);
+    DDX_Control(pDX, LOG_VIEWER_RECONNECT, m_btnReconnect);
 	DDX_Control(pDX, MAIN_PAGE_PANEL, m_mainPanel);
 	DDX_Control(pDX, MAIN_LOG_PANEL, m_logPanel);
 
@@ -142,6 +143,7 @@ void CfileDownloaderClientDlg::Initialize()
 	m_btnFocusToEnd.ModifyWndName("go to end");
 
 	m_btnCmdOk.ModifyWndName("send");
+    m_btnReconnect.ModifyWndName("reconnect");
 
 	m_coreUi->StartNetClient();
 }

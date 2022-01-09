@@ -7,13 +7,13 @@
 
 class NetPacket;
 class LoopThread;
-class PacketBuffer;
+class PacketBufferFix;
 
 class ClientWorker : public NetService
 {
 private:
     std::unique_ptr<LoopThread> m_workThread;
-    std::shared_ptr<PacketBuffer> m_packetBuffer;
+    std::shared_ptr<PacketBufferFix> m_packetBuffer;
 
 public:
     explicit ClientWorker(NetObject *parent);
@@ -25,7 +25,7 @@ private:
 
 public:
     void BufferOnPushed();
-    void SetReceiveBuffer(std::shared_ptr<PacketBuffer> packetBuffer);
+    void SetReceiveBuffer(std::shared_ptr<PacketBufferFix> packetBuffer);
 
 private:
     bool InitPacketForwarding();

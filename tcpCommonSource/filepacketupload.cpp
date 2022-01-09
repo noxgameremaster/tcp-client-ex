@@ -2,6 +2,8 @@
 #include "filepacketupload.h"
 #include "packetOrderTable.h"
 
+#include <array>
+
 FilePacketUpload::FilePacketUpload()
     : NetPacket()
 {

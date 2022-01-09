@@ -40,6 +40,7 @@ void GroupBox::DrawStuff(CDC &dc)
 BEGIN_MESSAGE_MAP(GroupBox, CStatic)
     ON_WM_PAINT()
     ON_WM_CTLCOLOR_REFLECT()
+    ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 void GroupBox::OnPaint()
@@ -49,6 +50,11 @@ void GroupBox::OnPaint()
     CBufferDC cdc(this);
     
     DrawStuff(cdc);
+}
+
+BOOL GroupBox::OnEraseBkgnd(CDC */*pDC*/)
+{
+    return TRUE;
 }
 
 HBRUSH GroupBox::CtlColor(CDC *pDC, UINT nCtlColor)

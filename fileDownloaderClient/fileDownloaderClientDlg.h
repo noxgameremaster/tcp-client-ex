@@ -22,6 +22,7 @@ private:
 	PrettyButton m_btnLogTestInsert;
 	PrettyButton m_btnStartTest;
 	PrettyButton m_btnFocusToEnd;
+    PrettyButton m_btnReconnect;
 	std::unique_ptr<CoreUi> m_coreUi;
 
 	std::unique_ptr<MainWndCC> m_wndcc;

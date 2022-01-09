@@ -3,6 +3,7 @@
 #define LARGE_FILE_REQUEST_PACKET_H__
 
 #include "netpacket.h"
+#include <array>
 
 class LargeFileRequestPacket : public NetPacket
 {

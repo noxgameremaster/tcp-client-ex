@@ -6,6 +6,15 @@
 #include <algorithm>
 #include <filesystem>
 
+#define VISUAL_STUDIO_2015 1900
+#if _MSC_VER == VISUAL_STUDIO_2015
+#define NAMESPACE_FILESYSTEM std::experimental::filesystem
+#else
+#define NAMESPACE_FILESYSTEM std::filesystem
+#endif
+#undef VISUAL_STUDIO_2015
+
+
 using fileHandlerType = NativeFileHandler;
 
 FileStream::FileStream(const std::string &filename)
@@ -150,7 +159,7 @@ bool FileStream::Exist()
 
 bool FileStream::Exist(const std::string &filename)
 {
-	return std::filesystem::exists(filename);
+	return NAMESPACE_FILESYSTEM::exists(filename);
 }
 
 bool FileStream::Copy(const std::string &copiedname)
