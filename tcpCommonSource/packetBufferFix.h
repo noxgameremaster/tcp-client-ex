@@ -15,7 +15,6 @@ class PacketBufferFix : public BinaryStream
     using packet_instance_type = std::unique_ptr<NetPacket>;
     using packet_instance_function = std::function<packet_instance_type(uint8_t)>;
     using parse_action = std::function<bool()>;
-    static constexpr size_t max_buffer_length = 65536;
 
     struct SenderInfo;
 

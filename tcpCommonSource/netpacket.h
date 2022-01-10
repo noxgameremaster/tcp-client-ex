@@ -8,6 +8,9 @@ class HeaderData;
 
 class NetPacket : public BinaryStream
 {
+public:
+    static constexpr size_t packet_unit_max_size = 65536;
+
 protected:
     enum class Mode
     {

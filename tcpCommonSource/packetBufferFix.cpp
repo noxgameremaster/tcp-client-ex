@@ -7,6 +7,8 @@
 #include "netLogObject.h"
 
 static socket_type s_latestReceiveSocket = WinSocket::invalid_socket;
+static constexpr size_t max_buffer_packet_count = 12;
+static constexpr size_t max_buffer_length = NetPacket::packet_unit_max_size * max_buffer_packet_count;
 
 struct PacketBufferFix::SenderInfo
 {
@@ -31,7 +33,7 @@ PacketBufferFix::PacketBufferFix()
     m_writeSeekpoint = 0;
     m_readSeekpoint = 0;
 
-    m_tempBuffer = std::make_unique<BinaryBuffer>(16384);   //!FIXME!!//
+    m_tempBuffer = std::make_unique<BinaryBuffer>(NetPacket::packet_unit_max_size);   //!FIXME!!//
 
     m_parseAction = [this]() { return this->ReadStartpoint(); };
 }
@@ -130,7 +132,7 @@ bool PacketBufferFix::EvacuateChunk(const size_t count)
 
 bool PacketBufferFix::ReadSendInfoDetail()
 {
-    uint32_t startpoint=0, endpoint = 0;
+    uint32_t startpoint = 0, endpoint = 0;
     bool delayReturn = true;
 
     m_tempBuffer->ReadChunk(startpoint);
@@ -223,7 +225,7 @@ bool PacketBufferFix::ReadPacketLength()
     m_tempBuffer->ReadChunk(stx);
     m_tempBuffer->ReadChunk(length);
     m_headerInfo->SetProperty<HeaderData::FieldInfo::LENGTH>(length);
-    if (length > 16384)   //too long     //FIXME. require alignment buffer size
+    if (length > NetPacket::packet_unit_max_size)   //too long     //FIXME. require alignment buffer size
     {
         RewindSeek(sizeof(length));
         m_parseAction = [this]() { return this->ReadStartpoint(); };
