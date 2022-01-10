@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="binaryBuffer.cpp" />
     <ClCompile Include="binarystream.cpp" />
     <ClCompile Include="chatPacket.cpp" />
     <ClCompile Include="downloadCompletePacket.cpp" />
@@ -165,6 +166,7 @@
     <ClCompile Include="netpacket.cpp" />
     <ClCompile Include="netservice.cpp" />
     <ClCompile Include="packetBuffer.cpp" />
+    <ClCompile Include="packetBufferFix.cpp" />
     <ClCompile Include="packetOrderTable.cpp" />
     <ClCompile Include="partitionpool.cpp" />
     <ClCompile Include="printUtil.cpp" />
@@ -174,6 +176,7 @@
     <ClCompile Include="winsocket.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="binaryBuffer.h" />
     <ClInclude Include="binarystream.h" />
     <ClInclude Include="ccobject.h" />
     <ClInclude Include="chatPacket.h" />
@@ -196,6 +199,7 @@
     <ClInclude Include="netpacket.h" />
     <ClInclude Include="netservice.h" />
     <ClInclude Include="packetBuffer.h" />
+    <ClInclude Include="packetBufferFix.h" />
     <ClInclude Include="packetOrderTable.h" />
     <ClInclude Include="partitionpool.h" />
     <ClInclude Include="printUtil.h" />

@@ -35,7 +35,7 @@ private:
 
 public:
     explicit PacketBufferFix();
-    ~PacketBufferFix();
+    ~PacketBufferFix() override;
 
 private:
     bool CheckCapacity(const size_t &inputSize);

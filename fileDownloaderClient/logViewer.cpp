@@ -319,9 +319,10 @@ void LogViewer::DrawStuff(CDC &pDC)
 {
     CRect rc;
 
+    pDC.SetBkMode(TRANSPARENT);
     GetWindowRect(&rc);
     ScreenToClient(&rc);
-    pDC.FillSolidRect(rc, ::GetSysColor(COLOR_WINDOW));
+    pDC.FillSolidRect(rc, /*::GetSysColor(COLOR_WINDOW)*/ RGB(255, 0, 0));
 }
 
 BEGIN_MESSAGE_MAP(LogViewer, CListCtrl)
@@ -391,7 +392,7 @@ void LogViewer::OnPaint()
 
     DrawStuff(cdc);*/
 
-    CListCtrl::OnPaint();
+    CListCtrl::OnPaint();   //!FIXME//
 
     CClientDC(this);
 }

@@ -196,8 +196,11 @@
     <ClInclude Include="cTabPage.h" />
     <ClInclude Include="fileDownloaderClient.h" />
     <ClInclude Include="fileDownloaderClientDlg.h" />
+    <ClInclude Include="filePanel.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="groupbox.h" />
+    <ClInclude Include="listElement.h" />
+    <ClInclude Include="listviewer.h" />
     <ClInclude Include="logPanel.h" />
     <ClInclude Include="logViewer.h" />
     <ClInclude Include="mymemdc.h" />
@@ -213,7 +216,10 @@
     <ClCompile Include="cTabPage.cpp" />
     <ClCompile Include="fileDownloaderClient.cpp" />
     <ClCompile Include="fileDownloaderClientDlg.cpp" />
+    <ClCompile Include="filePanel.cpp" />
     <ClCompile Include="groupbox.cpp" />
+    <ClCompile Include="listElement.cpp" />
+    <ClCompile Include="listviewer.cpp" />
     <ClCompile Include="logPanel.cpp" />
     <ClCompile Include="logViewer.cpp" />
     <ClCompile Include="pageManager.cpp" />

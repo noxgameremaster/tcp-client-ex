@@ -60,6 +60,15 @@
     <ClInclude Include="pageManager.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="listviewer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="listElement.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="filePanel.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="fileDownloaderClient.cpp">
@@ -93,6 +102,15 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="pageManager.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="listviewer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="listElement.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="filePanel.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
