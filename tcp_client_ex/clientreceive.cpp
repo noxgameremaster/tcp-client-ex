@@ -2,7 +2,6 @@
 #include "clientreceive.h"
 #include "netflowcontrol.h"
 #include "clientworker.h"
-//#include "packetBuffer.h"
 #include "packetBufferFix.h"
 #include "socketset.h"
 #include "winsocket.h"
@@ -64,6 +63,9 @@ void ClientReceive::OnDisconnected(WinSocket *sock)
     NotifyErrorToOwner();
     NetLogObject::LogObject().AppendLogMessage(stringFormat("the user %d has disconnect with me", sock->GetFd()), 
         PrintUtil::ConsoleColor::COLOR_RED);
+    
+    m_readFds->Remove(sock);
+    m_OnDisconnect.Emit(sock->GetFd());
 }
 
 void ClientReceive::ReceiveFrom(WinSocket *sock)
@@ -111,6 +113,7 @@ bool ClientReceive::OnInitialize()
 
 void ClientReceive::OnDeinitialize()
 {
+
     if (m_networker)
     {
         m_networker->Shutdown();

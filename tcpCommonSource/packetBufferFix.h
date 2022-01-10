@@ -3,6 +3,7 @@
 #define PACKET_BUFFER_FIX_H__
 
 #include "binarystream.h"
+#include <map>
 
 class WinSocket;
 class NetPacket;

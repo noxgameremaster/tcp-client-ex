@@ -58,6 +58,8 @@ LogViewer::LogViewer()
     m_addMsg = 0;
     m_updateThread = std::make_unique<LoopThread>();
     m_goToEnd = true;
+
+    m_uiUpdateData.reserve(max_appear_slot_count);
 }
 
 LogViewer::~LogViewer()
@@ -65,23 +67,41 @@ LogViewer::~LogViewer()
     StopLogViewThread();
 }
 
-void LogViewer::UpdateViewer()
+void LogViewer::UpdateDataCopy()
 {
     std::list<log_data_ty>::const_iterator walkpos = m_logdataPos;
     int maxCount = max_appear_slot_count;
     int curCount = 0;
 
+    m_uiUpdateData.clear();
     while (walkpos != m_logdataList.cend() && maxCount--)
     {
         if (walkpos != m_logdataList.cend())
         {
-            if (GetItemState(curCount, LVIS_FOCUSED | LVIS_SELECTED))
-                SetItemState(curCount, 0, LVIS_FOCUSED | LVIS_SELECTED);
-            SetItemText(curCount, 0, toArray(std::to_string(walkpos->get()->m_index)));
-            SetItemText(curCount, 1, toArray(walkpos->get()->m_message));
-            SetItemText(curCount, 2, toArray(walkpos->get()->m_datetime));
+            LogData *copyLog = new LogData(*(*walkpos));
+
+            m_uiUpdateData.push_back(log_data_ty(copyLog));
             ++curCount;
             ++walkpos;
+        }
+    }
+}
+
+void LogViewer::UpdateViewer()
+{
+    int updateCount = static_cast<int>(m_uiUpdateData.size());
+    int maxCount = max_appear_slot_count;
+    int curCount = 0;
+
+    while (curCount < maxCount)
+    {
+        if (curCount < updateCount)
+        {
+            if (GetItemState(curCount, LVIS_FOCUSED | LVIS_SELECTED))
+                SetItemState(curCount, 0, LVIS_FOCUSED | LVIS_SELECTED);
+            SetItemText(curCount, 0, toArray(std::to_string(m_uiUpdateData[curCount]->m_index)));
+            SetItemText(curCount, 1, toArray(m_uiUpdateData[curCount]->m_message));
+            SetItemText(curCount, 2, toArray(m_uiUpdateData[curCount]->m_datetime));
         }
         else
         {
@@ -89,15 +109,32 @@ void LogViewer::UpdateViewer()
             SetItemText(curCount, 1, "");
             SetItemText(curCount, 2, "");
         }
+        ++curCount;
     }
 }
 
-void LogViewer::ConditionalUpdateViewer()
+void LogViewer::ConditionalUpdateViewer(bool forceUpdate)
 {
-    std::lock_guard<std::mutex> guard(m_lock);
+    SetRedraw(false);
+    do
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
+        bool passCond = forceUpdate ? true : (std::distance(m_logdataPos, m_logdataList.cend()) <= max_appear_slot_count);
+        {
+            if (!passCond)
+                break;
 
-    if (std::distance(m_logdataPos, m_logdataList.cend()) <= max_appear_slot_count)
-        UpdateViewer();
+            std::lock_guard<std::recursive_mutex> uiLock(m_uiLock);
+            UpdateDataCopy();
+        }
+
+        {
+            std::unique_lock<std::recursive_mutex> uiLock(m_uiLock);
+            UpdateViewer();
+        }
+    }
+    while (false);
+    SetRedraw(true);
 }
 
 bool LogViewer::IsUpdateItem() const
@@ -233,38 +270,35 @@ bool LogViewer::MoveToPageEnd()
     return true;
 }
 
-LogViewer::LogData *LogViewer::GetLogData(int index)
+LogViewer::LogData *LogViewer::GetCopyLogData(int index)
 {
-    if (index < 0)
-        return nullptr;
+    LogData *log = nullptr;
 
-    if (m_logdataPos == m_logdataList.cend())
-        return nullptr;
-
-    int count = 0;
-    auto dataPos = m_logdataPos;
-
-    while (count < index)
+    try
     {
-        ++dataPos;
-        if (dataPos == m_logdataList.cend())
-            return nullptr;
-        count++;
+        log = m_uiUpdateData.at(index).get();
     }
-
-    return dataPos->get();
+    catch (const std::out_of_range &oor)
+    {
+        OutputDebugString(oor.what());
+        return nullptr;
+    }
+    return log;
 }
 
 void LogViewer::ViewerScrolling(const std::string &action)
 {
-    std::lock_guard<std::mutex> guard(m_lock);
+    std::unique_ptr<std::lock_guard<std::mutex>> guard(new std::lock_guard<std::mutex>(m_lock));
     auto scrollIterator = m_scrollMap.find(action);
 
     if (scrollIterator == m_scrollMap.cend())
         return;
 
     if (scrollIterator->second())
-        UpdateViewer();
+    {
+        guard.reset();
+        ConditionalUpdateViewer(true);
+    }
 }
 
 void LogViewer::SetFocusToEnd()
@@ -383,28 +417,29 @@ void LogViewer::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)
         break;
 
     case CDDS_ITEMPREPAINT:
-        {
-            LogData *logData = GetLogData(pNMCD->dwItemSpec);
+    {
+        std::unique_lock<std::recursive_mutex> uiLock(m_uiLock);
+        LogData *logData = GetCopyLogData(pNMCD->dwItemSpec);
 
-            if (logData == nullptr)
-                break;
-
-            if (pNMCD->uItemState & (LVIS_SELECTED | LVIS_FOCUSED))
-                logData->m_selected ^= true;
-
-            if (logData->m_selected)
-            {
-                pNMCD->uItemState = CDIS_DEFAULT;
-                pLVCD->clrText = RGB(0, 255, 0);
-                pLVCD->clrTextBk = RGB(255, 0, 255);
-            }
-            else
-            {
-                pLVCD->clrText = logData->m_textColor;
-                pLVCD->clrTextBk = logData->m_backgroundColor;
-            }
-            *pResult = CDRF_DODEFAULT;
+        if (logData == nullptr)
             break;
+
+        if (pNMCD->uItemState & (LVIS_SELECTED | LVIS_FOCUSED))
+            logData->m_selected ^= true;
+
+        if (logData->m_selected)
+        {
+            pNMCD->uItemState = CDIS_DEFAULT;
+            pLVCD->clrText = RGB(0, 255, 0);
+            pLVCD->clrTextBk = RGB(255, 0, 255);
         }
+        else
+        {
+            pLVCD->clrText = logData->m_textColor;
+            pLVCD->clrTextBk = logData->m_backgroundColor;
+        }
+        *pResult = CDRF_DODEFAULT;
+        break;
+    }
     }
 }

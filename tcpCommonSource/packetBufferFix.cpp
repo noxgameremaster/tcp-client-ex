@@ -138,8 +138,7 @@ bool PacketBufferFix::ReadSendInfoDetail()
     if (SenderInfo::sender_field_second != endpoint)
     {
         delayReturn = false;
-        //m_readSeekpoint -= (sizeof(startpoint) + sizeof(endpoint));     ///여기에서 read seek point 복구가 필요할 수 있다. 작업에 실패한 경우
-        RewindSeek(sizeof(startpoint) + sizeof(endpoint));
+        RewindSeek(sizeof(startpoint) + sizeof(endpoint));      ///여기에서 read seek point 복구가 필요할 수 있다. 작업에 실패한 경우
     }
     else
     {
@@ -199,7 +198,6 @@ bool PacketBufferFix::ReadPacketEtc()
     m_parseAction = [this]() { return this->ReadStartpoint(); };    //올바른 패킷이든 아니든 여기로 돌아가야 한다!
     if (endpoint != HeaderData::header_terminal)        //unmatched!
     {
-        //m_readSeekpoint -= (packetLength + sizeof(HeaderData::header_stx)); //rewind seekpoint
         RewindSeek(packetLength + sizeof(HeaderData::header_stx));
         delayReturn = false;
         NetLogObject::LogObject().AppendLogMessage("bool PacketBufferFix::ReadPacketEtc() the etx unmatched!", PrintUtil::ConsoleColor::COLOR_DARKRED);
@@ -227,7 +225,6 @@ bool PacketBufferFix::ReadPacketLength()
     m_headerInfo->SetProperty<HeaderData::FieldInfo::LENGTH>(length);
     if (length > 16384)   //too long     //FIXME. require alignment buffer size
     {
-        //m_readSeekpoint -= sizeof(length); //wrong rewind
         RewindSeek(sizeof(length));
         m_parseAction = [this]() { return this->ReadStartpoint(); };
         m_tempBuffer->Clear();
@@ -243,7 +240,6 @@ bool PacketBufferFix::ReadStartpoint()
     if (!EvacuateChunk(sizeof(uint32_t)))
         return false;
 
-    //m_readSeekpoint -= sizeof(uint32_t);
     RewindSeek(sizeof(uint32_t));
     uint32_t magic = 0;
 

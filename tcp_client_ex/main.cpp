@@ -3,18 +3,34 @@
 
 #include "netclient.h"
 #include "stringhelper.h"
+#include "netLogObject.h"
 #include "printutil.h"
 
 #pragma comment(lib, "tcpcommonsource.lib")
+
+class TestPrint : public CCObject
+{
+public:
+    void ReceiveLogMessage(const std::string &print, uint32_t colr)
+    {
+        PrintUtil::PrintMessage(print);
+    }
+};
 
 using namespace _StringHelper;
 
 int main()
 {
     NetClient client;
+    TestPrint testprint;
     bool runRes = client.Startup();
 
+    client.SetNetworkParam("127.0.0.1", "8282");
+
     PrintUtil::PrintMessage(stringFormat("start client..., status: %s \n", runRes ? "ok" : "ng"));
+    NetLogObject::LogObject().OnReleaseLogMessage().Connection(&TestPrint::ReceiveLogMessage, &testprint);
+
+    client.ClientTestSendFileRequest("C:\\Users\\인스유틸\\Documents\\Debug (3)\\DOWNLOAD\\TEST\\abcd.iso");
     std::getchar();
 
     client.Shutdown();
