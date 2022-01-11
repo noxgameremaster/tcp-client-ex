@@ -1,7 +1,7 @@
 
 #include "pch.h"
 #include "filePanel.h"
-#include "listElement.h"
+#include "downloadFileInfo.h"
 #include "resource.h"
 
 FilePanel::FilePanel(UINT nIDTemplate, CWnd *parent)
@@ -16,21 +16,31 @@ void FilePanel::InitCControls()
     ListViewer::ListColumn cols;
     CRect viewArea;
     
-    //GetWindowRect(viewArea);
-    GetClientRect(viewArea);
+    m_fileView.GetClientRect(&viewArea);
 
-    cols.Append("order", 50);
-    cols.Append("filename", viewArea.Width() - 50);
+    int width = viewArea.right;
+    auto setWidthFx = [&width](int columnWidth)
+    {
+        width = (width < columnWidth) ? 0 : width - columnWidth;
+        return (width == 0) ? width : columnWidth;
+    };
+
+    cols.Append("filename", setWidthFx(200));
+    cols.Append("filesize", setWidthFx(100));
+    cols.Append("downloadBytes", setWidthFx(100));
+    cols.Append("", width);
 
     m_fileView.AttachListColumn(cols);
 }
 
 void FilePanel::OnInitialUpdate()
 {
-    ListElement *elem = new ListElement;
+    DownloadFileInfo *elem = new DownloadFileInfo;
+    int columnIndex = 0;
 
-    elem->SetElement(0, "1");
-    elem->SetElement(1, "test_file.txt");
+    elem->SetElement(columnIndex++, "test_file.txt");
+    elem->SetElement(columnIndex++, "300");
+    elem->SetElement(columnIndex++, "0");
 
     m_fileView.Append(std::unique_ptr<ListElement>(elem));
 }

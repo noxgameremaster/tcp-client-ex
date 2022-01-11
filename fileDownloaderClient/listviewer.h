@@ -41,6 +41,7 @@ private:
 
 protected:
     DECLARE_MESSAGE_MAP()
+    afx_msg BOOL OnNotify(WPARAM wParam, LPARAM lParam, LRESULT *pResult);
     afx_msg void OnGetDisplayInfoList(NMHDR *pNMHDR, LRESULT *pResult);
     afx_msg void OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult);
     afx_msg void OnPaint();

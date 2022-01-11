@@ -47,7 +47,7 @@ void ListViewer::AttachListColumn(const ListColumn &columnData)
     int col = 0;
 
     for (const auto &column : columnData.m_columns)
-        InsertColumn(col++, toArray(std::get<0>(column)), LVCFMT_LEFT, std::get<1>(column));
+        InsertColumn(col++, toArray(std::get<0>(column)), LVCFMT_LEFT | LVCFMT_FIXED_WIDTH, std::get<1>(column));
 }
 
 void ListViewer::EnableHighlighting(HWND hWnd, int row, bool bHighlight)
@@ -70,6 +70,20 @@ BEGIN_MESSAGE_MAP(ListViewer, CListCtrl)
     ON_NOTIFY_REFLECT(NM_CUSTOMDRAW, OnNMCustomdraw)
     ON_WM_PAINT()
 END_MESSAGE_MAP()
+
+BOOL ListViewer::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT *pResult)
+{
+    switch (((NMHDR *)lParam)->code)
+    {
+    case HDN_BEGINTRACKW:
+    case HDN_BEGINTRACKA:
+        *pResult = TRUE;
+
+        return TRUE;
+    }
+
+    return CListCtrl::OnNotify(wParam, lParam, pResult);
+}
 
 void ListViewer::OnGetDisplayInfoList(NMHDR *pNMHDR, LRESULT *pResult)
 {

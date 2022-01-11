@@ -2,6 +2,7 @@
 #ifndef LIST_ELEMENT_H__
 #define LIST_ELEMENT_H__
 
+#include <sstream>
 #include <string>
 
 class ListElement
@@ -14,10 +15,16 @@ public:
     explicit ListElement();
     virtual ~ListElement();
 
-private:
+protected:
     template <class Ty>
-    void SetData(Ty &dest, const std::string &src);
+    void SetData(Ty &dest, const std::string &src)
+    {
+        std::stringstream ss(src);
 
+        ss >> dest;
+    }
+
+private:
     virtual size_t ElementCount()
     {
         return 2;
