@@ -102,6 +102,12 @@
     <ClCompile Include="reportErrorPacket.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="packetBufferFix.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="binaryBuffer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="winsocket.h">
@@ -192,6 +198,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="reportErrorPacket.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="packetBufferFix.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="binaryBuffer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

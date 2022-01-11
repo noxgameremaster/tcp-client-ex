@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -23,19 +23,19 @@
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{8cd56abb-b23d-42e7-a3bd-c323b3459377}</ProjectGuid>
     <RootNamespace>tcpCommonSource</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="binaryBuffer.cpp" />
     <ClCompile Include="binarystream.cpp" />
     <ClCompile Include="chatPacket.cpp" />
     <ClCompile Include="downloadCompletePacket.cpp" />
@@ -165,6 +166,7 @@
     <ClCompile Include="netpacket.cpp" />
     <ClCompile Include="netservice.cpp" />
     <ClCompile Include="packetBuffer.cpp" />
+    <ClCompile Include="packetBufferFix.cpp" />
     <ClCompile Include="packetOrderTable.cpp" />
     <ClCompile Include="partitionpool.cpp" />
     <ClCompile Include="printUtil.cpp" />
@@ -174,6 +176,7 @@
     <ClCompile Include="winsocket.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="binaryBuffer.h" />
     <ClInclude Include="binarystream.h" />
     <ClInclude Include="ccobject.h" />
     <ClInclude Include="chatPacket.h" />
@@ -196,6 +199,7 @@
     <ClInclude Include="netpacket.h" />
     <ClInclude Include="netservice.h" />
     <ClInclude Include="packetBuffer.h" />
+    <ClInclude Include="packetBufferFix.h" />
     <ClInclude Include="packetOrderTable.h" />
     <ClInclude Include="partitionpool.h" />
     <ClInclude Include="printUtil.h" />
