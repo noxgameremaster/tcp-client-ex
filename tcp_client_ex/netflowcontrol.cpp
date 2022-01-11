@@ -30,7 +30,6 @@ bool NetFlowControl::CheckHasIO() const
 
 bool NetFlowControl::CheckIOList()
 {
-    //std::this_thread::sleep_for(std::chrono::milliseconds(3));
     {
         std::lock_guard<std::mutex> lock(m_lock);
         while (m_inpacketList.size())

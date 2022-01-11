@@ -17,6 +17,7 @@ class CfileDownloaderClientDlg : public CDialogEx
 {
 	class MainWndCC;
 private:
+	std::unique_ptr<CBrush> m_bkBrush;
 	GroupBox m_mainPanel;
 	GroupBox m_logPanel;
 	PrettyButton m_btnLogTestInsert;
@@ -27,7 +28,7 @@ private:
 
 	std::unique_ptr<MainWndCC> m_wndcc;
 	std::unique_ptr<PageManager> m_logPanelLoader;
-
+	std::unique_ptr<PageManager> m_mainPageLoader;
 
 	//for test
 	CEdit m_cmdInput;
@@ -64,6 +65,7 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg BOOL PreTranslateMessage(MSG *pMsg);
 	afx_msg void OnClose();
+	afx_msg HBRUSH OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor);
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 };

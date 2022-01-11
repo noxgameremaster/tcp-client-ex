@@ -3,6 +3,7 @@
 #define PACKET_BUFFER_FIX_H__
 
 #include "binarystream.h"
+#include <map>
 
 class WinSocket;
 class NetPacket;
@@ -14,7 +15,6 @@ class PacketBufferFix : public BinaryStream
     using packet_instance_type = std::unique_ptr<NetPacket>;
     using packet_instance_function = std::function<packet_instance_type(uint8_t)>;
     using parse_action = std::function<bool()>;
-    static constexpr size_t max_buffer_length = 65536;
 
     struct SenderInfo;
 
@@ -35,7 +35,7 @@ private:
 
 public:
     explicit PacketBufferFix();
-    ~PacketBufferFix();
+    ~PacketBufferFix() override;
 
 private:
     bool CheckCapacity(const size_t &inputSize);

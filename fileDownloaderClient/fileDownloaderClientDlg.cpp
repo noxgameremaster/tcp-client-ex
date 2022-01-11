@@ -11,6 +11,7 @@
 #include "coreui.h"
 #include "pageManager.h"
 #include "logPanel.h"
+#include "filePanel.h"
 #include "stringHelper.h"
 
 #pragma comment(lib, "tcpCommonSource.lib")
@@ -80,7 +81,8 @@ END_MESSAGE_MAP()
 
 
 CfileDownloaderClientDlg::CfileDownloaderClientDlg(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_FILEDOWNLOADERCLIENT_DIALOG, pParent)
+	: CDialogEx(IDD_FILEDOWNLOADERCLIENT_DIALOG, pParent),
+	m_bkBrush(new CBrush(RGB(63, 72, 204)))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_wndcc = std::make_unique<MainWndCC>(this);
@@ -116,6 +118,7 @@ void CfileDownloaderClientDlg::InitPageManager()
 {
 	CWnd *logPanelFrame = GetDlgItem(MAIN_LOG_PANEL);
 
+	logPanelFrame->ShowWindow(SW_HIDE);
 	m_logPanelLoader = std::make_unique<PageManager>(*logPanelFrame, this);
 
 	std::unique_ptr<LogPanel> logView(new LogPanel(IDD_LOGVIEW_PANEL, this));
@@ -124,6 +127,17 @@ void CfileDownloaderClientDlg::InitPageManager()
 
 	m_logPanelLoader->MakePage("logview", std::move(logView));
 	m_logPanelLoader->ShowPage("logview");
+
+	CWnd *filePanelFrame = GetDlgItem(MAIN_PAGE_PANEL);
+
+	filePanelFrame->ShowWindow(SW_HIDE);
+
+	m_mainPageLoader = std::make_unique<PageManager>(*filePanelFrame, this);
+
+	std::unique_ptr<FilePanel> filePanel(new FilePanel(IDD_FILELIST_PANEL, this));
+
+	m_mainPageLoader->MakePage("filepage", std::move(filePanel));
+	m_mainPageLoader->ShowPage("filepage");
 }
 
 void CfileDownloaderClientDlg::Initialize()
@@ -165,6 +179,7 @@ BEGIN_MESSAGE_MAP(CfileDownloaderClientDlg, CDialogEx)
 	ON_WM_CLOSE()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 
@@ -270,6 +285,10 @@ void CfileDownloaderClientDlg::OnClose()
 	{
 		m_logPanelLoader.reset();
 	}
+	if (m_mainPageLoader)
+	{
+		m_mainPageLoader.reset();
+	}
 
 	//m_logViewer.StopLogViewThread();
 	if (m_coreUi)
@@ -279,6 +298,16 @@ void CfileDownloaderClientDlg::OnClose()
 	}
 	OutputDebugString("shutdown app");
 	CDialogEx::OnClose();
+}
+
+HBRUSH CfileDownloaderClientDlg::OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor)
+{
+	auto hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	if (pWnd == this)
+		return *m_bkBrush;
+
+	return hbr;
 }
 
 // 사용자가 최소화된 창을 끄는 동안에 커서가 표시되도록 시스템에서

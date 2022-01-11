@@ -25,6 +25,8 @@ private:
     std::list<log_data_ty>::const_iterator m_logdataPos;
     std::list<log_data_ty>::const_iterator m_logdataEndpos;
 
+    std::vector<log_data_ty> m_uiUpdateData;
+
     std::map<std::string, std::function<bool()>> m_scrollMap;
 
     std::weak_ptr<LogDataAlive> m_latestSelectCell;
@@ -38,9 +40,12 @@ public:
     explicit LogViewer();
     ~LogViewer() override;
 
-public:
+private:
+    void UpdateDataCopy();
     void UpdateViewer();
-    void ConditionalUpdateViewer();
+
+public:
+    void ConditionalUpdateViewer(bool forceUpdate = false);
     bool IsUpdateItem() const;
     bool UpdateThreadTask();
 
@@ -57,7 +62,7 @@ private:
     bool DownViewer();
     bool PageDownViewer();
     bool MoveToPageEnd();
-    LogData *GetLogData(int index);
+    LogData *GetCopyLogData(int index);
 
 public:
     void ViewerScrolling(const std::string &action);
@@ -79,6 +84,7 @@ protected:
 
 private:
     std::mutex m_lock;
+    std::recursive_mutex m_uiLock;
 };
 
 #endif

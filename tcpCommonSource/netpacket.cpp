@@ -7,7 +7,7 @@
 using namespace _StringHelper;
 
 NetPacket::NetPacket()
-    : BinaryStream(32786)
+    : BinaryStream(packet_unit_max_size)
 {
     m_senderSocketId = static_cast<socket_type>(-1);
     m_headerData = std::make_unique<HeaderData>();

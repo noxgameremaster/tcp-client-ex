@@ -7,6 +7,8 @@
 #include "netLogObject.h"
 
 static socket_type s_latestReceiveSocket = WinSocket::invalid_socket;
+static constexpr size_t max_buffer_packet_count = 12;
+static constexpr size_t max_buffer_length = NetPacket::packet_unit_max_size * max_buffer_packet_count;
 
 struct PacketBufferFix::SenderInfo
 {
@@ -31,7 +33,7 @@ PacketBufferFix::PacketBufferFix()
     m_writeSeekpoint = 0;
     m_readSeekpoint = 0;
 
-    m_tempBuffer = std::make_unique<BinaryBuffer>(16384);   //!FIXME!!//
+    m_tempBuffer = std::make_unique<BinaryBuffer>(NetPacket::packet_unit_max_size);   //!FIXME!!//
 
     m_parseAction = [this]() { return this->ReadStartpoint(); };
 }
@@ -130,7 +132,7 @@ bool PacketBufferFix::EvacuateChunk(const size_t count)
 
 bool PacketBufferFix::ReadSendInfoDetail()
 {
-    uint32_t startpoint=0, endpoint = 0;
+    uint32_t startpoint = 0, endpoint = 0;
     bool delayReturn = true;
 
     m_tempBuffer->ReadChunk(startpoint);
@@ -138,8 +140,7 @@ bool PacketBufferFix::ReadSendInfoDetail()
     if (SenderInfo::sender_field_second != endpoint)
     {
         delayReturn = false;
-        //m_readSeekpoint -= (sizeof(startpoint) + sizeof(endpoint));     ///여기에서 read seek point 복구가 필요할 수 있다. 작업에 실패한 경우
-        RewindSeek(sizeof(startpoint) + sizeof(endpoint));
+        RewindSeek(sizeof(startpoint) + sizeof(endpoint));      ///여기에서 read seek point 복구가 필요할 수 있다. 작업에 실패한 경우
     }
     else
     {
@@ -199,7 +200,6 @@ bool PacketBufferFix::ReadPacketEtc()
     m_parseAction = [this]() { return this->ReadStartpoint(); };    //올바른 패킷이든 아니든 여기로 돌아가야 한다!
     if (endpoint != HeaderData::header_terminal)        //unmatched!
     {
-        //m_readSeekpoint -= (packetLength + sizeof(HeaderData::header_stx)); //rewind seekpoint
         RewindSeek(packetLength + sizeof(HeaderData::header_stx));
         delayReturn = false;
         NetLogObject::LogObject().AppendLogMessage("bool PacketBufferFix::ReadPacketEtc() the etx unmatched!", PrintUtil::ConsoleColor::COLOR_DARKRED);
@@ -225,9 +225,8 @@ bool PacketBufferFix::ReadPacketLength()
     m_tempBuffer->ReadChunk(stx);
     m_tempBuffer->ReadChunk(length);
     m_headerInfo->SetProperty<HeaderData::FieldInfo::LENGTH>(length);
-    if (length > 16384)   //too long     //FIXME. require alignment buffer size
+    if (length > NetPacket::packet_unit_max_size)   //too long     //FIXME. require alignment buffer size
     {
-        //m_readSeekpoint -= sizeof(length); //wrong rewind
         RewindSeek(sizeof(length));
         m_parseAction = [this]() { return this->ReadStartpoint(); };
         m_tempBuffer->Clear();
@@ -243,7 +242,6 @@ bool PacketBufferFix::ReadStartpoint()
     if (!EvacuateChunk(sizeof(uint32_t)))
         return false;
 
-    //m_readSeekpoint -= sizeof(uint32_t);
     RewindSeek(sizeof(uint32_t));
     uint32_t magic = 0;
 

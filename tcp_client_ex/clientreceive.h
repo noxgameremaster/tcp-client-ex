@@ -9,17 +9,15 @@
 class WinSocket;
 class SocketSet;
 class ClientWorker;
-//class PacketBuffer;
 class PacketBufferFix;
 class LoopThread;
 
 class ClientReceive : public NetService
 {
-    static constexpr size_t read_receive_buffer_count = 1024;
+    static constexpr size_t read_receive_buffer_count = 10240;
 private:
     std::shared_ptr<WinSocket> m_netsocket;
     std::unique_ptr<SocketSet> m_readFds;
-    //std::shared_ptr<PacketBuffer> m_packetBuffer;
     std::shared_ptr<PacketBufferFix> m_packetBuffer;
     std::unique_ptr<ClientWorker> m_networker;
     std::unique_ptr<LoopThread> m_receiveThread;
@@ -44,6 +42,7 @@ private:
 
 private:
     DECLARE_SIGNAL(OnReceivePushStream)
+    DECLARE_SIGNAL(OnDisconnect, socket_type)
 };
 
 #endif
