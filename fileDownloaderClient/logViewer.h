@@ -9,6 +9,7 @@
 #include <functional>
 #include <mutex>
 #include <atomic>
+#include <vector>
 
 class LoopThread;
 

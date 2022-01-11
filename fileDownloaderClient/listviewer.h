@@ -6,8 +6,10 @@
 #include <memory>
 #include <string>
 #include <list>
+#include <tuple>
 
 class ListElement;
+class ListHeaderPanel;
 
 class ListViewer : public CListCtrl
 {
@@ -19,19 +21,29 @@ public:
 private:
     using list_element_ty = std::unique_ptr<ListElement>;
     std::vector<list_element_ty> m_listdata;
+    std::unique_ptr<ListHeaderPanel> m_headerPanel;
 
 public:
     explicit ListViewer();
     ~ListViewer() override;
 
+private:
+    void DrawStuff(CDC &cdc);
+
 public:
     void Append(list_element_ty addData);
     void AttachListColumn(const ListColumn &columnData);
+
+private:
+    void EnableHighlighting(HWND hWnd, int row, bool bHighlight);
+    bool IsRowSelected(HWND hWnd, int row);
+    bool IsRowHighlighted(HWND hWnd, int row);
 
 protected:
     DECLARE_MESSAGE_MAP()
     afx_msg void OnGetDisplayInfoList(NMHDR *pNMHDR, LRESULT *pResult);
     afx_msg void OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult);
+    afx_msg void OnPaint();
     void PreSubclassWindow() override;
 };
 

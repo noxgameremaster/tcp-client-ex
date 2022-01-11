@@ -4,6 +4,8 @@
 
 #include "ccobject.h"
 
+#include <future>
+
 class NetClient;
 class IniFileMan;
 
@@ -13,6 +15,7 @@ private:
     const std::string m_settingFileName;
     std::unique_ptr<NetClient> m_netMain;
     std::unique_ptr<IniFileMan> m_iniMan;
+    std::future<bool> m_netRunner;
 
 public:
     explicit CoreUi();
@@ -20,7 +23,12 @@ public:
 
     void Initialize();
     void Deinitialize();
-    bool StartNetClient();
+
+private:
+    bool NetStartup();
+
+public:
+    void StartNetClient();
 
 private:
     void ReceiveLogMessage(const std::string &msg, uint32_t colr);

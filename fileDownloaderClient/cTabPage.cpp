@@ -1,6 +1,7 @@
 
 #include "pch.h"
 #include "CTabPage.h"
+#include "cbufferdc.h"
 
 IMPLEMENT_DYNAMIC(CTabPage, CFormView)
 
@@ -12,6 +13,21 @@ CTabPage::CTabPage(UINT _nIDTemplate, CWnd *parent)
 
 CTabPage::~CTabPage()
 { }
+
+void CTabPage::DrawStuff(CDC &cdc)
+{
+    CPen pen(PS_SOLID, 2, RGB(128, 255, 255));
+    CBrush brush(RGB(13, 107, 115));
+    CPen *oldPen = cdc.SelectObject(&pen);
+    CBrush *oldBrush = cdc.SelectObject(&brush);
+    CRect border;
+
+    GetClientRect(&border);
+    cdc.Rectangle(&border);
+
+    cdc.SelectObject(oldPen);
+    cdc.SelectObject(oldBrush);
+}
 
 void CTabPage::ChangeBkColor(UINT _color)
 {
@@ -72,6 +88,14 @@ HBRUSH CTabPage::OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor)
     return m_bkBrush;
 }
 
+void CTabPage::OnPaint()
+{
+    CBufferDC cdc(this);
+
+    DrawStuff(cdc);
+}
+
 BEGIN_MESSAGE_MAP(CTabPage, CFormView)
     ON_WM_CTLCOLOR()
+    ON_WM_PAINT()
 END_MESSAGE_MAP()

@@ -20,6 +20,10 @@ public:
     CTabPage(UINT _nIDTemplate, CWnd *parent = nullptr);
     virtual ~CTabPage();
 
+private:
+    void DrawStuff(CDC &cdc);
+
+public:
     void ChangeBkColor(UINT _color);
     virtual BOOL Create(LPCTSTR lpszClassName, LPCTSTR lpszWindowName, DWORD dwStyle, const RECT &rect, CWnd *pParentWnd, CCreateContext *pContext = nullptr);
     virtual void OnInitialUpdate();
@@ -37,6 +41,8 @@ public:
 protected:
     virtual void DoDataExchange(CDataExchange *pDX) override;
     afx_msg HBRUSH OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor);
+    afx_msg void OnPaint();
+
     //afx_msg 
     DECLARE_MESSAGE_MAP()
 };

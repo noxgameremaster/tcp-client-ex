@@ -2,6 +2,9 @@
 #include "pch.h"
 #include "listviewer.h"
 #include "listElement.h"
+#include "listHeaderPanel.h"
+#include "cbufferdc.h"
+#include "mymemdc.h"
 #include "stringHelper.h"
 #include "resource.h"
 
@@ -11,10 +14,26 @@ IMPLEMENT_DYNAMIC(ListViewer, CListCtrl)
 
 ListViewer::ListViewer()
     : CListCtrl()
-{ }
+{
+    m_headerPanel = std::make_unique<ListHeaderPanel>();
+}
 
 ListViewer::~ListViewer()
 { }
+
+void ListViewer::DrawStuff(CDC &cdc)
+{
+    CPen pen(PS_SOLID, 2, RGB(255, 0, 0));
+    CPen *oldPen = cdc.SelectObject(&pen);
+    CRect border;
+
+    GetWindowRect(&border);
+    //ScreenToClient(&border);
+
+    cdc.Rectangle(&border);
+
+    cdc.SelectObject(oldPen);
+}
 
 void ListViewer::Append(list_element_ty addData)
 {
@@ -31,9 +50,25 @@ void ListViewer::AttachListColumn(const ListColumn &columnData)
         InsertColumn(col++, toArray(std::get<0>(column)), LVCFMT_LEFT, std::get<1>(column));
 }
 
+void ListViewer::EnableHighlighting(HWND hWnd, int row, bool bHighlight)
+{
+    ListView_SetItemState(hWnd, row, bHighlight ? 0xff : 0, LVIS_SELECTED);
+}
+
+bool ListViewer::IsRowSelected(HWND hWnd, int row)
+{
+    return ListView_GetItemState(hWnd, row, LVIS_SELECTED) != 0;
+}
+
+bool ListViewer::IsRowHighlighted(HWND hWnd, int row)
+{
+    return IsRowSelected(hWnd, row) /*&& (::GetFocus() == hWnd)*/;
+}
+
 BEGIN_MESSAGE_MAP(ListViewer, CListCtrl)
     ON_NOTIFY_REFLECT(LVN_GETDISPINFO, OnGetDisplayInfoList)
     ON_NOTIFY_REFLECT(NM_CUSTOMDRAW, OnNMCustomdraw)
+    ON_WM_PAINT()
 END_MESSAGE_MAP()
 
 void ListViewer::OnGetDisplayInfoList(NMHDR *pNMHDR, LRESULT *pResult)
@@ -59,44 +94,83 @@ void ListViewer::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)
 {
     LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
     NMTVCUSTOMDRAW *pLVCD = reinterpret_cast<NMTVCUSTOMDRAW *>(pNMHDR);
+    static bool bHighlighted = false;
 
-    switch (pNMCD->dwDrawStage)
+    *pResult = CDRF_DODEFAULT;
+    if (CDDS_PREPAINT == pNMCD->dwDrawStage)
     {
-    case CDDS_PREPAINT:
-        // Item prepaint notification.
         *pResult = CDRF_NOTIFYITEMDRAW;
-        break;
-
-    case CDDS_ITEMPREPAINT:
+    }
+    else if (CDDS_ITEMPREPAINT == pNMCD->dwDrawStage)
     {
-        /*std::unique_lock<std::recursive_mutex> uiLock(m_uiLock);
-        LogData *logData = GetCopyLogData(pNMCD->dwItemSpec);
+        int iRow = static_cast<int>(pNMCD->dwItemSpec);
 
-        if (logData == nullptr)
-            break;*/
+        bHighlighted = IsRowHighlighted(m_hWnd, iRow);
 
-        /*if (pNMCD->uItemState & (LVIS_SELECTED | LVIS_FOCUSED))
-            logData->m_selected ^= true;
+        if (bHighlighted)
+        {
+            pLVCD->clrText = RGB(32, 194, 44); // Use my foreground hilite color
+            pLVCD->clrTextBk = RGB(192, 0, 208); // Use my background hilite color
 
-        if (logData->m_selected)
-        {*/
-            pNMCD->uItemState = CDIS_DEFAULT;
-            pLVCD->clrText = RGB(0, 255, 0);
-            pLVCD->clrTextBk = RGB(255, 0, 255);
-        //}
-        //else
-        /*{
-            pLVCD->clrText = logData->m_textColor;
-            pLVCD->clrTextBk = logData->m_backgroundColor;
-        }*/
+            EnableHighlighting(m_hWnd, iRow, false);
+        }
+        else
+            pLVCD->clrText = RGB(231, 231, 248);
+
+        *pResult = CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
+    }
+    else if (CDDS_ITEMPOSTPAINT == pNMCD->dwDrawStage)
+    {
+        if (bHighlighted)
+        {
+            int iRow = static_cast<int>(pNMCD->dwItemSpec);
+
+            EnableHighlighting(m_hWnd, iRow, true);
+        }
         *pResult = CDRF_DODEFAULT;
-        break;
     }
-    }
+}
+
+void ListViewer::OnPaint()
+{
+    /*CListCtrl::OnPaint();
+    CBufferDC cdc(this);
+
+    DrawStuff(cdc);*/
+
+    CPaintDC dc(this);
+    CRect rect;
+    GetClientRect(&rect);
+    MyMemDC memDC(&dc, rect);
+    CRect headerRect;
+
+    GetDlgItem(0)->GetWindowRect(&headerRect);
+    ScreenToClient(&headerRect);
+    dc.ExcludeClipRect(&headerRect);
+    
+    CRect clip;
+    memDC.GetClipBox(&clip);
+    memDC.FillSolidRect(clip, RGB(76, 85, 118));
+
+    SetTextBkColor(RGB(76, 85, 118));
+
+    /*m_SkinVerticleScrollbar.UpdateThumbPosition();
+    m_SkinHorizontalScrollbar.UpdateThumbPosition();*/
+
+
+    DefWindowProc(WM_PAINT, (WPARAM)memDC->m_hDC, (LPARAM)0);
 }
 
 void ListViewer::PreSubclassWindow()
 {
-    SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER);
+    SetExtendedStyle(LVS_EX_FULLROWSELECT | /*LVS_EX_GRIDLINES |*/ LVS_EX_DOUBLEBUFFER);
+
+    CHeaderCtrl *pHeadCtrl = GetHeaderCtrl();
+    HWND hWnd = reinterpret_cast<HWND>(::SendMessage(m_hWnd, LVM_GETHEADER, 0, 0));
+
+    pHeadCtrl->ModifyStyle(0, LVS_OWNERDRAWFIXED, SWP_FRAMECHANGED);
+    m_headerPanel->SubclassWindow(hWnd);
+
+    CListCtrl::PreSubclassWindow();
 }
 

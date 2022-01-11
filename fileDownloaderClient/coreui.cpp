@@ -30,13 +30,14 @@ void CoreUi::Initialize()
 
 void CoreUi::Deinitialize()
 {
+    m_netRunner.get();
     m_netMain->Shutdown();
 
     NetLogObject::LogObject().Shutdown();
     EventWorker::Instance().Stop();
 }
 
-bool CoreUi::StartNetClient()
+bool CoreUi::NetStartup()
 {
     if (!m_iniMan->ReadIni(m_settingFileName))
     {
@@ -64,6 +65,13 @@ bool CoreUi::StartNetClient()
 
     m_OnForwardMessage.Emit("fail to connect...", 0xff);
     return false;
+}
+
+void CoreUi::StartNetClient()
+{
+    m_netRunner = std::async([this]() { return this->NetStartup(); });
+
+    
 }
 
 void CoreUi::ReceiveLogMessage(const std::string &msg, uint32_t colr)

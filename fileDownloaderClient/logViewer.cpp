@@ -272,18 +272,13 @@ bool LogViewer::MoveToPageEnd()
 
 LogViewer::LogData *LogViewer::GetCopyLogData(int index)
 {
-    LogData *log = nullptr;
-
-    try
-    {
-        log = m_uiUpdateData.at(index).get();
-    }
-    catch (const std::out_of_range &oor)
-    {
-        OutputDebugString(oor.what());
+    if (m_uiUpdateData.empty())
         return nullptr;
-    }
-    return log;
+
+    if (index < 0 || index >= static_cast<int>(m_uiUpdateData.size()))
+        return nullptr;
+
+    return m_uiUpdateData[index].get();
 }
 
 void LogViewer::ViewerScrolling(const std::string &action)

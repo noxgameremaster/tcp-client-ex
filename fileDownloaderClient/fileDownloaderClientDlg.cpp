@@ -281,6 +281,11 @@ BOOL CfileDownloaderClientDlg::PreTranslateMessage(MSG *pMsg)
 void CfileDownloaderClientDlg::OnClose()
 {
 	ShowWindow(SW_HIDE);
+	if (m_coreUi)
+	{
+		m_coreUi->Deinitialize();
+		m_coreUi.reset();
+	}
 	if (m_logPanelLoader)
 	{
 		m_logPanelLoader.reset();
@@ -291,11 +296,6 @@ void CfileDownloaderClientDlg::OnClose()
 	}
 
 	//m_logViewer.StopLogViewThread();
-	if (m_coreUi)
-	{
-		m_coreUi->Deinitialize();
-		m_coreUi.reset();
-	}
 	OutputDebugString("shutdown app");
 	CDialogEx::OnClose();
 }
