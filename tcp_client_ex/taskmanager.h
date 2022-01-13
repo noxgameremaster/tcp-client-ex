@@ -39,7 +39,7 @@ private:
 public:
     void InputTask(std::unique_ptr<NetPacket> &&packet);
     AbstractTask *GetTask(const std::string &taskName);
-    void ForwardPacket(std::unique_ptr<NetPacket> &&packet);
+    void ForwardPacket(std::unique_ptr<NetPacket> &&packet, bool toInner = false);
 };
 
 #endif

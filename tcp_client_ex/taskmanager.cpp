@@ -132,10 +132,11 @@ AbstractTask *TaskManager::GetTask(const std::string &taskName)
     return taskIterator->second.get();
 }
 
-void TaskManager::ForwardPacket(std::unique_ptr<NetPacket>&& packet)
+void TaskManager::ForwardPacket(std::unique_ptr<NetPacket>&& packet, bool toInner)
 {
     if (GetParent()!=nullptr)
-        m_netFlow->Enqueue(std::forward<std::remove_reference<decltype(packet)>::type>(packet), NetFlowControl::IOType::OUT);
+        m_netFlow->Enqueue(std::forward<std::remove_reference<decltype(packet)>::type>(packet), 
+            toInner ? NetFlowControl::IOType::INNER : NetFlowControl::IOType::OUT);
 }
 
 

@@ -7,7 +7,7 @@
 using namespace _StringHelper;
 
 LargeFileChunkPacket::LargeFileChunkPacket()
-    : NetPacket()
+    : NetPacket(packet_unit_max_size)
 {
     m_streamLength = 0;
     m_fileStream.fill(0);

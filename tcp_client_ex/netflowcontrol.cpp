@@ -6,12 +6,13 @@
 #include "filepacket.h"
 #include "chatPacket.h"
 #include "largeFileRequestPacket.h"
+#include "eventworker.h"
 #include "loopThread.h"
 
 NetFlowControl::NetFlowControl()
     : NetService()
 {
-    m_taskmanager = std::make_shared<TaskManager>(this);
+    m_taskmanager = std::make_unique<TaskManager>(this);
     m_ioThread = std::make_unique<LoopThread>();
 
     m_ioThread->SetWaitCondition([this]() { return this->CheckHasIO(); });
@@ -28,25 +29,26 @@ bool NetFlowControl::CheckHasIO() const
     return (m_inpacketList.size() + m_outpacketList.size()) > 0;
 }
 
+void NetFlowControl::DequeueIO(NetFlowControl::net_packet_list_type &ioList, std::function<bool(NetFlowControl::net_packet_type&&)> &&processor)
+{
+    net_packet_type packet;
+    std::unique_lock<std::mutex> localLock(m_lock);
+
+    while (ioList.size())
+    {
+        packet = std::move(ioList.front());
+
+        processor(std::move(packet));
+        ioList.pop_front();
+    }
+}
+
 bool NetFlowControl::CheckIOList()
 {
-    {
-        std::lock_guard<std::mutex> lock(m_lock);
-        while (m_inpacketList.size())
-        {
-            std::unique_ptr<NetPacket> packet = std::move(m_inpacketList.front());
-
-            ReceivePacket(std::move(packet));
-            m_inpacketList.pop_front();
-        }
-        while (m_outpacketList.size())
-        {
-            std::unique_ptr<NetPacket> packet = std::move(m_outpacketList.front());
-
-            ReleasePacket(std::move(packet));
-            m_outpacketList.pop_front();
-        }
-    }
+    DequeueIO(m_inpacketList, [this](net_packet_type &&packet) { this->ReceivePacket(std::move(packet)); return true; });
+    DequeueIO(m_outpacketList, [this](net_packet_type &&packet) { return this->ReleasePacket(std::move(packet)); });
+    DequeueIO(m_innerPacketList, [this](net_packet_type &&packet) { this->ReleaseToInnerPacket(std::move(packet)); return true; });
+    
     return true;
 }
 
@@ -69,19 +71,19 @@ void NetFlowControl::OnStopped()
     m_taskmanager->Shutdown();
 }
 
-void NetFlowControl::ReceivePacket(std::unique_ptr<NetPacket> &&packet)
+void NetFlowControl::ReceivePacket(NetFlowControl::net_packet_type &&packet)
 {
     m_taskmanager->InputTask(std::move(packet));
 }
 
-bool NetFlowControl::ReleasePacket(std::unique_ptr<NetPacket> &&packet)
+bool NetFlowControl::ReleasePacket(NetFlowControl::net_packet_type &&packet)
 {
     if (m_sendbuffer.expired())
         return false;
 
     auto sendbuffer = m_sendbuffer.lock();
 
-    std::unique_ptr<NetPacket> sendData = std::forward<std::remove_reference<decltype(packet)>::type>(packet);
+    net_packet_type sendData = std::forward<std::remove_reference<decltype(packet)>::type>(packet);
     uint8_t *stream = nullptr;
     size_t length = 0;
 
@@ -91,18 +93,31 @@ bool NetFlowControl::ReleasePacket(std::unique_ptr<NetPacket> &&packet)
     return sendbuffer->PushBuffer(stream, length);
 }
 
-void NetFlowControl::Enqueue(std::unique_ptr<NetPacket>&& packet, IOType ioType)
+void NetFlowControl::ReleaseToInnerPacket(NetFlowControl::net_packet_type &&innerPacket)
+{
+    QUEUE_EMIT(m_OnReleaseInnerPacket, net_shared_packet_type(std::move(innerPacket)));
+}
+
+void NetFlowControl::Enqueue(NetFlowControl::net_packet_type&& packet, IOType ioType)
 {
     std::list<std::remove_reference<decltype(packet)>::type> *ioList = nullptr;
 
     do
     {
-        if (ioType == IOType::IN)
+        switch (ioType)
+        {
+        case IOType::IN:
             ioList = &m_inpacketList;
-        else if (ioType == IOType::OUT)
-            ioList = &m_outpacketList;
-        else
             break;
+        case IOType::OUT:
+            ioList = &m_outpacketList;
+            break;
+        case IOType::INNER:
+            ioList = &m_innerPacketList;
+            break;
+        default:
+            return;
+        }
 
         {
             std::lock_guard<std::mutex> lock(m_lock);

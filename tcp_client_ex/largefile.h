@@ -32,7 +32,9 @@ public:
     void SlotSetFileParams(const std::string &fileName, const std::string &pathName, const size_t &fileSize);
     void SlotWriteChunk(const std::vector<uint8_t> &srcChunk, bool ended);
 
+public:
     DECLARE_SIGNAL(OnReportSetParamResult, bool)
+public:
     DECLARE_SIGNAL(OnWriteChunk, bool, size_t, size_t, bool)
 };
 

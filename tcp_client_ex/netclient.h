@@ -26,7 +26,7 @@ public:
     ~NetClient() override;
 
 private:
-    void ToggleEventManager(bool isOn);
+    void OnInitialOnce() override;
     void OnError(const std::string &title, const std::string &errorMessage) override;
     bool StandBySocket();
     bool ReceiverInit();
@@ -43,6 +43,7 @@ public:
     void ClientTestSendFileRequest(const std::string &req);
     void ClientSendChat(const std::string &say);
     bool SetNetworkParam(const std::string &ip, const std::string &port);
+    void RegistInnerPacketListener(NetService *listener, std::function<void(std::shared_ptr<NetPacket>&&)> &&invokable);
 
 private:
     void SlotReportPing(uint32_t recvCount, uint32_t sendCount);

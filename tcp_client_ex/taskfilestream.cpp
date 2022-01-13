@@ -7,6 +7,7 @@
 #include "netLogObject.h"
 #include "eventworker.h"
 #include "ioFileStream.h"
+#include "frameRateThread.h"
 #include "runClock.h"
 #include "stringhelper.h"
 
@@ -18,6 +19,8 @@ TaskFileStream::TaskFileStream(NetObject *parent)
     m_error = 0;
     m_filesize = 0;
     m_timeCounter = std::make_unique<RunClock>();
+    
+    m_OnReportWritePos.Connection(&TaskFileStream::SlotWritePos, this);
 }
 
 TaskFileStream::~TaskFileStream()
@@ -25,9 +28,7 @@ TaskFileStream::~TaskFileStream()
 
 void TaskFileStream::WriteFileMetaData()
 {
-    EventWorker &work = EventWorker::Instance();
-
-    work.AppendTask(&m_OnReportFileMetaInfo, m_filename, m_pathname, m_filesize);
+    QUEUE_EMIT(m_OnReportFileMetaInfo, m_filename, m_pathname, m_filesize);
 }
 
 void TaskFileStream::ReportFileMetaReceiveCompleted()
@@ -60,7 +61,7 @@ void TaskFileStream::Report(bool noError)
         ReportFileMetaReceiveCompleted();
         return;
     }
-    NetLogObject::LogObject().AppendLogMessage("taskfilestream::report error", PrintUtil::ConsoleColor::COLOR_RED);
+    NET_PUSH_LOGMSG("taskfilestream::report error", PrintUtil::ConsoleColor::COLOR_RED);
 }
 
 void TaskFileStream::ReportWriteChunk(bool isError, const size_t &writeAmount, const size_t &totalSize, bool ended)
@@ -83,8 +84,28 @@ void TaskFileStream::ReportWriteChunk(bool isError, const size_t &writeAmount, c
     if (writeAmount >= totalSize)
     {
         std::string elapsedTime = m_timeCounter->Show(true);
-        NetLogObject::LogObject().AppendLogMessage(stringFormat("download complete. %s seconds", elapsedTime), PrintUtil::ConsoleColor::COLOR_VIOLET);
+
+        NET_PUSH_LOGMSG(stringFormat("download complete. %s seconds", elapsedTime), PrintUtil::ConsoleColor::COLOR_VIOLET);
+
+        InnerSendFileInfo(m_filesize);
     }
+    else
+    {
+        QUEUE_EMIT(m_OnReportWritePos, writeAmount, totalSize)
+    }
+}
+
+void TaskFileStream::InnerSendFileInfo(const size_t writeAmount)
+{
+    std::unique_ptr<FilePacket> innerReport(new FilePacket);
+
+    innerReport->SetFileName(m_filename);
+    innerReport->SetFilesize(m_filesize);
+    innerReport->SetSavePath(m_pathname);
+    if (writeAmount)
+        innerReport->SetDownloadBytes(writeAmount);
+
+    ForwardPacketToManager(std::move(innerReport), true);
 }
 
 void TaskFileStream::ProcessFileMeta(std::unique_ptr<NetPacket> &&packet)
@@ -100,7 +121,9 @@ void TaskFileStream::ProcessFileMeta(std::unique_ptr<NetPacket> &&packet)
 
     WriteFileMetaData();
 
-    NetLogObject::LogObject().AppendLogMessage(stringFormat("start download. %s file %d bytes...", m_filename, m_filesize), PrintUtil::ConsoleColor::COLOR_GREY);
+    NET_PUSH_LOGMSG(stringFormat("start download. %s file %d bytes...", m_filename, m_filesize), PrintUtil::ConsoleColor::COLOR_GREY);
+
+    InnerSendFileInfo(0);
 
     m_timeCounter->Reset();
 }
@@ -118,18 +141,20 @@ void TaskFileStream::ProcessFileChunk(std::unique_ptr<NetPacket> &&packet)
     {
     case FileChunkPacket::PacketSubCmd::SendEndChunkToClient:
         //SendDownloadEnd();
-        NetLogObject::LogObject().AppendLogMessage("end stream");
+        NET_PUSH_LOGMSG("end stream");
         ended = true;
         //break;
 
     case FileChunkPacket::PacketSubCmd::PrevToClient:
     case FileChunkPacket::PacketSubCmd::SendToClient:
-        std::vector<uint8_t> fileChunk;
+        {
+            static std::vector<uint8_t> fileChunk;
 
-        if (!chunkdata->FetchFileChunk(fileChunk))
-            return;
-        EventWorker::Instance().AppendTask(&m_OnReportReceiveFileChunk, std::move(fileChunk), ended);
-        break;
+            if (!chunkdata->FetchFileChunk(fileChunk))
+                return;
+            QUEUE_EMIT(m_OnReportReceiveFileChunk, std::move(fileChunk), ended);
+            break;
+        }
     }
 }
 
@@ -146,12 +171,12 @@ void TaskFileStream::ProcessFileUpload(std::unique_ptr<NetPacket> &&packet)
             IOFileStream::UrlSeparatePathAndName(m_uploadPath, m_pathname, m_filename);
             std::string downloadPath = "downloads";
 
-            EventWorker::Instance().AppendTask(&m_OnReportFileMetaInfo, m_filename, downloadPath, 0);
+            QUEUE_EMIT(m_OnReportFileMetaInfo, m_filename, downloadPath, 0);
         }
         break;
     case FilePacketUpload::PacketSubCmd::FileServerToClient:
         {
-            NetLogObject::LogObject().AppendLogMessage("server ready to file\n", PrintUtil::ConsoleColor::COLOR_BLUE);
+            NET_PUSH_LOGMSG("server ready to file\n", PrintUtil::ConsoleColor::COLOR_BLUE);
             std::unique_ptr<FileChunkPacket> chunk(new FileChunkPacket);
 
             chunk->ChangeSubCommand(FileChunkPacket::PacketSubCmd::SendToServer);
@@ -159,7 +184,7 @@ void TaskFileStream::ProcessFileUpload(std::unique_ptr<NetPacket> &&packet)
         }
         break;
     default:
-        NetLogObject::LogObject().AppendLogMessage("server sent unknown packet", PrintUtil::ConsoleColor::COLOR_BLUE);
+        NET_PUSH_LOGMSG("server sent unknown packet", PrintUtil::ConsoleColor::COLOR_BLUE);
     }
 }
 
@@ -181,4 +206,15 @@ void TaskFileStream::DoTask(std::unique_ptr<NetPacket> &&packet)
 std::string TaskFileStream::TaskName() const
 {
     return NetPacket::TaskKey<FilePacket>::Get();
+}
+
+void TaskFileStream::SlotWritePos(const size_t &writeAmount, const size_t &totalAmount)
+{
+    static uint32_t cFps = 0;
+
+    if (FrameRateThread::FrameThreadObject().IsGreater(cFps, 100))
+    {
+        cFps = FrameRateThread::FrameThreadObject().CurrentFps();
+        InnerSendFileInfo(writeAmount);
+    }
 }

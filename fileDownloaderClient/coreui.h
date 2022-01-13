@@ -2,14 +2,15 @@
 #ifndef CORE_UI_H__
 #define CORE_UI_H__
 
-#include "ccobject.h"
-
+#include "netservice.h"
 #include <future>
 
 class NetClient;
 class IniFileMan;
+class NetPacket;
+class DownloadFileInfo;
 
-class CoreUi : public CCObject
+class CoreUi : public NetService
 {
 private:
     const std::string m_settingFileName;
@@ -21,8 +22,12 @@ public:
     explicit CoreUi();
     ~CoreUi() override;
 
-    void Initialize();
-    void Deinitialize();
+private:
+    void OnInitialOnce() override;
+    bool OnInitialize() override;
+    bool OnStarted() override;
+    void OnDeinitialize() override;
+    void OnStopped() override;
 
 private:
     bool NetStartup();
@@ -39,7 +44,13 @@ public:
 
     void SendCommandToServer(const std::string &cmd);
 
+private:
+    void SlotGetInnerPacket(std::shared_ptr<NetPacket> &&packet);
+
+public:
     DECLARE_SIGNAL(OnForwardMessage, std::string, uint32_t)
+public:
+    DECLARE_SIGNAL(OnSendInfoToFilePanel, std::shared_ptr<DownloadFileInfo>)
 };
 
 #endif

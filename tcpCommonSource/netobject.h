@@ -25,6 +25,7 @@ public:
     ~NetObject() override;
 
 protected:
+    void GetImpl(std::weak_ptr<NetObjectImpl> &destImpl);
     void GetImpl(NetObject *other, std::weak_ptr<NetObjectImpl> &destImpl);
     NetObject *GetOther(std::weak_ptr<NetObjectImpl> &srcImpl);
     NetObject *GetParent();

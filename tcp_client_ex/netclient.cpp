@@ -8,6 +8,7 @@
 #include "eventworker.h"
 #include "stringHelper.h"
 #include "netLogObject.h"
+#include "frameRateThread.h"
 
 #include <iostream>
 #include <cassert>
@@ -24,17 +25,15 @@ NetClient::NetClient()
 NetClient::~NetClient()
 { }
 
-void NetClient::ToggleEventManager(bool isOn)
+void NetClient::OnInitialOnce()
 {
-    EventWorker &worker = EventWorker::Instance();
-
-    isOn ? worker.Start() : worker.Stop();
+    FrameRateThread::FrameThreadObject().Startup();
 }
 
 void NetClient::OnError(const std::string &title, const std::string &errorMessage)
 {
     if ("serverError" == title)
-        NetLogObject::LogObject().AppendLogMessage(errorMessage, PrintUtil::ConsoleColor::COLOR_RED);
+        NET_PUSH_LOGMSG(errorMessage, PrintUtil::ConsoleColor::COLOR_RED);
 }
 
 bool NetClient::StandBySocket()
@@ -78,7 +77,6 @@ bool NetClient::SenderInit()
 bool NetClient::OnInitialize()
 {
     NetService::OnInitialize();
-    ToggleEventManager(true);
 
     auto checkException = [](bool cond)
     {
@@ -116,7 +114,7 @@ bool NetClient::OnStarted()
 {
     bool end = m_flowcontrol->Startup();
 
-    NetLogObject::LogObject().AppendLogMessage(stringFormat("netclient::onstarted::show_result::%s", end ? "ok" : "ng"),
+    NET_PUSH_LOGMSG(stringFormat("netclient::onstarted::show_result::%s", end ? "ok" : "ng"),
         end ? PrintUtil::ConsoleColor::COLOR_BLUE : PrintUtil::ConsoleColor::COLOR_RED);
     m_netStatus->Startup();
     return end;
@@ -133,7 +131,7 @@ void NetClient::OnStopped()
     if (m_netStatus)
         m_netStatus->Shutdown();
 
-    ToggleEventManager(false);
+    FrameRateThread::FrameThreadObject().Shutdown();
 }
 
 bool NetClient::NetDebugInit()
@@ -201,11 +199,16 @@ bool NetClient::SetNetworkParam(const std::string &ip, const std::string &port)
     return true;
 }
 
+void NetClient::RegistInnerPacketListener(NetService *listener, std::function<void(std::shared_ptr<NetPacket>&&)> &&invokable)
+{
+    m_flowcontrol->OnReleaseInnerPacket().Connection(std::forward<std::remove_reference<decltype(invokable)>::type>(invokable), listener);
+}
+
 void NetClient::SlotReportPing(uint32_t recvCount, uint32_t sendCount)
 {
     std::string report = stringFormat("server not response (receive: %d, send: %d)", recvCount, sendCount);
 
-    NetLogObject::LogObject().AppendLogMessage(report, PrintUtil::ConsoleColor::COLOR_GREY);
+    NET_PUSH_LOGMSG(report, PrintUtil::ConsoleColor::COLOR_GREY);
 
     //EventWorker::Instance().AppendTask(&m_OnDeadlockTest);  //will cause deadlock
 }

@@ -53,7 +53,7 @@ bool ClientReceive::NotifyErrorToOwner()
 
 bool ClientReceive::ErrorBufferIsFull()
 {
-    NetLogObject::LogObject().AppendLogMessage("the receive buffer is fully", PrintUtil::ConsoleColor::COLOR_RED);
+    NET_PUSH_LOGMSG("the receive buffer is fully", PrintUtil::ConsoleColor::COLOR_RED);
 
     return false;
 }
@@ -61,8 +61,7 @@ bool ClientReceive::ErrorBufferIsFull()
 void ClientReceive::OnDisconnected(WinSocket *sock)
 {
     NotifyErrorToOwner();
-    NetLogObject::LogObject().AppendLogMessage(stringFormat("the user %d has disconnect with me", sock->GetFd()), 
-        PrintUtil::ConsoleColor::COLOR_RED);
+    NET_PUSH_LOGMSG(stringFormat("the user %d has disconnect with me", sock->GetFd()), PrintUtil::ConsoleColor::COLOR_RED);
     
     m_readFds->Remove(sock);
     m_OnDisconnect.Emit(sock->GetFd());
@@ -80,7 +79,7 @@ void ClientReceive::ReceiveFrom(WinSocket *sock)
             ErrorBufferIsFull();
         else
         {
-            EventWorker::Instance().AppendTask(&m_OnReceivePushStream);
+            QUEUE_EMIT(m_OnReceivePushStream);
             break;
         }
         m_stopped = true;

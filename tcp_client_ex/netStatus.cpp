@@ -40,7 +40,7 @@ bool NetStatus::CheckNetStatus()
                     s_recvCount = m_recvCount;
                 if (m_sendCount != s_sendCount)
                     s_sendCount = m_sendCount;
-                EventWorker::Instance().AppendTask(&m_OnReportPing, m_recvCount, m_sendCount);
+                QUEUE_EMIT(m_OnReportPing, m_recvCount, m_sendCount);
             }
             while (false);
         }

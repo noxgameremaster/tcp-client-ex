@@ -32,7 +32,7 @@ public:
     void SlotOnReceive(uint32_t recvCount);
     void SlotOnSend(uint32_t sendCount);
 
-private:
+public:
     DECLARE_SIGNAL(OnReportPing, uint32_t, uint32_t)
 
 private:

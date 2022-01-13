@@ -33,6 +33,7 @@ private:
 public:
     virtual std::string GetElement(int index);
     virtual void SetElement(int index, const std::string &value);
+    virtual bool Clone(const ListElement *other);
 };
 
 #endif

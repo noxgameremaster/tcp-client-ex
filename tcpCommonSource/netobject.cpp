@@ -27,7 +27,11 @@ NetObject::NetObject(NetObject *parent)
 }
 
 NetObject::~NetObject()
+{ }
+
+void NetObject::GetImpl(std::weak_ptr<NetObjectImpl> &destImpl)
 {
+    GetImpl(this, destImpl);
 }
 
 void NetObject::GetImpl(NetObject *other, std::weak_ptr<NetObjectImpl> &destImpl)

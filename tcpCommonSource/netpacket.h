@@ -11,6 +11,9 @@ class NetPacket : public BinaryStream
 public:
     static constexpr size_t packet_unit_max_size = 32786;
 
+private:
+    static constexpr size_t packet_unit_default_size = 512;
+
 protected:
     enum class Mode
     {
@@ -25,6 +28,7 @@ private:
 
 public:
     explicit NetPacket();
+    explicit NetPacket(const size_t reserveSize);
     ~NetPacket() override;
 
 private:

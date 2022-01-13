@@ -7,6 +7,7 @@
 #include <string>
 #include <list>
 #include <tuple>
+#include <map>
 
 class ListElement;
 class ListHeaderPanel;
@@ -19,8 +20,9 @@ public:
     class ListColumn;
 
 private:
-    using list_element_ty = std::unique_ptr<ListElement>;
+    using list_element_ty = std::shared_ptr<ListElement>;
     std::vector<list_element_ty> m_listdata;
+    std::map<int, list_element_ty> m_datamap;
     std::unique_ptr<ListHeaderPanel> m_headerPanel;
 
 public:
@@ -29,9 +31,12 @@ public:
 
 private:
     void DrawStuff(CDC &cdc);
+private:
+    bool GetListData(int keyId, list_element_ty &dest);
+    bool UpdateChangedCell(list_element_ty &updateData);
 
 public:
-    void Append(list_element_ty addData);
+    void Append(int keyId, list_element_ty addData);
     void AttachListColumn(const ListColumn &columnData);
 
 private:

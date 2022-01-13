@@ -3,7 +3,9 @@
 #include "listElement.h"
 
 ListElement::ListElement()
-{ }
+{
+    m_order = 0;
+}
 
 ListElement::~ListElement()
 { }
@@ -31,4 +33,17 @@ void ListElement::SetElement(int index, const std::string &value)
     default:
         return;
     }
+}
+
+bool ListElement::Clone(const ListElement *other)
+{
+    if (other == nullptr)
+        return false;
+    if (other == this)
+        return false;
+
+    *this = *other;
+    /*m_order = other->m_order;
+    m_testString = other->m_testString;*/
+    return true;
 }

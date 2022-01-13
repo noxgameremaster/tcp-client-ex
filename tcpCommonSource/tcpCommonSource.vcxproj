@@ -152,6 +152,7 @@
     <ClCompile Include="fileChunkPacket.cpp" />
     <ClCompile Include="filepacket.cpp" />
     <ClCompile Include="filepacketupload.cpp" />
+    <ClCompile Include="frameRateThread.cpp" />
     <ClCompile Include="headerdata.cpp" />
     <ClCompile Include="ioFileStream.cpp" />
     <ClCompile Include="ipToByte.cpp" />
@@ -186,6 +187,7 @@
     <ClInclude Include="fileChunkPacket.h" />
     <ClInclude Include="filepacket.h" />
     <ClInclude Include="filepacketupload.h" />
+    <ClInclude Include="frameRateThread.h" />
     <ClInclude Include="headerdata.h" />
     <ClInclude Include="ioFileStream.h" />
     <ClInclude Include="ipToByte.h" />

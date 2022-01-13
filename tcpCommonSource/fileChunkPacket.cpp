@@ -3,7 +3,7 @@
 #include "packetordertable.h"
 
 FileChunkPacket::FileChunkPacket()
-    : NetPacket()
+    : NetPacket(packet_unit_max_size)
 {
     m_chunkLength = 0;
     m_filechunk.fill(0);

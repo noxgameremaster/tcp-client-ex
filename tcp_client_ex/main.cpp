@@ -4,6 +4,7 @@
 #include "netclient.h"
 #include "stringhelper.h"
 #include "netLogObject.h"
+#include "eventworker.h"
 #include "printutil.h"
 
 #pragma comment(lib, "tcpcommonsource.lib")
@@ -21,6 +22,7 @@ using namespace _StringHelper;
 
 int main()
 {
+    EventWorker::Instance().Start();
     NetClient client;
     TestPrint testprint;
     bool runRes = client.Startup();
@@ -34,6 +36,7 @@ int main()
     std::getchar();
 
     client.Shutdown();
+    EventWorker::Instance().Stop();
 
     return 0;
 }

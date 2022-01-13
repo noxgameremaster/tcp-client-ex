@@ -2,7 +2,9 @@
 #include "pch.h"
 #include "coreui.h"
 #include "netclient.h"
+#include "filepacket.h"
 #include "netLogObject.h"
+#include "downloadFileInfo.h"
 #include "eventworker.h"
 #include "iniFileMan.h"
 #include "stringHelper.h"
@@ -10,30 +12,56 @@
 using namespace _StringHelper;
 
 CoreUi::CoreUi()
-    : CCObject(),
+    : NetService(),
     m_settingFileName("appsetting.txt")
 { }
 
 CoreUi::~CoreUi()
 { }
 
-void CoreUi::Initialize()
+void CoreUi::OnInitialOnce()
 {
     EventWorker::Instance().Start();
     NetLogObject::LogObject().Startup();
-
     NetLogObject::LogObject().OnReleaseLogMessage().Connection(&CoreUi::ReceiveLogMessage, this);
 
     m_netMain = std::make_unique<NetClient>();
-    m_iniMan = std::make_unique<IniFileMan>();
+
+    std::weak_ptr<NetObjectImpl> ref;
+
+    GetImpl(ref);
+
+    m_netMain->RegistInnerPacketListener(this, [this, ref = std::move(ref)](std::shared_ptr<NetPacket> &&packet)
+    {
+        if (ref.expired())
+            return;
+
+        this->SlotGetInnerPacket(std::move(packet));
+    });
 }
 
-void CoreUi::Deinitialize()
+bool CoreUi::OnInitialize()
+{
+    m_iniMan = std::make_unique<IniFileMan>();
+
+    return true;
+}
+
+bool CoreUi::OnStarted()
+{
+    return true;
+}
+
+void CoreUi::OnDeinitialize()
 {
     m_netRunner.get();
     m_netMain->Shutdown();
 
     NetLogObject::LogObject().Shutdown();
+}
+
+void CoreUi::OnStopped()
+{
     EventWorker::Instance().Stop();
 }
 
@@ -70,8 +98,6 @@ bool CoreUi::NetStartup()
 void CoreUi::StartNetClient()
 {
     m_netRunner = std::async([this]() { return this->NetStartup(); });
-
-    
 }
 
 void CoreUi::ReceiveLogMessage(const std::string &msg, uint32_t colr)
@@ -107,3 +133,20 @@ void CoreUi::SendCommandToServer(const std::string &cmd)
     if (m_netMain)
         m_netMain->ClientSendChat(cmd);
 }
+
+void CoreUi::SlotGetInnerPacket(std::shared_ptr<NetPacket> &&packet)
+{
+    std::string packetName = packet->ClassName();
+
+    if (packetName == "FilePacket")
+    {
+        auto filePacket = dynamic_cast<FilePacket *>(packet.get());
+        std::shared_ptr<DownloadFileInfo> fileInfo(new DownloadFileInfo);
+
+        fileInfo->SetFileInfo(filePacket->GetFileName(), filePacket->GetFilePath(), filePacket->GetFilesize(), filePacket->GetDownloadBytes());
+        QUEUE_EMIT(m_OnSendInfoToFilePanel, std::move(fileInfo));
+        return;
+    }
+    NET_PUSH_LOGMSG(stringFormat("get packet %s", packet->ClassName()));
+}
+

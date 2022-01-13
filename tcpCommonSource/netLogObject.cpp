@@ -70,7 +70,7 @@ bool NetLogObject::NavigateLogList()
         std::lock_guard<std::mutex> guard(m_lock);
 
         for (const auto &elem : m_netLog)
-            EventWorker::Instance().AppendTask(&m_OnReleaseLogMessage, std::get<0>(elem), std::get<1>(elem));
+            QUEUE_EMIT(m_OnReleaseLogMessage, std::get<0>(elem), std::get<1>(elem));
 
         m_netLog.clear();
     }

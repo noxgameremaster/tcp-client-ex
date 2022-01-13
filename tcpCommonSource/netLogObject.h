@@ -38,8 +38,12 @@ public:
 private:
     mutable std::mutex m_lock;
 
+public:
     DECLARE_SIGNAL(OnReleaseLogMessage, std::string, uint32_t)
 };
+
+#define NET_PUSH_LOGMSG(...)    \
+    NetLogObject::LogObject().AppendLogMessage(__VA_ARGS__)
 
 #endif
 

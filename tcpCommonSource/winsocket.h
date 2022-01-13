@@ -128,8 +128,9 @@ public:
     bool Accept(WinSocket &&dest);
     bool operator==(const WinSocket &other);
 
-private:
+public:
     DECLARE_SIGNAL(OnReceive, uint32_t)
+public:
     DECLARE_SIGNAL(OnSend, uint32_t)
 };
 

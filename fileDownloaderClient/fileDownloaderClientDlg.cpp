@@ -136,13 +136,16 @@ void CfileDownloaderClientDlg::InitPageManager()
 
 	std::unique_ptr<FilePanel> filePanel(new FilePanel(IDD_FILELIST_PANEL, this));
 
+    m_coreUi->OnSendInfoToFilePanel().Connection(&FilePanel::SlotFileListAppend, filePanel.get());
+
 	m_mainPageLoader->MakePage("filepage", std::move(filePanel));
 	m_mainPageLoader->ShowPage("filepage");
 }
 
 void CfileDownloaderClientDlg::Initialize()
 {
-	m_coreUi->Initialize();
+	//m_coreUi->Initialize();
+    m_coreUi->Startup();
 	m_coreUi->OnForwardMessage().Connection(&MainWndCC::GetNetLogMessage, m_wndcc.get());
 
 	SetWindowText(toArray(std::string("Client Application")));
@@ -283,7 +286,7 @@ void CfileDownloaderClientDlg::OnClose()
 	ShowWindow(SW_HIDE);
 	if (m_coreUi)
 	{
-		m_coreUi->Deinitialize();
+		m_coreUi->Shutdown();
 		m_coreUi.reset();
 	}
 	if (m_logPanelLoader)

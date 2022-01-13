@@ -6,6 +6,7 @@ NetService::NetService(NetObject *parent)
     : NetObject(parent)
 {
     m_turnOn = false;
+    m_onceInvokable = [this]() { this->m_onceInvokable = { }; this->OnInitialOnce(); };
 }
 
 NetService::~NetService()
@@ -87,21 +88,28 @@ void NetService::NotifyOccurError(NetService *net, const std::string &errorTitle
 
 bool NetService::Startup()
 {
-    if (m_turnOn)
-        return false;
+    {
+        std::unique_lock<std::mutex> localLock(m_lock);
+        if (m_turnOn)
+            return false;
+        m_onceInvokable();
 
-    m_turnOn = OnInitialize() ? OnStarted() : false;
+        m_turnOn = OnInitialize() ? OnStarted() : false;
+    }
 
     return m_turnOn;
 }
 
 void NetService::Shutdown()
 {
-    if (!m_turnOn)
-        return;
+    {
+        std::unique_lock<std::mutex> localLock(m_lock);
+        if (!m_turnOn)
+            return;
 
+        m_turnOn = false;
+    }
     OnStopped();
     OnDeinitialize();
-    m_turnOn = true;
 }
 

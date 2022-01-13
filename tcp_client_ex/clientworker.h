@@ -37,6 +37,7 @@ private:
 
     static std::unique_ptr<NetPacket> DistinguishPacket(uint8_t packetId);
 
+private:
     DECLARE_SIGNAL(OnReleasePacket, std::unique_ptr<NetPacket>&&)
 };
 

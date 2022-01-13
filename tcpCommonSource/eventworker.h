@@ -70,5 +70,8 @@ private:
     mutable std::mutex m_lock;
 };
 
+#define QUEUE_EMIT(SignalObject, ...)   \
+    EventWorker::Instance().AppendTask(&SignalObject, __VA_ARGS__);
+
 #endif
 

@@ -13,11 +13,15 @@ class LoopThread;
 
 class NetFlowControl : public NetService
 {
+    using net_packet_type = std::unique_ptr<NetPacket>;
+    using net_shared_packet_type = std::shared_ptr<NetPacket>;
+    using net_packet_list_type = std::list<net_packet_type>;
 private:
-    std::shared_ptr<TaskManager> m_taskmanager; 
+    std::unique_ptr<TaskManager> m_taskmanager; 
     std::weak_ptr<IOBuffer> m_sendbuffer;
-    std::list<std::unique_ptr<NetPacket>> m_inpacketList;
-    std::list<std::unique_ptr<NetPacket>> m_outpacketList;
+    net_packet_list_type m_inpacketList;
+    net_packet_list_type m_outpacketList;
+    net_packet_list_type m_innerPacketList;
     std::unique_ptr<LoopThread> m_ioThread;
 
 public:
@@ -26,6 +30,7 @@ public:
 
 private:
     bool CheckHasIO() const;
+    void DequeueIO(net_packet_list_type &ioList, std::function<bool(net_packet_type&&)> &&processor);
     bool CheckIOList();
     virtual bool OnInitialize();
     virtual void OnDeinitialize();
@@ -39,20 +44,25 @@ public:
     }
 
 private:
-    void ReceivePacket(std::unique_ptr<NetPacket> &&packet);
-    bool ReleasePacket(std::unique_ptr<NetPacket> &&packet);
+    void ReceivePacket(net_packet_type &&packet);
+    bool ReleasePacket(net_packet_type &&packet);
+    void ReleaseToInnerPacket(net_packet_type &&innerPacket);
 
 public:
     enum class IOType
     {
         IN,
-        OUT
+        OUT,
+        INNER
     };
-    void Enqueue(std::unique_ptr<NetPacket> &&packet, IOType ioType);
+    void Enqueue(net_packet_type &&packet, IOType ioType);
     void SendEchoToServer(const std::string &echoMsg);
 
     void TestSendFilePacket(const std::string &fileInfo);
     void SendChatMessage(const std::string &msg);
+
+public:
+    DECLARE_SIGNAL(OnReleaseInnerPacket, net_shared_packet_type)
 
 private:
     mutable std::mutex m_lock;

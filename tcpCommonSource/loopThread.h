@@ -20,8 +20,8 @@ private:
     task_function_type m_taskFunction;
 
 public:
-    LoopThread(NetObject *parent = nullptr);
-    ~LoopThread();
+    explicit LoopThread(NetObject *parent = nullptr);
+    ~LoopThread() override;
 
 private:
     void WaitCondition();

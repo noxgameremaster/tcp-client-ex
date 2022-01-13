@@ -30,6 +30,7 @@ FilePacket::FilePacket()
     m_filenameLength = 0;
     m_pathLength = 0;
     m_reportError = 0;
+    m_downloadBytes = 0;
 }
 
 FilePacket::~FilePacket()

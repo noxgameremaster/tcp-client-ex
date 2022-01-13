@@ -14,6 +14,8 @@ private:
     uint8_t m_pathLength;
     uint8_t m_reportError;
 
+    size_t m_downloadBytes;
+
 public:
     FilePacket();
     ~FilePacket() override;
@@ -60,6 +62,16 @@ public:
     size_t GetFilesize() const
     {
         return static_cast<size_t>(m_filesize);
+    }
+
+    void SetDownloadBytes(const size_t bytes)
+    {
+        m_downloadBytes = bytes;
+    }
+
+    size_t GetDownloadBytes() const
+    {
+        return m_downloadBytes;
     }
 
     uint8_t GetPacketId() const override;

@@ -35,11 +35,49 @@ void ListViewer::DrawStuff(CDC &cdc)
     cdc.SelectObject(oldPen);
 }
 
-void ListViewer::Append(list_element_ty addData)
+bool ListViewer::GetListData(int keyId, ListViewer::list_element_ty &dest)
 {
-    m_listdata.push_back(std::move(addData));
+    auto keyIterator = m_datamap.find(keyId);
 
+    if (keyIterator == m_datamap.cend())
+        return false;
+
+    dest = keyIterator->second;
+    return true;
+}
+
+bool ListViewer::UpdateChangedCell(list_element_ty &updateData)
+{
+    int cellId = 0;
+
+    for (const auto &item : m_listdata)
+    {
+        if (item == updateData)
+        {
+            RedrawItems(cellId, cellId);
+            return true;
+        }
+        ++cellId;
+    }
+    return false;
+}
+
+void ListViewer::Append(int keyId, list_element_ty addData)
+{
+    list_element_ty search;
+
+    if (GetListData(keyId, search)) //replace from old stuff
+    {
+        //*search = *addData; //need virtual clone here
+        search->Clone(addData.get());
+        UpdateChangedCell(search);
+        return;
+    }
+    list_element_ty moving = std::move(addData);
+
+    m_listdata.push_back(moving);
     SetItemCount(m_listdata.size());
+    m_datamap.emplace(keyId, moving);
 }
 
 void ListViewer::AttachListColumn(const ListColumn &columnData)
@@ -102,6 +140,7 @@ void ListViewer::OnGetDisplayInfoList(NMHDR *pNMHDR, LRESULT *pResult)
     { }
 
     pResult[0] = 0;
+    //RedrawItems()
 }
 
 void ListViewer::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)

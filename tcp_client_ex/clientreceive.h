@@ -42,6 +42,7 @@ private:
 
 private:
     DECLARE_SIGNAL(OnReceivePushStream)
+private:
     DECLARE_SIGNAL(OnDisconnect, socket_type)
 };
 

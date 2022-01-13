@@ -35,6 +35,7 @@ public:
     void ReportWriteChunk(bool isError, const size_t &writeAmount, const size_t &totalSize, bool ended);
 
 private:
+    void InnerSendFileInfo(const size_t writeAmount);
     void ProcessFileMeta(std::unique_ptr<NetPacket> &&packet);
     void ProcessFileChunk(std::unique_ptr<NetPacket> &&packet);
     void ProcessFileUpload(std::unique_ptr<NetPacket> &&packet);
@@ -43,8 +44,16 @@ private:
 public:
     std::string TaskName() const override;
 
+public:
     DECLARE_SIGNAL(OnReportFileMetaInfo, std::string, std::string, size_t)
+public:
     DECLARE_SIGNAL(OnReportReceiveFileChunk, std::vector<uint8_t>, bool)
+
+private:
+    DECLARE_SIGNAL(OnReportWritePos, size_t, size_t)
+
+private:
+    void SlotWritePos(const size_t &writeAmount, const size_t &totalAmount);
 };
 
 #endif

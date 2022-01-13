@@ -128,6 +128,25 @@ public:
         return true;
     }
 
+    template <class... SlotArgTys, class RecvInstance>
+    bool Connection(std::function<void(SlotArgTys&&...)> &&invokable, RecvInstance *pRecv)
+    {
+        static_assert(std::is_base_of<CCObject, RecvInstance>::value, "the instance must inherit CCObject");
+        if (pRecv == nullptr)
+            return false;
+
+        std::lock_guard<std::mutex> lock(m_lock);
+        std::weak_ptr<CCObject::Pimpl> refptr = (*static_cast<CCObject *>(pRecv))();
+        addSlot([callable = std::move(invokable), refptr = std::move(refptr)](Args&&... args)
+        {
+            if (refptr.expired())
+                return;
+
+            callable(std::forward<Args>(args)...);
+        }, pRecv);
+        return true;
+    }
+
     template <class... SlotArgs>
     void Emit(SlotArgs&&... args)
     {
@@ -155,10 +174,9 @@ private:
 };
 
 #define DECLARE_SIGNAL(SIGNAL_IDENTIFIER, ...)	\
-private: \
-    EventSignal<__VA_ARGS__> m_##SIGNAL_IDENTIFIER; \
-public: \
     EventSignal<__VA_ARGS__> &SIGNAL_IDENTIFIER()   \
     { return m_##SIGNAL_IDENTIFIER; }    \
+private: \
+    EventSignal<__VA_ARGS__> m_##SIGNAL_IDENTIFIER; \
 
 #endif

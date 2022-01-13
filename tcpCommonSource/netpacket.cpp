@@ -7,7 +7,14 @@
 using namespace _StringHelper;
 
 NetPacket::NetPacket()
-    : BinaryStream(packet_unit_max_size)
+    : BinaryStream(packet_unit_default_size)
+{
+    m_senderSocketId = static_cast<socket_type>(-1);
+    m_headerData = std::make_unique<HeaderData>();
+}
+
+NetPacket::NetPacket(const size_t reserveSize)
+    : BinaryStream(reserveSize)
 {
     m_senderSocketId = static_cast<socket_type>(-1);
     m_headerData = std::make_unique<HeaderData>();
@@ -108,7 +115,7 @@ uint8_t NetPacket::GetSubCommand() const
 
 bool NetPacket::PacketError(Mode workType)
 {
-    NetLogObject::LogObject().AppendLogMessage(stringFormat("task: %s, packet error in %s", 
+    NET_PUSH_LOGMSG(stringFormat("task: %s, packet error in %s",
         (workType == Mode::Read) ? "read" : (workType==Mode::Write ? "write" : "none"), ClassName()),
         PrintUtil::ConsoleColor::COLOR_DARKRED);
 

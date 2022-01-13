@@ -3,7 +3,7 @@
 #include "packetOrderTable.h"
 
 LargeFileCompletePacket::LargeFileCompletePacket()
-    : NetPacket()
+    : NetPacket(packet_unit_max_size)
 {
     m_fileSizeLow = 0;
     m_fileSizeHigh = 0;

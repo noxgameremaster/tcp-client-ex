@@ -59,7 +59,7 @@ bool LargeFile::SetFileParams(const std::string &fileName, const std::string &pa
 {
     std::unique_ptr<bool, std::function<void(bool*)>> bRet(new bool(false), [this](bool *ret)
     {
-        EventWorker::Instance().AppendTask(&m_OnReportSetParamResult, *ret);
+        QUEUE_EMIT(m_OnReportSetParamResult, *ret);
         delete ret;
     });
     if (!RemoveIfAlreadExist(stringFormat("%s\\%s", pathName, fileName)))
@@ -133,6 +133,6 @@ void LargeFile::SlotWriteChunk(const std::vector<uint8_t> &srcChunk, bool ended)
 
     if (result)
         m_writeAmount += srcChunk.size();
-    EventWorker::Instance().AppendTask(&m_OnWriteChunk, result ? false : true, m_writeAmount, m_filesize, ended);
+    QUEUE_EMIT(m_OnWriteChunk, result ? false : true, m_writeAmount, m_filesize, ended);
 }
 

@@ -124,7 +124,7 @@ bool PacketBufferFix::EvacuateChunk(const size_t count)
             return false;
 
         if (!m_tempBuffer->Append(peek))     ///WARNING-!스트림이 너무 커서 버퍼에 못넣는 수도 있음!///
-            NetLogObject::LogObject().AppendLogMessage("PacketBufferFix::EvacuateChunk a stream too long!", PrintUtil::ConsoleColor::COLOR_DARKRED);
+            NET_PUSH_LOGMSG("PacketBufferFix::EvacuateChunk a stream too long!", PrintUtil::ConsoleColor::COLOR_DARKRED);
         ++m_readSeekpoint;
     }
     return true;
@@ -180,7 +180,7 @@ bool PacketBufferFix::ReadPacketDetail()
         return true;
     }
     while (false);
-    NetLogObject::LogObject().AppendLogMessage("PacketBufferFix::ReadPacketDetail error");
+    NET_PUSH_LOGMSG("PacketBufferFix::ReadPacketDetail error");
     return false;
 }
 
@@ -202,7 +202,7 @@ bool PacketBufferFix::ReadPacketEtc()
     {
         RewindSeek(packetLength + sizeof(HeaderData::header_stx));
         delayReturn = false;
-        NetLogObject::LogObject().AppendLogMessage("bool PacketBufferFix::ReadPacketEtc() the etx unmatched!", PrintUtil::ConsoleColor::COLOR_DARKRED);
+        NET_PUSH_LOGMSG("bool PacketBufferFix::ReadPacketEtc() the etx unmatched!", PrintUtil::ConsoleColor::COLOR_DARKRED);
     }
     else
     {
@@ -230,7 +230,7 @@ bool PacketBufferFix::ReadPacketLength()
         RewindSeek(sizeof(length));
         m_parseAction = [this]() { return this->ReadStartpoint(); };
         m_tempBuffer->Clear();
-        NetLogObject::LogObject().AppendLogMessage("bool PacketBufferFix::ReadPacketLength() wrong packet rewind seekpoint..", PrintUtil::ConsoleColor::COLOR_DARKRED);
+        NET_PUSH_LOGMSG("bool PacketBufferFix::ReadPacketLength() wrong packet rewind seekpoint..", PrintUtil::ConsoleColor::COLOR_DARKRED);
         return false;
     }
     m_parseAction = [this]() { return this->ReadPacketEtc(); };

@@ -14,6 +14,7 @@ class NetService : public NetObject
 private:
     std::unique_ptr<WSAData, wsa_deleter> m_wsaData;
     std::atomic<bool> m_turnOn;
+    std::function<void()> m_onceInvokable;
 
 public:
     NetService(NetObject *parent = nullptr);
@@ -24,6 +25,7 @@ private:
     bool WsaCleanup();
 
 protected:
+    virtual void OnInitialOnce() {}
     virtual bool OnInitialize();
     virtual void OnDeinitialize();
     virtual bool OnStarted();
@@ -36,6 +38,9 @@ protected:
 public:
     bool Startup();
     void Shutdown();
+
+private:
+    std::mutex m_lock;
 };
 
 #endif
