@@ -7,26 +7,56 @@
 #include "chatPacket.h"
 #include "largeFileRequestPacket.h"
 #include "eventworker.h"
+#include "netLogObject.h"
 #include "loopThread.h"
+#include "stringHelper.h"
+
+using namespace _StringHelper;
 
 NetFlowControl::NetFlowControl()
     : NetService()
 {
     m_taskmanager = std::make_unique<TaskManager>(this);
-    m_ioThread = std::make_unique<LoopThread>();
+    //m_ioThread = std::make_unique<LoopThread>(this);
 
-    m_ioThread->SetWaitCondition([this]() { return this->CheckHasIO(); });
-    m_ioThread->SetTaskFunction([this]() { return this->CheckIOList(); });
+    //m_ioThread->SetWaitCondition([this]() { return this->CheckHasIO(); });
+    //m_ioThread->SetTaskFunction([this]() { return this->CheckIOList(); });
+
+    m_ioCount = 0;
+
+    m_debugCountIn = 0;
+    m_debugCountOut = 0;
+    m_debugCountEnqueueIn = 0;
+    m_debugCountEnqueueOut = 0;
+
+    m_terminated = false;
 }
 
 NetFlowControl::~NetFlowControl()
 { }
 
+void NetFlowControl::IOThreadWork()
+{
+    do
+    {
+        {
+            std::unique_lock<std::mutex> lock(m_lock);
+            m_condvar.wait(lock, [this]() { return this->m_terminated || this->m_ioCount > 0; });
+
+            if (m_terminated)
+                break;
+        }
+        CheckIOList();
+    }
+    while (true);
+}
+
 bool NetFlowControl::CheckHasIO() const
 {
-    std::lock_guard<std::mutex> guard(m_lock);
+    //std::lock_guard<std::mutex> guard(m_lock);
 
-    return (m_inpacketList.size() + m_outpacketList.size()) > 0;
+    //return (m_inpacketList.size() + m_outpacketList.size()) > 0;
+    return m_ioCount > 0;
 }
 
 void NetFlowControl::DequeueIO(NetFlowControl::net_packet_list_type &ioList, std::function<bool(NetFlowControl::net_packet_type&&)> &&processor)
@@ -40,6 +70,8 @@ void NetFlowControl::DequeueIO(NetFlowControl::net_packet_list_type &ioList, std
 
         processor(std::move(packet));
         ioList.pop_front();
+        if (m_ioCount > 0)
+            --m_ioCount;
     }
 }
 
@@ -54,7 +86,15 @@ bool NetFlowControl::CheckIOList()
 
 bool NetFlowControl::OnInitialize()
 {
-    return m_ioThread->Startup();
+    if (m_ioThread.joinable())
+    {
+        m_terminated = true;
+        m_condvar.notify_all();
+        m_ioThread.join();
+    }
+    m_ioThread = std::thread([this]() { this->IOThreadWork(); });
+    //return m_ioThread->Startup();
+    return true;
 }
 
 void NetFlowControl::OnDeinitialize()
@@ -67,17 +107,23 @@ bool NetFlowControl::OnStarted()
 
 void NetFlowControl::OnStopped()
 {
-    m_ioThread->Shutdown();
+    //m_ioThread->Shutdown();
+    m_terminated = true;
+    m_condvar.notify_all();
+    if (m_ioThread.joinable())
+        m_ioThread.join();
     m_taskmanager->Shutdown();
 }
 
 void NetFlowControl::ReceivePacket(NetFlowControl::net_packet_type &&packet)
 {
     m_taskmanager->InputTask(std::move(packet));
+    ++m_debugCountIn;
 }
 
 bool NetFlowControl::ReleasePacket(NetFlowControl::net_packet_type &&packet)
 {
+    ++m_debugCountOut;
     if (m_sendbuffer.expired())
         return false;
 
@@ -108,9 +154,11 @@ void NetFlowControl::Enqueue(NetFlowControl::net_packet_type&& packet, IOType io
         {
         case IOType::IN:
             ioList = &m_inpacketList;
+            ++m_debugCountEnqueueIn;
             break;
         case IOType::OUT:
             ioList = &m_outpacketList;
+            ++m_debugCountEnqueueOut;
             break;
         case IOType::INNER:
             ioList = &m_innerPacketList;
@@ -123,8 +171,10 @@ void NetFlowControl::Enqueue(NetFlowControl::net_packet_type&& packet, IOType io
             std::lock_guard<std::mutex> lock(m_lock);
 
             ioList->push_back(std::move(packet));
+            ++m_ioCount;
         }
-        m_ioThread->Notify();
+        //m_ioThread->Notify();
+        m_condvar.notify_one();
     }
     while (false);
 }
@@ -152,4 +202,13 @@ void NetFlowControl::SendChatMessage(const std::string &msg)
 
     chat->SetChatMessage(msg);
     Enqueue(std::move(chat), IOType::OUT);
+}
+
+void NetFlowControl::DebugReportInputOutputCounting()
+{
+    int ioCountCopy = m_ioCount;
+
+    NET_PUSH_LOGMSG(stringFormat("in- %d, out- %d, enqueue in- %d, enqueue out- %d",
+        m_debugCountIn, m_debugCountOut, m_debugCountEnqueueIn, m_debugCountEnqueueOut));
+    NET_PUSH_LOGMSG(stringFormat("queueContain(in/out: %d/%d) %d %d", m_inpacketList.size(), m_outpacketList.size(), ioCountCopy, m_taskmanager->GetTaskCount()));
 }

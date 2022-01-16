@@ -18,6 +18,7 @@ public:
     ~TaskLargeFile() override;
 
 private:
+    void InnerSendFileInfo(const size_t amount);
     bool CreateDownloadFile(const std::string &url);
     void RequestChunkData();
     void ReportDownloadComplete();
@@ -25,6 +26,10 @@ private:
     void LargeFileGetChunk(std::unique_ptr<NetPacket> &&pack);
     void DoTask(std::unique_ptr<NetPacket> &&packet) override;
     std::string TaskName() const override;
+    void SlotReportFileSeek(const size_t writeAmount);
+
+private:
+    DECLARE_SIGNAL(OnReportFileSeek, size_t)
 };
 
 #endif

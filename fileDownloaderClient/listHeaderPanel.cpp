@@ -89,5 +89,10 @@ void ListHeaderPanel::OnPaint()
 
 BOOL ListHeaderPanel::OnEraseBkgnd(CDC *pDC)
 {
-    return TRUE;
+    CRect rt;
+
+    pDC->GetClipBox(rt);
+    DrawHeaderStuff(*pDC, rt);
+
+    return TRUE;//CHeaderCtrl::OnEraseBkgnd(pDC);
 }

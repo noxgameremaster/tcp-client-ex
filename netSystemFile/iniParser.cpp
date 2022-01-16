@@ -52,7 +52,7 @@ bool IniParser::readc(int &c)
 
 bool IniParser::unreadc(int c)
 {
-	m_tokens.push_front(c);
+	m_tokens.push_front(static_cast<uint8_t>(c));
 
 	return false;
 }
@@ -104,7 +104,7 @@ bool IniParser::skipBlock()
 {
 	bool maybeEnd = false;
 
-	while (1)
+	while (true)
 	{
 		int c;
 		if (!readc(c))
@@ -118,7 +118,7 @@ bool IniParser::skipBlock()
 
 bool IniParser::skipLine()
 {
-	while (1)
+	while (true)
 	{
 		int c;
 
@@ -184,7 +184,7 @@ IniParser::tokenType IniParser::readString()
 			break;
 		if (c != '\\')
 		{
-			buffer.push_back(c);
+			buffer.push_back(static_cast<uint8_t>(c));
 			continue;
 		}
 
@@ -192,7 +192,7 @@ IniParser::tokenType IniParser::readString()
 
 		if (!readEscapedchar(esc))
 			return makeInvalid("unknown escaped char");
-		buffer.push_back(esc);
+		buffer.push_back(static_cast<uint8_t>(esc));
 
 	}
 	while (1);
@@ -202,7 +202,7 @@ IniParser::tokenType IniParser::readString()
 
 IniParser::tokenType IniParser::readIdent(int c)
 {
-	std::list<uint8_t> buffer(1, c);
+	std::list<uint8_t> buffer(1, static_cast<char>(c));
 
 	do
 	{
@@ -211,7 +211,7 @@ IniParser::tokenType IniParser::readIdent(int c)
 
 		if (isalnum(c) || (c & 0x80) || c == '_' || c == '$')
 		{
-			buffer.push_back(c);
+			buffer.push_back(static_cast<char>(c));
 			continue;
 		}
 		unreadc(c);
@@ -230,18 +230,18 @@ IniParser::tokenType IniParser::doReadToken()
 
 	readc(c);
 
-	switch (c)
+	switch (static_cast<char>(c))
 	{
-	case '\r': return std::make_shared<IniToken>(std::string(1, c), iniTokenType::NOTHING);
+	case '\r': return std::make_shared<IniToken>(std::string(1, static_cast<char>(c)), iniTokenType::NOTHING);
 	case '\n': return std::make_shared<IniToken>(std::to_string(m_linecount++), iniTokenType::NEW_LINE);
-	case '[': return std::make_shared<IniToken>(std::string(1, c), iniTokenType::SEC_ENTRY);
-	case ']': return std::make_shared<IniToken>(std::string(1, c), iniTokenType::SEC_EXIT);
+	case '[': return std::make_shared<IniToken>(std::string(1, static_cast<char>(c)), iniTokenType::SEC_ENTRY);
+	case ']': return std::make_shared<IniToken>(std::string(1, static_cast<char>(c)), iniTokenType::SEC_EXIT);
 	case '"': return readString();
-	case '$': case '_': return readIdent(c);
-	case '=': return std::make_shared<IniToken>(std::string(1, c), iniTokenType::OP_ASSIGN);
+	case '$': case '_': return readIdent(static_cast<char>(c));
+	case '=': return std::make_shared<IniToken>(std::string(1, static_cast<char>(c)), iniTokenType::OP_ASSIGN);
 	default:
-		if (isalpha(c)) return readIdent(c);
-		else return makeInvalid("unknown token:: " + std::to_string(c));
+		if (isalpha(static_cast<char>(c))) return readIdent(static_cast<char>(c));
+		else return makeInvalid("unknown token:: " + std::to_string(static_cast<char>(c)));
 	}
 }
 

@@ -54,8 +54,9 @@ public:
     void WhenNewConnection(std::weak_ptr<WinSocket> client);
     void WhenOccurredDisconnection(socket_type socketId);
 
-private:
+public:
     DECLARE_SIGNAL(OnReleasePacket, std::unique_ptr<NetPacket>&&)
+public:
     DECLARE_SIGNAL(OnReleaseFileStream, std::vector<uint8_t>, std::string)
 
 private:

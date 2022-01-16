@@ -40,6 +40,11 @@ void LogPanel::FocusEndline()
     m_logViewer.SetFocusToEnd();
 }
 
+void LogPanel::BeforeDestroy()
+{
+    m_logViewer.StopLogViewThread();
+}
+
 BEGIN_MESSAGE_MAP(LogPanel, CTabPage)
 END_MESSAGE_MAP()
 

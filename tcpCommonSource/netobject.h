@@ -41,6 +41,10 @@ public:
     {
         return m_portNumber;
     }
+    virtual std::string ObjectName() const
+    {
+        return "NetObject";
+    }
 };
 
 #endif

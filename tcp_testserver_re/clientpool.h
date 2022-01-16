@@ -28,7 +28,9 @@ public:
     bool FindUserFromId(socket_type socketId, std::weak_ptr<WinSocket> &getsocket);
     std::list<socket_type> GetSocketIdList() const;
 
+public:
     DECLARE_SIGNAL(OnRegistUser, std::weak_ptr<WinSocket>)
+public:
     DECLARE_SIGNAL(OnExitUser, socket_type)
 
 private:

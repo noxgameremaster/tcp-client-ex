@@ -139,4 +139,10 @@ void TaskManager::ForwardPacket(std::unique_ptr<NetPacket>&& packet, bool toInne
             toInner ? NetFlowControl::IOType::INNER : NetFlowControl::IOType::OUT);
 }
 
+int TaskManager::GetTaskCount() const //Debugging
+{
+    if (m_taskthread)
+        return m_taskthread->GetCount();
 
+    return 0;
+}

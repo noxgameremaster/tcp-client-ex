@@ -9,7 +9,7 @@ ClientSend::ClientSend(std::shared_ptr<WinSocket> &sock, NetObject *parent)
     : NetService(parent)
 {
     m_netsocket = sock;
-    m_sendThread = std::make_unique<LoopThread>();
+    m_sendThread = std::make_unique<LoopThread>(this);
     m_sendThread->SetTaskFunction([this]() { return this->StreamSend(); });
     m_sendThread->SetWaitCondition([this]() { return !this->m_sendbuffer->IsEmpty(); });
 }

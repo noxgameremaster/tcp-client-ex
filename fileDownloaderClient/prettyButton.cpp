@@ -55,7 +55,7 @@ BOOL PrettyButton::OnEraseBkgnd(CDC */*pDC*/)
     return TRUE;
 }
 
-void PrettyButton::OnLButtonDown(UINT nFlags, CPoint point)
+void PrettyButton::OnLButtonDown(UINT /*nFlags*/, CPoint /*point*/)
 {
     if (m_onClicked)
         m_onClicked();

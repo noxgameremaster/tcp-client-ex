@@ -32,6 +32,12 @@ public:
     void SlotOnReceive(uint32_t recvCount);
     void SlotOnSend(uint32_t sendCount);
 
+private:
+    std::string ObjectName() const override
+    {
+        return "NetStatus";
+    }
+
 public:
     DECLARE_SIGNAL(OnReportPing, uint32_t, uint32_t)
 

@@ -35,6 +35,11 @@ private:
     void HaltWorkThread();
     void OnStopped() override;
 
+    std::string ObjectName() const override
+    {
+        return "ClientWorker";
+    }
+
     static std::unique_ptr<NetPacket> DistinguishPacket(uint8_t packetId);
 
 private:

@@ -36,6 +36,17 @@ private:
         return "taskThread";
     }
 
+    std::string ObjectName() const override
+    {
+        return TaskName();
+    }
+
+public:
+    int GetCount() const    //Debugging only
+    {
+        return static_cast<int>(m_msglist.size());
+    }
+
 private:
     mutable std::mutex m_lock;
 };

@@ -64,7 +64,7 @@ LogViewer::LogViewer()
 
 LogViewer::~LogViewer()
 {
-    StopLogViewThread();
+    //StopLogViewThread();
 }
 
 void LogViewer::UpdateDataCopy()
@@ -305,7 +305,6 @@ void LogViewer::StopLogViewThread()
 {
     if (m_updateThread)
     {
-        m_updateThread->Notify();
         m_updateThread->Shutdown();
     }
 }

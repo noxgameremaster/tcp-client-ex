@@ -92,12 +92,11 @@ bool NetService::Startup()
         std::unique_lock<std::mutex> localLock(m_lock);
         if (m_turnOn)
             return false;
-        m_onceInvokable();
-
-        m_turnOn = OnInitialize() ? OnStarted() : false;
+        m_turnOn = true;
     }
+    m_onceInvokable();
 
-    return m_turnOn;
+    return OnInitialize() ? OnStarted() : false;
 }
 
 void NetService::Shutdown()

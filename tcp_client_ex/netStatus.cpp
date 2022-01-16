@@ -55,7 +55,7 @@ bool NetStatus::OnInitialize()
     if (m_statusThread)
         return false;
 
-    m_statusThread = std::make_unique<LoopThread>();
+    m_statusThread = std::make_unique<LoopThread>(this);
     m_statusThread->SetTaskFunction([this]() { return this->CheckNetStatus(); });
 
     return true;

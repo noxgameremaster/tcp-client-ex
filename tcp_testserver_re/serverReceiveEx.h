@@ -41,7 +41,9 @@ private:
 public:
     void RegistClientPool(std::shared_ptr<ClientPool> &cliPool);
 
+public:
     DECLARE_SIGNAL(OnShareBuffer, std::shared_ptr<PacketBuffer>)
+public:
     DECLARE_SIGNAL(OnReceiveData)
 
 private:

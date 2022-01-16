@@ -26,6 +26,7 @@ private:
 
     std::string TaskName() const override;
 
+public:
     DECLARE_SIGNAL(OnServerRemoteFileInfo, std::string, std::string)
 };
 

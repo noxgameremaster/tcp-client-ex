@@ -107,7 +107,7 @@ void CfileDownloaderClientDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, MAIN_INPUT_OK, m_btnCmdOk);
 }
 
-void CfileDownloaderClientDlg::AppendLogViewMessage(const std::string &message, uint32_t color)
+void CfileDownloaderClientDlg::AppendLogViewMessage(const std::string &message, uint32_t /*color*/)
 {
 	//m_logViewer.CreateNewLog(message, color);
 
@@ -158,6 +158,8 @@ void CfileDownloaderClientDlg::Initialize()
 	m_btnLogTestInsert.ModifyWndName("echo test");
 	m_btnStartTest.ModifyWndName("file req");
 	m_btnFocusToEnd.ModifyWndName("go to end");
+
+    m_btnReconnect.SetCallback([this]() { this->m_coreUi->Shutdown(); });
 
 	m_btnCmdOk.ModifyWndName("send");
     m_btnReconnect.ModifyWndName("reconnect");
@@ -283,12 +285,15 @@ BOOL CfileDownloaderClientDlg::PreTranslateMessage(MSG *pMsg)
 
 void CfileDownloaderClientDlg::OnClose()
 {
-	ShowWindow(SW_HIDE);
+    m_logPanelLoader->DestroyAll();
+    m_mainPageLoader->DestroyAll();
+
 	if (m_coreUi)
 	{
 		m_coreUi->Shutdown();
-		m_coreUi.reset();
+		//m_coreUi.reset();
 	}
+    //MessageBox("it will shutdown");
 	if (m_logPanelLoader)
 	{
 		m_logPanelLoader.reset();
@@ -297,10 +302,10 @@ void CfileDownloaderClientDlg::OnClose()
 	{
 		m_mainPageLoader.reset();
 	}
-
-	//m_logViewer.StopLogViewThread();
+    m_coreUi->StopCoreService();
 	OutputDebugString("shutdown app");
 	CDialogEx::OnClose();
+	//ShowWindow(SW_HIDE);
 }
 
 HBRUSH CfileDownloaderClientDlg::OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor)

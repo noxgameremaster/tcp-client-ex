@@ -211,4 +211,6 @@ void NetClient::SlotReportPing(uint32_t recvCount, uint32_t sendCount)
     NET_PUSH_LOGMSG(report, PrintUtil::ConsoleColor::COLOR_GREY);
 
     //EventWorker::Instance().AppendTask(&m_OnDeadlockTest);  //will cause deadlock
+    if (m_flowcontrol)
+        m_flowcontrol->DebugReportInputOutputCounting();
 }

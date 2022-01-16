@@ -30,6 +30,7 @@ private:
     void OnStopped() override;
 
 private:
+    bool NetInit();
     bool NetStartup();
 
 public:
@@ -43,6 +44,7 @@ public:
     void DoTestFilePacket();
 
     void SendCommandToServer(const std::string &cmd);
+    void StopCoreService();
 
 private:
     void SlotGetInnerPacket(std::shared_ptr<NetPacket> &&packet);

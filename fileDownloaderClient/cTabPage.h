@@ -37,6 +37,7 @@ public:
     {
         m_pageName = pageName;
     }
+    virtual void BeforeDestroy() {}
 
 protected:
     virtual void DoDataExchange(CDataExchange *pDX) override;

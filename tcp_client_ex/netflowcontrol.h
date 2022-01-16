@@ -5,6 +5,7 @@
 #include "netservice.h"
 #include <list>
 #include <mutex>
+#include <atomic>
 
 class TaskManager;
 class IOBuffer;
@@ -22,13 +23,25 @@ private:
     net_packet_list_type m_inpacketList;
     net_packet_list_type m_outpacketList;
     net_packet_list_type m_innerPacketList;
-    std::unique_ptr<LoopThread> m_ioThread;
+    //std::unique_ptr<LoopThread> m_ioThread;
+    std::thread m_ioThread;
+    std::condition_variable m_condvar;
+    bool m_terminated;
+
+    int m_debugCountIn;
+    int m_debugCountOut;
+
+    int m_debugCountEnqueueIn;
+    int m_debugCountEnqueueOut;
+
+    std::atomic<int> m_ioCount;
 
 public:
     NetFlowControl();
     ~NetFlowControl();
 
 private:
+    void IOThreadWork();
     bool CheckHasIO() const;
     void DequeueIO(net_packet_list_type &ioList, std::function<bool(net_packet_type&&)> &&processor);
     bool CheckIOList();
@@ -61,8 +74,17 @@ public:
     void TestSendFilePacket(const std::string &fileInfo);
     void SendChatMessage(const std::string &msg);
 
+private:
+    std::string ObjectName() const override
+    {
+        return "NetFlowControl";
+    }
+
 public:
     DECLARE_SIGNAL(OnReleaseInnerPacket, net_shared_packet_type)
+
+public:
+    void DebugReportInputOutputCounting();
 
 private:
     mutable std::mutex m_lock;

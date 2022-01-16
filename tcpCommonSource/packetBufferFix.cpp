@@ -91,7 +91,7 @@ bool PacketBufferFix::MakePacketImpl()
 
     m_headerInfo->GetProperty<HeaderData::FieldInfo::LENGTH>(length);
 
-    auto stream = m_tempBuffer->GetPart(length/*, m_headerInfo->FieldLength()*/);
+    auto stream = m_tempBuffer->GetPartRe(length/*, m_headerInfo->FieldLength()*/);
 
     m_createdPacket->SetSenderSocketId(m_senderInfo->m_latestSocketId);
     m_createdPacket->SetHeaderData(std::move(m_headerInfo));
@@ -105,13 +105,26 @@ bool PacketBufferFix::MakePacketHeaderData()
 {
     size_t length = m_headerInfo->FieldLength();
 
-    if (!m_headerInfo->PutStream(m_tempBuffer->GetPart(length)))
+    if (!m_headerInfo->PutStream(m_tempBuffer->GetPartRe(length)))
         return false;
 
     if (!m_headerInfo->MakeData())
         return false;
 
     return true;
+}
+
+bool PacketBufferFix::EvacuateByteStream(const size_t count)
+{
+    if (m_tempBuffer->Size() >= count)
+        return true;
+
+    const size_t reqCount = count - m_tempBuffer->Size();
+    const size_t realCount = (m_readSeekpoint + reqCount > m_writeSeekpoint) ? m_writeSeekpoint - m_readSeekpoint : reqCount;
+
+    m_tempBuffer->AppendImpl(&m_buffer[0] + m_readSeekpoint, realCount);
+    m_readSeekpoint += realCount;
+    return m_tempBuffer->Size() >= count;
 }
 
 bool PacketBufferFix::EvacuateChunk(const size_t count)
@@ -190,7 +203,7 @@ bool PacketBufferFix::ReadPacketEtc()
 
     m_headerInfo->GetProperty<HeaderData::FieldInfo::LENGTH>(packetLength);
 
-    if (!EvacuateChunk(packetLength))
+    if (!EvacuateByteStream(packetLength))
         return false;
 
     uint32_t endpoint = 0;

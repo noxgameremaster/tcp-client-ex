@@ -56,16 +56,12 @@ void CoreUi::OnDeinitialize()
 {
     m_netRunner.get();
     m_netMain->Shutdown();
-
-    NetLogObject::LogObject().Shutdown();
 }
 
 void CoreUi::OnStopped()
-{
-    EventWorker::Instance().Stop();
-}
+{ }
 
-bool CoreUi::NetStartup()
+bool CoreUi::NetInit()
 {
     if (!m_iniMan->ReadIni(m_settingFileName))
     {
@@ -88,16 +84,28 @@ bool CoreUi::NetStartup()
         return false;
     }
 
-    if (m_netMain->Startup())
-        return true;
+    return true;
+}
 
-    m_OnForwardMessage.Emit("fail to connect...", 0xff);
-    return false;
+bool CoreUi::NetStartup()
+{
+    std::string connectInfo = stringFormat("ip: %s, port: %d", m_netMain->GetIpAddress(), static_cast<int>(m_netMain->GetPortNumber()));
+
+    m_OnForwardMessage.Emit(connectInfo, 0xff);
+    if (!m_netMain->Startup())
+    {
+        m_OnForwardMessage.Emit("fail to connect...", 0xff);
+        return false;
+    }
+    return true;
 }
 
 void CoreUi::StartNetClient()
 {
-    m_netRunner = std::async([this]() { return this->NetStartup(); });
+    if (NetInit())
+    {
+        m_netRunner = std::async([this]() { return this->NetStartup(); });
+    }
 }
 
 void CoreUi::ReceiveLogMessage(const std::string &msg, uint32_t colr)
@@ -132,6 +140,12 @@ void CoreUi::SendCommandToServer(const std::string &cmd)
 {
     if (m_netMain)
         m_netMain->ClientSendChat(cmd);
+}
+
+void CoreUi::StopCoreService()
+{
+    NetLogObject::LogObject().Shutdown();
+    EventWorker::Instance().Stop();
 }
 
 void CoreUi::SlotGetInnerPacket(std::shared_ptr<NetPacket> &&packet)

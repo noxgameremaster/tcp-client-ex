@@ -18,6 +18,10 @@ public:
         return m_buffer.size();
     }
 
+//private:
+    bool AppendImpl(const uint8_t *streamPtr, const size_t length);
+
+public:
     bool Append(const uint8_t src);
 
     template <class Ty>
@@ -53,6 +57,7 @@ public:
     }
 
     std::vector<uint8_t> GetPart(const size_t &requestLength, const size_t &off = 0);
+    std::vector<uint8_t> GetPartRe(const size_t &requestLength, const size_t &off = 0);
 };
 
 #endif

@@ -10,7 +10,8 @@ LargeFileChunkPacket::LargeFileChunkPacket()
     : NetPacket(packet_unit_max_size)
 {
     m_streamLength = 0;
-    m_fileStream.fill(0);
+    //m_fileStream.fill(0);
+    m_fileStreamV.reserve(packet_unit_max_size);
 }
 
 LargeFileChunkPacket::~LargeFileChunkPacket()
@@ -35,19 +36,21 @@ size_t LargeFileChunkPacket::PacketSize(Mode mode)
 
 bool LargeFileChunkPacket::ReadStreamFromServer()
 {
-    decltype(m_streamLength) counter = 0;
+    //decltype(m_streamLength) counter = 0;
     try
     {
         ReadCtx(m_streamLength);
-        if (m_streamLength > m_fileStream.max_size())
+        if (m_streamLength > NetPacket::packet_unit_max_size)
         {
             std::string errmsg = stringFormat("chunk buffer to small! receive: %d bytes", m_streamLength);
 
             NetLogObject::LogObject().AppendLogMessage(errmsg);
             return false;
         }
-        while (counter < m_streamLength)
-            ReadCtx(m_fileStream[counter++]);
+        m_fileStreamV.resize(m_streamLength);
+        ReadByteArray(m_fileStreamV);
+        /*while (counter < m_streamLength)
+            ReadCtx(m_fileStream[counter++]);*/
     }
     catch (const bool &fail)
     {
@@ -102,8 +105,10 @@ bool LargeFileChunkPacket::GetFileStream(std::vector<uint8_t> &dest)
     if (!m_streamLength)
         return false;
 
-    dest.resize(m_streamLength);
+    //dest.resize(m_streamLength);
 
-    std::copy_n(m_fileStream.cbegin(), m_streamLength, dest.begin());
+    //std::copy_n(m_fileStream.cbegin(), m_streamLength, dest.begin());
+
+    dest = m_fileStreamV;
     return true;
 }

@@ -40,6 +40,11 @@ private:
     bool OnStarted() override;
     void OnStopped() override;
 
+    std::string ObjectName() const override
+    {
+        return "ClientReceive";
+    }
+
 private:
     DECLARE_SIGNAL(OnReceivePushStream)
 private:

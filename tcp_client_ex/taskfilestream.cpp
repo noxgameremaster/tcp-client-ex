@@ -208,7 +208,7 @@ std::string TaskFileStream::TaskName() const
     return NetPacket::TaskKey<FilePacket>::Get();
 }
 
-void TaskFileStream::SlotWritePos(const size_t &writeAmount, const size_t &totalAmount)
+void TaskFileStream::SlotWritePos(const size_t &writeAmount, const size_t &/*totalAmount*/)
 {
     static uint32_t cFps = 0;
 

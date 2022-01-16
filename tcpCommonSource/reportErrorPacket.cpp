@@ -17,7 +17,7 @@ ReportErrorPacket::ReportErrorPacket()
 ReportErrorPacket::~ReportErrorPacket()
 { }
 
-size_t ReportErrorPacket::PacketSize(Mode mode)
+size_t ReportErrorPacket::PacketSize(Mode /*mode*/)
 {
     return 0;
 }

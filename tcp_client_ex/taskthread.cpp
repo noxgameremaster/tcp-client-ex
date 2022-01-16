@@ -7,7 +7,7 @@
 TaskThread::TaskThread(NetObject *parent)
     : AbstractTask(parent)
 {
-    m_taskThread = std::make_unique<LoopThread>();
+    m_taskThread = std::make_unique<LoopThread>(this);
     m_taskThread->SetWaitCondition([this]() { return this->IsMessageList(); });
     m_taskThread->SetTaskFunction([this]() { return this->Dequeue(); });
 }

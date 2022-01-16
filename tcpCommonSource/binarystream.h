@@ -130,6 +130,16 @@ protected:
         m_seekpoint += sizeof(T);
     }
 
+    template <class Container>
+    bool ReadByteArray(Container &dest)
+    {
+        if (dest.size() + m_seekpoint > m_context->size())
+            return false;
+
+        memcpy_s(dest.data(), dest.size(), m_context->data() + m_seekpoint, dest.size());
+        return true;
+    }
+
 public:
     template <class Container>
     bool PutStream(const Container &cont)

@@ -27,6 +27,11 @@ private:
     bool OnStarted() override;
     void OnStopped() override;
 
+    std::string ObjectName() const override
+    {
+        return "ClientSend";
+    }
+
 public:
     template <class NetObjectPtr, class Function>
     void SharedSendBuffer(NetObjectPtr *obj, Function &&memberF)

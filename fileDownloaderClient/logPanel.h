@@ -49,6 +49,7 @@ private:
 	void OnInitialUpdate() override;
 	void InitCControls();
 	void FocusEndline();
+    void BeforeDestroy() override;
 
 public:
 	LogPanelRecv *ReceiveObject()

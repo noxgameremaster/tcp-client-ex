@@ -77,6 +77,7 @@ private:
     bool MakePacketImpl();
     bool MakePacketHeaderData();
 
+    bool EvacuateByteStream(const size_t count);
     bool EvacuateChunk(const size_t count);
 
     bool ReadSendInfoDetail();

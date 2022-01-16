@@ -36,10 +36,18 @@ private:
 
     void SendOnInitial();
 
+    std::string ObjectName() const override
+    {
+        return "TaskManager";
+    }
+
 public:
     void InputTask(std::unique_ptr<NetPacket> &&packet);
     AbstractTask *GetTask(const std::string &taskName);
     void ForwardPacket(std::unique_ptr<NetPacket> &&packet, bool toInner = false);
+
+
+    int GetTaskCount() const; //Debugging
 };
 
 #endif

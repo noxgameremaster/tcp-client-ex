@@ -19,13 +19,17 @@ private:
     std::function<void()> m_waitFunction;
     task_function_type m_taskFunction;
 
+    bool m_useCondition;
+
 public:
-    explicit LoopThread(NetObject *parent = nullptr);
+    explicit LoopThread(NetObject *owner = nullptr);
     ~LoopThread() override;
 
 private:
     void WaitCondition();
+    void ThreadHalted();
     void DoTask(task_function_type task);
+    void DoTaskCondition(task_function_type task);
     bool OnInitialize() override;
     void OnDeinitialize() override;
     bool OnStarted() override;

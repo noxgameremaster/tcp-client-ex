@@ -24,7 +24,7 @@ ClientReceive::ClientReceive(std::shared_ptr<WinSocket> &sock, NetObject *parent
     m_readFds->SetTimeInterval(1, 0);
 
     m_packetBuffer = std::make_unique<PacketBufferFix>();
-    m_receiveThread = std::make_unique<LoopThread>();
+    m_receiveThread = std::make_unique<LoopThread>(this);
 
     m_receiveThread->SetTaskFunction([this]() { return this->DoTask(); });
 
@@ -69,10 +69,11 @@ void ClientReceive::OnDisconnected(WinSocket *sock)
 
 void ClientReceive::ReceiveFrom(WinSocket *sock)
 {
-    std::vector<uint8_t> receiveVector(read_receive_buffer_count, 0);
+    static std::vector<uint8_t> receiveVector;
 
     do
     {
+        receiveVector.resize(read_receive_buffer_count);
         if (!sock->Receive(receiveVector))
             OnDisconnected(sock);
         else if (!m_packetBuffer->PushBack(sock, receiveVector))

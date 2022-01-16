@@ -19,7 +19,7 @@
 ClientWorker::ClientWorker(NetObject *parent)
     : NetService(parent)
 {
-    m_workThread = std::make_unique<LoopThread>();
+    m_workThread = std::make_unique<LoopThread>(this);
     m_workThread->SetTaskFunction([this]() { return this->FetchFromBuffer(); });
     m_workThread->SetWaitCondition([this]() { return this->IsContained(); });
 
