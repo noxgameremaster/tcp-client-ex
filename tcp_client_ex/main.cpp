@@ -22,7 +22,7 @@ using namespace _StringHelper;
 
 int main()
 {
-    EventWorker::Instance().Start();
+    EventWorker::Instance();
     NetClient client;
     TestPrint testprint;
     bool runRes = client.Startup();
@@ -36,7 +36,7 @@ int main()
     std::getchar();
 
     client.Shutdown();
-    EventWorker::Instance().Stop();
+    //EventWorker::Instance().Stop();
 
     return 0;
 }

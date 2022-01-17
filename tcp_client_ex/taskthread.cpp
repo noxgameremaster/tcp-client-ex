@@ -7,9 +7,10 @@
 TaskThread::TaskThread(NetObject *parent)
     : AbstractTask(parent)
 {
-    m_taskThread = std::make_unique<LoopThread>(this);
-    m_taskThread->SetWaitCondition([this]() { return this->IsMessageList(); });
-    m_taskThread->SetTaskFunction([this]() { return this->Dequeue(); });
+    //m_taskThread = std::make_unique<LoopThread>(this);
+    /*m_taskThread->SetWaitCondition([this]() { return this->IsMessageList(); });
+    m_taskThread->SetTaskFunction([this]() { return this->Dequeue(); });*/
+    m_terminated = false;
 }
 
 TaskThread::~TaskThread()
@@ -17,11 +18,7 @@ TaskThread::~TaskThread()
 
 bool TaskThread::IsMessageList() const
 {
-    {
-        std::lock_guard<std::mutex> guard(m_lock);
-
-        return m_msglist.size() != 0;
-    }
+    return m_msglist.size() != 0;
 }
 
 void TaskThread::ExecuteTask(std::unique_ptr<NetPacket> &&msg)
@@ -44,11 +41,26 @@ void TaskThread::ExecuteTask(std::unique_ptr<NetPacket> &&msg)
     ExecuteDoTask(task, std::move(msg));
 }
 
-bool TaskThread::Dequeue()
+void TaskThread::Dequeue()
 {
     std::unique_ptr<NetPacket> msg;
 
     for (;;)
+    {
+        {
+            std::unique_lock ulock(m_lock);
+            m_condvar.wait(ulock, [this]() { return this->m_terminated || this->IsMessageList(); });
+
+            if (m_terminated)
+                break;
+
+            msg = std::move(m_msglist.front());
+            m_msglist.pop_front();
+        }
+        ExecuteTask(std::move(msg));
+    }
+
+    /*for (;;)
     {
         {
             std::lock_guard<std::mutex> lock(m_lock);
@@ -62,8 +74,8 @@ bool TaskThread::Dequeue()
         if (!msg)
             continue;
         ExecuteTask(std::move(msg));
-    }
-    return true;
+    }*/
+    //return true;
 }
 
 void TaskThread::DoTask(std::unique_ptr<NetPacket> &&)
@@ -76,17 +88,25 @@ void TaskThread::PushBack(std::unique_ptr<NetPacket> &&msg)
 
         m_msglist.push_back(std::move(msg));
     }
-    m_taskThread->Notify();
+    //m_taskThread->Notify();
+    m_condvar.notify_one();
 }
 
 void TaskThread::StopThread()
 {
-    m_taskThread->Shutdown();
+    m_terminated = true;
+    if (m_taskThread.joinable())
+    {
+        m_condvar.notify_one();
+        m_taskThread.join();
+    }
+    //m_taskThread->Shutdown();
 }
 
 void TaskThread::RunThread()
 {
-    m_taskThread->Startup();
+    //m_taskThread->Startup();
+    m_taskThread = std::thread([this]() { this->Dequeue(); });
 }
 
 

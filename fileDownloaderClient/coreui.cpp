@@ -21,7 +21,7 @@ CoreUi::~CoreUi()
 
 void CoreUi::OnInitialOnce()
 {
-    EventWorker::Instance().Start();
+    EventWorker::Instance();
     NetLogObject::LogObject().Startup();
     NetLogObject::LogObject().OnReleaseLogMessage().Connection(&CoreUi::ReceiveLogMessage, this);
 
@@ -54,7 +54,7 @@ bool CoreUi::OnStarted()
 
 void CoreUi::OnDeinitialize()
 {
-    m_netRunner.get();
+    //m_netRunner.get();  ///here error //FIXME.
     m_netMain->Shutdown();
 }
 
@@ -145,7 +145,7 @@ void CoreUi::SendCommandToServer(const std::string &cmd)
 void CoreUi::StopCoreService()
 {
     NetLogObject::LogObject().Shutdown();
-    EventWorker::Instance().Stop();
+    //EventWorker::Instance().Stop();
 }
 
 void CoreUi::SlotGetInnerPacket(std::shared_ptr<NetPacket> &&packet)

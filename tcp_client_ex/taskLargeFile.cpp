@@ -5,6 +5,7 @@
 #include "largeFileCompletePacket.h"
 #include "filepacket.h"
 #include "netLogObject.h"
+#include "asynchronousFileTask.h"
 #include "ioFileStream.h"
 #include "eventworker.h"
 #include "frameRateThread.h"
@@ -16,7 +17,6 @@ TaskLargeFile::TaskLargeFile(NetObject *parent)
     : AbstractTask(parent)
 {
     m_accumulate = 0;
-
     m_OnReportFileSeek.Connection(&TaskLargeFile::SlotReportFileSeek, this);
 }
 
@@ -29,7 +29,8 @@ void TaskLargeFile::InnerSendFileInfo(const size_t amount)
         return;
 
     std::string path, name;
-    m_file->UrlSeparatePathAndName(path, name);
+
+    (*m_file)->UrlSeparatePathAndName(path, name);
     
     std::unique_ptr<FilePacket> innerSend(new FilePacket);
 
@@ -44,9 +45,9 @@ bool TaskLargeFile::CreateDownloadFile(const std::string &url)
     std::string filename, path;
     IOFileStream::UrlSeparatePathAndName(url, path, filename);
 
-    m_file = std::make_unique<IOFileStream>(stringFormat("%s\\%s", "downloads", filename));
+    m_file = std::make_unique<AsynchonousFileTask>(new IOFileStream(stringFormat("%s\\%s", "downloads", filename)));
 
-    return m_file->Open(IOFileStream::OpenMode::WriteOnly);
+    return (*m_file)->Open(IOFileStream::OpenMode::WriteOnly);
 }
 
 void TaskLargeFile::RequestChunkData()
@@ -59,7 +60,7 @@ void TaskLargeFile::RequestChunkData()
 
 void TaskLargeFile::ReportDownloadComplete()
 {
-    std::unique_ptr<IOFileStream> file(m_file.release());
+    //std::unique_ptr<AsynchonousFileTask> file(m_file.release());
     std::unique_ptr<LargeFileCompletePacket> complete(new LargeFileCompletePacket);
 
     complete->SetSubCmd();
@@ -73,14 +74,16 @@ void TaskLargeFile::LargeFileRequest(std::unique_ptr<NetPacket> &&reqPacket)
 
     switch (req->SubCommand())
     {
-    case LargeFileRequestPacket::PacketSubCmd::StartTestToServer:
+    case LargeFileRequestPacket::PacketSubCmd::StartTestToServer:        
+        if (!CreateDownloadFile(req->RequestFileUrl()))
+        {
+            NetLogObject::LogObject().AppendLogMessage("open fail!");
+            break;
+        }
         NET_PUSH_LOGMSG("sent request packet to server!");
         req->ChangeSubCommand(LargeFileRequestPacket::PacketSubCmd::SendToServer);
         ForwardPacketToManager(std::move(reqPacket));
-        if (!CreateDownloadFile(req->RequestFileUrl()))
-            NetLogObject::LogObject().AppendLogMessage("open fail!");
-        else
-            InnerSendFileInfo(0);
+        InnerSendFileInfo(0);
         break;
     case LargeFileRequestPacket::PacketSubCmd::SendToClient:
         NET_PUSH_LOGMSG("receive msg from server. i will request a chunk data!");
@@ -94,26 +97,33 @@ void TaskLargeFile::LargeFileGetChunk(std::unique_ptr<NetPacket> &&pack)
 {
     LargeFileChunkPacket *chunk = static_cast<LargeFileChunkPacket *>(pack.get());
     std::vector<uint8_t> stream;
+    bool notCompleted = false;
 
     switch (chunk->SubCommand())
     {
     case LargeFileChunkPacket::PacketSubCmd::SendToClient:
         RequestChunkData();
-        chunk->GetFileStream(stream);
-        if (!m_file->Write(stream))
-            NET_PUSH_LOGMSG(stringFormat("error %d", stream.size()));
-        
-        m_accumulate += stream.size();
-        QUEUE_EMIT(m_OnReportFileSeek, m_accumulate);
-        break;
+        notCompleted = true;
+        [[fallthrough]];
     case LargeFileChunkPacket::PacketSubCmd::SentLastDataToClient:
         chunk->GetFileStream(stream);
-        if (!m_file->Write(stream))
-            NET_PUSH_LOGMSG(stringFormat("error %d", stream.size()));
+        m_file->PushStream(stream);
+            //NET_PUSH_LOGMSG(stringFormat("file write error %d", stream.size()));
+
         m_accumulate += stream.size();
-        ReportDownloadComplete();
-        NET_PUSH_LOGMSG(stringFormat("end all %d bytes", m_accumulate));
-        InnerSendFileInfo(m_accumulate);
+        if (notCompleted)
+        {
+            QUEUE_EMIT(m_OnReportFileSeek, m_accumulate);
+        }
+        else
+        {
+            ReportDownloadComplete();
+            NET_PUSH_LOGMSG(stringFormat("end all %d bytes", m_accumulate));
+            InnerSendFileInfo(m_accumulate);
+        }
+        break;
+
+    default:
         break;
     }
 }

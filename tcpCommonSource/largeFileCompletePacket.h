@@ -9,7 +9,7 @@ class LargeFileCompletePacket : public NetPacket
 private:
     uint32_t m_fileSizeLow;
     uint32_t m_fileSizeHigh;
-    uint32_t m_fileCrc;
+    //uint32_t m_fileCrc;
 
 public:
     explicit LargeFileCompletePacket();

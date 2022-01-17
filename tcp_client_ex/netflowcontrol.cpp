@@ -8,7 +8,7 @@
 #include "largeFileRequestPacket.h"
 #include "eventworker.h"
 #include "netLogObject.h"
-#include "loopThread.h"
+#include "eventThread.h"
 #include "stringHelper.h"
 
 using namespace _StringHelper;
@@ -17,10 +17,6 @@ NetFlowControl::NetFlowControl()
     : NetService()
 {
     m_taskmanager = std::make_unique<TaskManager>(this);
-    //m_ioThread = std::make_unique<LoopThread>(this);
-
-    //m_ioThread->SetWaitCondition([this]() { return this->CheckHasIO(); });
-    //m_ioThread->SetTaskFunction([this]() { return this->CheckIOList(); });
 
     m_ioCount = 0;
 
@@ -53,9 +49,6 @@ void NetFlowControl::IOThreadWork()
 
 bool NetFlowControl::CheckHasIO() const
 {
-    //std::lock_guard<std::mutex> guard(m_lock);
-
-    //return (m_inpacketList.size() + m_outpacketList.size()) > 0;
     return m_ioCount > 0;
 }
 
@@ -93,7 +86,6 @@ bool NetFlowControl::OnInitialize()
         m_ioThread.join();
     }
     m_ioThread = std::thread([this]() { this->IOThreadWork(); });
-    //return m_ioThread->Startup();
     return true;
 }
 
@@ -107,7 +99,6 @@ bool NetFlowControl::OnStarted()
 
 void NetFlowControl::OnStopped()
 {
-    //m_ioThread->Shutdown();
     m_terminated = true;
     m_condvar.notify_all();
     if (m_ioThread.joinable())
@@ -173,7 +164,6 @@ void NetFlowControl::Enqueue(NetFlowControl::net_packet_type&& packet, IOType io
             ioList->push_back(std::move(packet));
             ++m_ioCount;
         }
-        //m_ioThread->Notify();
         m_condvar.notify_one();
     }
     while (false);
@@ -211,4 +201,9 @@ void NetFlowControl::DebugReportInputOutputCounting()
     NET_PUSH_LOGMSG(stringFormat("in- %d, out- %d, enqueue in- %d, enqueue out- %d",
         m_debugCountIn, m_debugCountOut, m_debugCountEnqueueIn, m_debugCountEnqueueOut));
     NET_PUSH_LOGMSG(stringFormat("queueContain(in/out: %d/%d) %d %d", m_inpacketList.size(), m_outpacketList.size(), ioCountCopy, m_taskmanager->GetTaskCount()));
+
+    auto sendbuffer = m_sendbuffer.expired() ? nullptr : m_sendbuffer.lock();
+
+    if (sendbuffer)
+        NET_PUSH_LOGMSG(stringFormat("sendbuffer amount: %d", sendbuffer->ContainedAmount()));
 }

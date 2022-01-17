@@ -5,13 +5,14 @@
 #include "netservice.h"
 #include "printUtil.h"
 
-class LoopThread;
+//class LoopThread;
+class EventThread;
 
 class NetLogObject : public NetService
 {
     using net_log_element = std::tuple<std::string, uint32_t>;
 private:
-    std::unique_ptr<LoopThread> m_logThread;
+    std::unique_ptr<EventThread> m_logThread;
     std::list<net_log_element> m_netLog;
 
 private:
@@ -36,7 +37,8 @@ public:
     static NetLogObject &LogObject();
 
 private:
-    mutable std::mutex m_lock;
+    //mutable std::mutex m_lock;
+    std::shared_ptr<std::mutex> m_lock;
 
 public:
     DECLARE_SIGNAL(OnReleaseLogMessage, std::string, uint32_t)

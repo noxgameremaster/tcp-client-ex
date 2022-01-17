@@ -43,6 +43,12 @@ public:
 
     bool SetTrigger(NetObject *trigger, std::function<void()> &&fn);
 
+public:
+    size_t ContainedAmount() const
+    {
+        return m_indexes.size();
+    }
+
 private:
     mutable std::mutex m_lock;
     std::mutex m_trigLock;

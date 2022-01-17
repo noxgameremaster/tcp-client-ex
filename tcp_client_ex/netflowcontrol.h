@@ -10,7 +10,7 @@
 class TaskManager;
 class IOBuffer;
 class NetPacket;
-class LoopThread;
+class EventThread;
 
 class NetFlowControl : public NetService
 {
@@ -23,8 +23,8 @@ private:
     net_packet_list_type m_inpacketList;
     net_packet_list_type m_outpacketList;
     net_packet_list_type m_innerPacketList;
-    //std::unique_ptr<LoopThread> m_ioThread;
     std::thread m_ioThread;
+    //std::unique_ptr<EventThread> m_ioThread;
     std::condition_variable m_condvar;
     bool m_terminated;
 

@@ -7,7 +7,7 @@ LargeFileCompletePacket::LargeFileCompletePacket()
 {
     m_fileSizeLow = 0;
     m_fileSizeHigh = 0;
-    m_fileCrc = 0;
+    //m_fileCrc = 0;
 }
 
 LargeFileCompletePacket::~LargeFileCompletePacket()
@@ -18,14 +18,14 @@ size_t LargeFileCompletePacket::PacketSize(Mode mode)
     if (mode != Mode::Write)
         return 0;
 
-    return sizeof(m_fileCrc) + sizeof(m_fileSizeHigh) + sizeof(m_fileSizeLow);
+    return /*sizeof(m_fileCrc) + */sizeof(m_fileSizeHigh) + sizeof(m_fileSizeLow);
 }
 
 bool LargeFileCompletePacket::WriteReportToServer()
 {
     try
     {
-        WriteCtx(m_fileCrc);
+        //WriteCtx(m_fileCrc);
         WriteCtx(m_fileSizeLow);
         WriteCtx(m_fileSizeHigh);
     }
@@ -56,12 +56,12 @@ void LargeFileCompletePacket::SetSubCmd()
     SetSubCommand(1);
 }
 
-void LargeFileCompletePacket::SetLargeFileSize(const uint64_t &totalSize, uint32_t crc)
+void LargeFileCompletePacket::SetLargeFileSize(const uint64_t &totalSize, uint32_t /*crc*/) //2022-01-17 14:33 unused crc
 {
     static constexpr uint32_t dword_mask = 0xffffffff;
 
     m_fileSizeLow = totalSize & dword_mask;
     m_fileSizeHigh = (totalSize >> 32) & dword_mask;
-    m_fileCrc = crc;
+    //m_fileCrc = crc;
 }
 

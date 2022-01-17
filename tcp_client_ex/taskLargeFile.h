@@ -5,12 +5,12 @@
 #include "abstractTask.h"
 
 class NetPacket;
-class IOFileStream;
+class AsynchonousFileTask;
 
 class TaskLargeFile : public AbstractTask
 {
 private:
-    std::unique_ptr<IOFileStream> m_file;
+    std::unique_ptr<AsynchonousFileTask> m_file;
     uint32_t m_accumulate;
 
 public:

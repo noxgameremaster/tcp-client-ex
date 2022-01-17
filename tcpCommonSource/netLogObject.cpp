@@ -1,6 +1,7 @@
 
 #include "netLogObject.h"
-#include "loopThread.h"
+//#include "loopThread.h"
+#include "eventThread.h"
 #include "eventworker.h"
 
 template <uint8_t R, uint8_t G, uint8_t B>
@@ -12,10 +13,12 @@ struct RgbToUInt
 NetLogObject::NetLogObject()
     : NetService()
 {
-    m_logThread = std::make_unique<LoopThread>();
+    m_lock = std::make_unique<std::mutex>();
+    m_logThread = std::make_unique<EventThread>(this);
 
-    m_logThread->SetTaskFunction([this]() { return this->NavigateLogList(); });
-    m_logThread->SetWaitCondition([this]() { return this->IsNotEmpty(); });
+    m_logThread->SetExecution([this]() { return this->NavigateLogList(); });
+    m_logThread->SetCondition([this]() { return this->IsNotEmpty(); });
+    m_logThread->SetLocker(m_lock);
 }
 
 NetLogObject::~NetLogObject()
@@ -50,7 +53,7 @@ void NetLogObject::AppendLogMessage(const std::string &message, PrintUtil::Conso
     std::string pushMsg = message;
 
     {
-        std::lock_guard<std::mutex> guard(m_lock);
+        std::lock_guard<std::mutex> guard(*m_lock);
 
         m_netLog.emplace_back(std::move(pushMsg), realColor);
     }
@@ -59,15 +62,13 @@ void NetLogObject::AppendLogMessage(const std::string &message, PrintUtil::Conso
 
 bool NetLogObject::IsNotEmpty() const
 {
-    std::lock_guard<std::mutex> guard(m_lock);
-
     return !m_netLog.empty();
 }
 
 bool NetLogObject::NavigateLogList()
 {
     {
-        std::lock_guard<std::mutex> guard(m_lock);
+        std::lock_guard<std::mutex> guard(*m_lock);
 
         for (const auto &elem : m_netLog)
             QUEUE_EMIT(m_OnReleaseLogMessage, std::get<0>(elem), std::get<1>(elem));

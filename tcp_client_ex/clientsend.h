@@ -6,14 +6,14 @@
 
 class WinSocket;
 class IOBuffer;
-class LoopThread;
+class EventThread;
 
 class ClientSend : public NetService
 {
 private:
     std::shared_ptr<WinSocket> m_netsocket;
     std::shared_ptr<IOBuffer> m_sendbuffer;
-    std::unique_ptr<LoopThread> m_sendThread;
+    std::unique_ptr<EventThread> m_sendThread;
 
 public:
     ClientSend(std::shared_ptr<WinSocket> &sock, NetObject *parent = nullptr);
@@ -43,6 +43,9 @@ public:
 
         (obj->*memberF)(m_sendbuffer);
     }
+
+private:
+    std::shared_ptr<std::mutex> m_lock;
 };
 
 #endif

@@ -3,14 +3,16 @@
 #define EVENT_WORKER_H__
 
 #include "ccobject.h"
-
-class LoopThread;
+#include <future>
+#include <atomic>
 
 class EventWorker : public CCObject
 {
 private:
     std::list<std::function<void()>> m_task;
-    std::unique_ptr<LoopThread> m_eventThread;
+    std::condition_variable m_condvar;
+    std::future<bool> m_eventThread;
+    std::atomic<bool> m_terminated{false};
 
 private:
     explicit EventWorker();
@@ -59,9 +61,6 @@ public:
         }
         EventThreadNotify();
     }
-
-    bool Start();
-    bool Stop();
     void EventThreadNotify();
 
     static EventWorker &Instance();

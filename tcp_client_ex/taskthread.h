@@ -7,13 +7,16 @@
 #include <mutex>
 
 class NetPacket;
-class LoopThread;
+//class LoopThread;
 
 class TaskThread : public AbstractTask
 {
 private:
     std::list<std::unique_ptr<NetPacket>> m_msglist;
-    std::unique_ptr<LoopThread> m_taskThread;
+    //std::unique_ptr<LoopThread> m_taskThread;
+    std::thread m_taskThread;
+    bool m_terminated;
+    std::condition_variable m_condvar;
 
 public:
     TaskThread(NetObject *parent);
@@ -22,7 +25,7 @@ public:
 private:
     bool IsMessageList() const;
     void ExecuteTask(std::unique_ptr<NetPacket> &&msg);
-    bool Dequeue();
+    void Dequeue();
     void DoTask(std::unique_ptr<NetPacket> &&packet) override;
 
 public:
@@ -48,7 +51,7 @@ public:
     }
 
 private:
-    mutable std::mutex m_lock;
+    std::mutex m_lock;
 };
 
 #endif

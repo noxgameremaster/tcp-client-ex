@@ -2,16 +2,20 @@
 #include "netclient.h"
 #include "netflowcontrol.h"
 #include "iobuffer.h"
-#include "loopThread.h"
+#include "eventThread.h"
 #include "winsocket.h"
 
 ClientSend::ClientSend(std::shared_ptr<WinSocket> &sock, NetObject *parent)
     : NetService(parent)
 {
+    m_lock = std::make_shared<std::mutex>();
     m_netsocket = sock;
-    m_sendThread = std::make_unique<LoopThread>(this);
-    m_sendThread->SetTaskFunction([this]() { return this->StreamSend(); });
-    m_sendThread->SetWaitCondition([this]() { return !this->m_sendbuffer->IsEmpty(); });
+    
+    m_sendThread = std::make_unique<EventThread>(this);
+
+    m_sendThread->SetCondition([this]() { return !this->m_sendbuffer->IsEmpty(); });
+    m_sendThread->SetExecution([this]() { return this->StreamSend(); });
+    m_sendThread->SetLocker(m_lock);
 }
 
 ClientSend::~ClientSend()
