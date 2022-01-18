@@ -12,6 +12,9 @@
 #include "pageManager.h"
 #include "logPanel.h"
 #include "filePanel.h"
+#include "switchPanel.h"
+#include "debugPage.h"
+#include "downloadCompletePanel.h"
 #include "stringHelper.h"
 
 #pragma comment(lib, "tcpCommonSource.lib")
@@ -41,6 +44,16 @@ public:
 	{
 		m_parent->AppendLogViewMessage(msg, colr);
 	}
+
+    void SlotPageSwitchingTriggered(const std::string &pageId)
+    {
+        m_parent->DoPageSwitching(pageId);
+    }
+
+    void SlotDoTesting(const std::string &testName, const std::string &context)
+    {
+        m_parent->DoTesting(testName, context);
+    }
 };
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
@@ -96,15 +109,8 @@ void CfileDownloaderClientDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 
-	DDX_Control(pDX, LOG_VIEWER_INSERT, m_btnLogTestInsert);
-	DDX_Control(pDX, LOG_VIEWER_TEST_START, m_btnStartTest);
-	DDX_Control(pDX, LOG_VIEWER_FOCUS_TOEND, m_btnFocusToEnd);
-    DDX_Control(pDX, LOG_VIEWER_RECONNECT, m_btnReconnect);
 	DDX_Control(pDX, MAIN_PAGE_PANEL, m_mainPanel);
 	DDX_Control(pDX, MAIN_LOG_PANEL, m_logPanel);
-
-	DDX_Control(pDX, MAIN_INPUT, m_cmdInput);
-	DDX_Control(pDX, MAIN_INPUT_OK, m_btnCmdOk);
 }
 
 void CfileDownloaderClientDlg::AppendLogViewMessage(const std::string &message, uint32_t /*color*/)
@@ -139,7 +145,27 @@ void CfileDownloaderClientDlg::InitPageManager()
     m_coreUi->OnSendInfoToFilePanel().Connection(&FilePanel::SlotFileListAppend, filePanel.get());
 
 	m_mainPageLoader->MakePage("filepage", std::move(filePanel));
+    std::unique_ptr<DebugPage> debugPanel(new DebugPage(IDD_DEBUG_PANEL, this));
+
+    debugPanel->OnTesting().Connection(&MainWndCC::SlotDoTesting, m_wndcc.get());
+    m_mainPageLoader->MakePage("debugpage", std::move(debugPanel));
+
+    std::unique_ptr<DownloadCompletePanel> completePanel(new DownloadCompletePanel(IDD_DOWN_COMPLETED_PANEL, this));
+
+    m_mainPageLoader->MakePage("completePage", std::move(completePanel));
 	m_mainPageLoader->ShowPage("filepage");
+
+    CWnd *switchPanelFrame = GetDlgItem(MAIN_SWITCH_PANEL);
+
+    switchPanelFrame->ShowWindow(SW_HIDE);
+    m_switchPanelLoader = std::make_unique<PageManager>(*switchPanelFrame, this);
+
+    std::unique_ptr<SwitchPanel> switchPanel(new SwitchPanel(IDD_SWITCH_PANEL, this));
+
+    switchPanel->OnPageSwitching().Connection(&MainWndCC::SlotPageSwitchingTriggered, m_wndcc.get());
+
+    m_switchPanelLoader->MakePage("switchPanel", std::move(switchPanel));
+    m_switchPanelLoader->ShowPage("switchPanel");
 }
 
 void CfileDownloaderClientDlg::Initialize()
@@ -151,32 +177,35 @@ void CfileDownloaderClientDlg::Initialize()
 	SetWindowText(toArray(std::string("Client Application")));
 
 	InitPageManager();
-	m_btnLogTestInsert.SetCallback([this]() { this->m_coreUi->DoTestEcho(); });
-	m_btnStartTest.SetCallback([this]() { this->m_coreUi->DoTestFilePacket(); });
-	m_btnCmdOk.SetCallback([this]() { this->SendInputCommand(); });
-
-	m_btnLogTestInsert.ModifyWndName("echo test");
-	m_btnStartTest.ModifyWndName("file req");
-	m_btnFocusToEnd.ModifyWndName("go to end");
-
-    m_btnReconnect.SetCallback([this]() { this->m_coreUi->Shutdown(); });
-
-	m_btnCmdOk.ModifyWndName("send");
-    m_btnReconnect.ModifyWndName("reconnect");
 
 	m_coreUi->StartNetClient();
 }
 
-void CfileDownloaderClientDlg::SendInputCommand()
+void CfileDownloaderClientDlg::DoPageSwitching(const std::string &pageId)
 {
-	CString cmd;
+    if (!m_mainPageLoader)
+        return;
 
-	m_cmdInput.GetWindowTextA(cmd);
-	if (m_coreUi)
-	{
-		m_coreUi->SendCommandToServer(cmd.GetBuffer());
-		m_cmdInput.SetWindowTextA("");
-	}
+    m_mainPageLoader->ShowPage(pageId);
+}
+
+void CfileDownloaderClientDlg::DoTesting(const std::string &testName, const std::string &context)
+{
+    if (!m_coreUi)
+        return;
+
+    if (testName == "echo test")
+    {
+        m_coreUi->DoTestEcho();
+    }
+    else if (testName == "file request")
+    {
+        m_coreUi->DoTestFilePacket();
+    }
+    else if (testName == "send command")
+    {
+        m_coreUi->SendCommandToServer(context);
+    }
 }
 
 BEGIN_MESSAGE_MAP(CfileDownloaderClientDlg, CDialogEx)
@@ -287,13 +316,12 @@ void CfileDownloaderClientDlg::OnClose()
 {
     m_logPanelLoader->DestroyAll();
     m_mainPageLoader->DestroyAll();
+    m_switchPanelLoader->DestroyAll();
 
 	if (m_coreUi)
 	{
 		m_coreUi->Shutdown();
-		//m_coreUi.reset();
 	}
-    //MessageBox("it will shutdown");
 	if (m_logPanelLoader)
 	{
 		m_logPanelLoader.reset();
@@ -302,10 +330,12 @@ void CfileDownloaderClientDlg::OnClose()
 	{
 		m_mainPageLoader.reset();
 	}
+    if (m_switchPanelLoader)
+        m_switchPanelLoader.reset();
+
     m_coreUi->StopCoreService();
 	OutputDebugString("shutdown app");
 	CDialogEx::OnClose();
-	//ShowWindow(SW_HIDE);
 }
 
 HBRUSH CfileDownloaderClientDlg::OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor)

@@ -7,9 +7,6 @@
 TaskThread::TaskThread(NetObject *parent)
     : AbstractTask(parent)
 {
-    //m_taskThread = std::make_unique<LoopThread>(this);
-    /*m_taskThread->SetWaitCondition([this]() { return this->IsMessageList(); });
-    m_taskThread->SetTaskFunction([this]() { return this->Dequeue(); });*/
     m_terminated = false;
 }
 
@@ -48,7 +45,7 @@ void TaskThread::Dequeue()
     for (;;)
     {
         {
-            std::unique_lock ulock(m_lock);
+            std::unique_lock<std::mutex> ulock(m_lock);
             m_condvar.wait(ulock, [this]() { return this->m_terminated || this->IsMessageList(); });
 
             if (m_terminated)
@@ -59,23 +56,6 @@ void TaskThread::Dequeue()
         }
         ExecuteTask(std::move(msg));
     }
-
-    /*for (;;)
-    {
-        {
-            std::lock_guard<std::mutex> lock(m_lock);
-
-            if (m_msglist.empty())
-                break;
-
-            msg = std::move(m_msglist.front());
-            m_msglist.pop_front();
-        }
-        if (!msg)
-            continue;
-        ExecuteTask(std::move(msg));
-    }*/
-    //return true;
 }
 
 void TaskThread::DoTask(std::unique_ptr<NetPacket> &&)

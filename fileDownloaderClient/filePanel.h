@@ -4,8 +4,8 @@
 
 #include "cTabPage.h"
 #include "listviewer.h"
+#include "textlabel.h"
 #include "ccobject.h"
-
 #include <map>
 #include <stack>
 
@@ -15,6 +15,7 @@ class FilePanel : public CTabPage, public CCObject
 {
 private:
     ListViewer m_fileView;
+    TextLabel m_textTitle;
     std::stack<int> m_keyIdStack;
     std::map<std::string, int> m_keyMap;
 

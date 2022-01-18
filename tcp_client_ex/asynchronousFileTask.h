@@ -3,6 +3,7 @@
 #define ASYNCHRONOUS_FILE_TASK_H__
 
 #include "ccobject.h"
+#include <vector>
 
 class EventThread;
 class IOFileStream;

@@ -65,8 +65,8 @@ private:
 		return std::to_string(value);
 	}
 
-	template <typename T>
-	std::string &makeStringdata(const std::string &value)
+	template <>
+	std::string makeStringdata(const std::string &value)
 	{
 		return value;
 	}

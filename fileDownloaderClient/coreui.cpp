@@ -43,6 +43,12 @@ void CoreUi::OnInitialOnce()
 bool CoreUi::OnInitialize()
 {
     m_iniMan = std::make_unique<IniFileMan>();
+    m_completedInfo = std::make_unique<IniFileMan>();
+
+    m_completedInfo->SetItemValue("file1", "name", std::string("abc.txt"));
+
+    std::string dest;
+    m_completedInfo->GetItemValue("file1", "name", dest);
 
     return true;
 }

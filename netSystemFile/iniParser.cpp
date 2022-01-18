@@ -373,31 +373,45 @@ bool IniParser::LoadData(const std::vector<uint8_t> &loadvec)
 	return analysis();
 }
 
-bool IniParser::FindKey(const std::string &sectionkey, const std::string &itemkey, IniParser::findkeyFunctionType &&action)
+IniParser::FindKeyResult IniParser::FindKey(const std::string &sectionkey, const std::string &itemkey, IniParser::findkeyFunctionType &&action)
 {
 	auto sectionkeyIterator = m_sectionDict.find(sectionkey);
 
 	if (sectionkeyIterator == m_sectionDict.end())
-		return false;
+		return FindKeyResult::NoSection;
 
 	auto &currentSection = sectionkeyIterator->second;
 	auto keyIterator = currentSection.find(itemkey);
 
 	if (keyIterator == currentSection.end())
-		return false;
+		return FindKeyResult::NoItem;
 	action(keyIterator->second);
 
-	return true;
+	return FindKeyResult::Found;
 }
 
 bool IniParser::GetData(const std::string &sectionkey, const std::string &itemkey, std::string &dest)
 {
-	return FindKey(sectionkey, itemkey, [&dest](std::string &s) { dest = s; });
+    return FindKey(sectionkey, itemkey, [&dest](std::string &s) { dest = s; }) == FindKeyResult::Found;
 }
 
 bool IniParser::SetData(const std::string &sectionkey, const std::string &itemkey, const std::string &itemvalue)
 {
-	return FindKey(sectionkey, itemkey, [&itemvalue](std::string &s) { s = itemvalue; });
+    switch (FindKey(sectionkey, itemkey, [&itemvalue](std::string &s) { s = itemvalue; }))
+    {
+    case FindKeyResult::NoSection:
+    {
+        m_sectionDict.insert({ sectionkey, { std::make_pair(itemkey, itemvalue) } });
+        return false;
+    }
+    case FindKeyResult::NoItem:
+    {
+        m_sectionDict[sectionkey].emplace(itemkey, itemvalue);
+        return false;
+    }
+    case FindKeyResult::Found: return true;
+    default: return false;
+    }
 }
 
 bool IniParser::SectionPreorder(std::function<bool(const std::string &)> &&action)

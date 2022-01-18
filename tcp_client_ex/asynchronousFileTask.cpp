@@ -3,6 +3,8 @@
 #include "ioFileStream.h"
 #include "eventThread.h"
 
+#include <iterator>
+
 AsynchonousFileTask::AsynchonousFileTask(IOFileStream *file)
     : CCObject(), m_targetfile(file)
 {

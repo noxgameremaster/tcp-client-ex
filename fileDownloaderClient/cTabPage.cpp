@@ -96,6 +96,6 @@ void CTabPage::OnPaint()
 }
 
 BEGIN_MESSAGE_MAP(CTabPage, CFormView)
-    ON_WM_CTLCOLOR()
+    //ON_WM_CTLCOLOR()
     ON_WM_PAINT()
 END_MESSAGE_MAP()

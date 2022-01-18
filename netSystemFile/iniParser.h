@@ -65,9 +65,17 @@ private:
 public:
 	bool LoadData(const std::vector<uint8_t> &loadvec);
 
+private:
+    enum class FindKeyResult
+    {
+        Found,
+        NoSection,
+        NoItem
+    };
 	using findkeyFunctionType = std::function<void(std::string &)>;
-	bool FindKey(const std::string &sectionkey, const std::string &itemkey, findkeyFunctionType &&action);
+    FindKeyResult FindKey(const std::string &sectionkey, const std::string &itemkey, findkeyFunctionType &&action);
 
+public:
 	bool GetData(const std::string &sectionkey, const std::string &itemkey, std::string &dest);
 	bool SetData(const std::string &sectionkey, const std::string &itemkey, const std::string &itemvalue);
 

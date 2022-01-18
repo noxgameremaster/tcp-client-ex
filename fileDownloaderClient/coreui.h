@@ -16,6 +16,7 @@ private:
     const std::string m_settingFileName;
     std::unique_ptr<NetClient> m_netMain;
     std::unique_ptr<IniFileMan> m_iniMan;
+    std::unique_ptr<IniFileMan> m_completedInfo;
     std::future<bool> m_netRunner;
 
 public:

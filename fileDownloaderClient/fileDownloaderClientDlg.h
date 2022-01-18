@@ -20,19 +20,12 @@ private:
 	std::unique_ptr<CBrush> m_bkBrush;
 	GroupBox m_mainPanel;
 	GroupBox m_logPanel;
-	PrettyButton m_btnLogTestInsert;
-	PrettyButton m_btnStartTest;
-	PrettyButton m_btnFocusToEnd;
-    PrettyButton m_btnReconnect;
 	std::unique_ptr<CoreUi> m_coreUi;
 
 	std::unique_ptr<MainWndCC> m_wndcc;
 	std::unique_ptr<PageManager> m_logPanelLoader;
 	std::unique_ptr<PageManager> m_mainPageLoader;
-
-	//for test
-	CEdit m_cmdInput;
-	PrettyButton m_btnCmdOk;
+    std::unique_ptr<PageManager> m_switchPanelLoader;
 
 // 생성입니다.
 public:
@@ -53,7 +46,8 @@ public:
 private:
 	void InitPageManager();
 	void Initialize();
-	void SendInputCommand();
+    void DoPageSwitching(const std::string &pageId);
+    void DoTesting(const std::string &testName, const std::string &context);
 
 // 구현입니다.
 protected:

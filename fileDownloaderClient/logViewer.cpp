@@ -358,7 +358,7 @@ void LogViewer::PreSubclassWindow()
     headCtrl->GetClientRect(&headerRect);
 
     CreateColumn("Index", 50);
-    CreateColumn("message", 400);
+    CreateColumn("message", 600);
     CreateColumn("datetime", 200);
 
     GetClientRect(&m_updateLocation);

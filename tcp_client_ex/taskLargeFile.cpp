@@ -60,7 +60,6 @@ void TaskLargeFile::RequestChunkData()
 
 void TaskLargeFile::ReportDownloadComplete()
 {
-    //std::unique_ptr<AsynchonousFileTask> file(m_file.release());
     std::unique_ptr<LargeFileCompletePacket> complete(new LargeFileCompletePacket);
 
     complete->SetSubCmd();
@@ -108,7 +107,6 @@ void TaskLargeFile::LargeFileGetChunk(std::unique_ptr<NetPacket> &&pack)
     case LargeFileChunkPacket::PacketSubCmd::SentLastDataToClient:
         chunk->GetFileStream(stream);
         m_file->PushStream(stream);
-            //NET_PUSH_LOGMSG(stringFormat("file write error %d", stream.size()));
 
         m_accumulate += stream.size();
         if (notCompleted)

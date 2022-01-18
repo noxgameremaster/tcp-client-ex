@@ -56,6 +56,9 @@ void FilePanel::InitCControls()
     cols.Append("", width);
 
     m_fileView.AttachListColumn(cols);
+
+    m_textTitle.SetWindowTextA("File Downloading");
+    m_textTitle.SetTextColor(RGB(128, 255, 255));
 }
 
 void FilePanel::OnInitialUpdate()
@@ -88,6 +91,7 @@ void FilePanel::DoDataExchange(CDataExchange *pDX)
     CTabPage::DoDataExchange(pDX);
 
     DDX_Control(pDX, FILE_LIST_PANEL_LIST, m_fileView);
+    DDX_Control(pDX, FILE_LIST_PANEL_TITLE, m_textTitle);
 
     InitCControls();
 }
