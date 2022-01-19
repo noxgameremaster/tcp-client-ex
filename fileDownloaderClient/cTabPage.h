@@ -2,9 +2,10 @@
 #ifndef C_TAB_PAGE_H__
 #define C_TAB_PAGE_H__
 
+#include "ccobject.h"
 #include <string>
 
-class CTabPage : public CFormView
+class CTabPage : public CFormView, public CCObject
 {
     DECLARE_DYNAMIC(CTabPage)
 private:

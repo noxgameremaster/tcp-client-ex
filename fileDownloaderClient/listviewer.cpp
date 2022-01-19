@@ -16,6 +16,8 @@ ListViewer::ListViewer()
     : CListCtrl()
 {
     m_headerPanel = std::make_unique<ListHeaderPanel>();
+
+    m_listdata.reserve(8192);
 }
 
 ListViewer::~ListViewer()
@@ -35,14 +37,14 @@ void ListViewer::DrawStuff(CDC &cdc)
     cdc.SelectObject(oldPen);
 }
 
-bool ListViewer::GetListData(int keyId, ListViewer::list_element_ty &dest)
+bool ListViewer::GetListData(const std::string &uniqKey, ListViewer::list_element_ty &dest)
 {
-    auto keyIterator = m_datamap.find(keyId);
+    auto keyIterator = m_iterMap.find(uniqKey);
 
-    if (keyIterator == m_datamap.cend())
+    if (keyIterator == m_iterMap.cend())
         return false;
 
-    dest = keyIterator->second;
+    dest = *(keyIterator->second);
     return true;
 }
 
@@ -62,22 +64,50 @@ bool ListViewer::UpdateChangedCell(list_element_ty &updateData)
     return false;
 }
 
-void ListViewer::Append(int keyId, list_element_ty addData)
+bool ListViewer::Erase(list_element_ty delData)
 {
+    auto mapIterator = m_iterMap.find(delData->GetUniqId());
+
+    if (mapIterator == m_iterMap.cend())
+        return false;
+
+    m_listdata.erase(mapIterator->second);
+    m_iterMap.erase(mapIterator);
+
+    SetItemCount(m_listdata.size());
+    return true;
+}
+
+bool ListViewer::Append(list_element_ty addData, bool update)
+{
+    if (m_listdata.capacity() <= m_listdata.size())
+        return false;
+
     list_element_ty search;
 
-    if (GetListData(keyId, search)) //replace from old stuff
+    if (GetListData(addData->GetUniqId(), search)) //replace from old stuff
     {
         //*search = *addData; //need virtual clone here
         search->Clone(addData.get());
         UpdateChangedCell(search);
-        return;
+        return true;
     }
-    list_element_ty moving = std::move(addData);
+    m_listdata.push_back(addData);
+    m_iterMap.emplace(addData->GetUniqId(), m_listdata.cend() - 1);
+    if (update)
+        SetItemCount(m_listdata.size());
+    return true;
+}
 
-    m_listdata.push_back(moving);
+bool ListViewer::AppendWithList(const std::list<list_element_ty> &addDataList)
+{
+    for (const auto &element : addDataList)
+    {
+        if (!Append(element, false))
+            return false;
+    }
     SetItemCount(m_listdata.size());
-    m_datamap.emplace(keyId, moving);
+    return true;
 }
 
 void ListViewer::AttachListColumn(const ListColumn &columnData)

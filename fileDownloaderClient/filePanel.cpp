@@ -6,34 +6,10 @@
 
 FilePanel::FilePanel(UINT nIDTemplate, CWnd *parent)
     : CTabPage(nIDTemplate, parent)
-{
-    InitStack(30);
-}
+{ }
 
 FilePanel::~FilePanel()
 { }
-
-void FilePanel::InitStack(const size_t preCount)
-{
-    if (!preCount)
-        return;
-
-    size_t rep = preCount;
-
-    while (rep--)
-        m_keyIdStack.push(static_cast<int>(rep));
-}
-
-bool FilePanel::SearchFromFileName(const std::string &fileName, int &destKey)
-{
-    auto keyIterator = m_keyMap.find(fileName);
-
-    if (keyIterator == m_keyMap.cend())
-        return false;
-
-    destKey = keyIterator->second;
-    return true;
-}
 
 void FilePanel::InitCControls()
 {
@@ -67,20 +43,14 @@ void FilePanel::OnInitialUpdate()
 void FilePanel::SlotFileListAppend(std::shared_ptr<DownloadFileInfo> &&updateItem)
 {
     std::string keyString = updateItem->GetElement(DownloadFileInfo::PropertyInfo::FileName);       //Å°°ª
-    int destKey = 0;
-
-    if (!SearchFromFileName(keyString, destKey))
-    {
-        if (m_keyIdStack.empty())
-            return;
-
-        destKey = m_keyIdStack.top();
-        m_keyIdStack.pop();
-        m_keyMap.emplace(keyString, destKey);
-    }
     std::unique_ptr<DownloadFileInfo> copiedItem(new DownloadFileInfo(*updateItem));
 
-    m_fileView.Append(destKey, std::move(copiedItem));
+    m_fileView.Append(std::move(copiedItem));
+}
+
+void FilePanel::SlotFileListErase(std::shared_ptr<DownloadFileInfo> &&delItem)
+{
+    m_fileView.Erase(delItem);
 }
 
 BEGIN_MESSAGE_MAP(FilePanel, CTabPage)

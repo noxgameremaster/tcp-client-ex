@@ -23,7 +23,7 @@ TaskLargeFile::TaskLargeFile(NetObject *parent)
 TaskLargeFile::~TaskLargeFile()
 { }
 
-void TaskLargeFile::InnerSendFileInfo(const size_t amount)
+void TaskLargeFile::InnerSendFileInfo(const size_t amount, bool isLast)
 {
     if (!m_file)
         return;
@@ -37,6 +37,8 @@ void TaskLargeFile::InnerSendFileInfo(const size_t amount)
     innerSend->SetFileName(name);
     innerSend->SetSavePath(path);
     innerSend->SetDownloadBytes(amount);
+    if (isLast)
+        innerSend->SetComplete();
     ForwardPacketToManager(std::move(innerSend), true);
 }
 
@@ -117,7 +119,7 @@ void TaskLargeFile::LargeFileGetChunk(std::unique_ptr<NetPacket> &&pack)
         {
             ReportDownloadComplete();
             NET_PUSH_LOGMSG(stringFormat("end all %d bytes", m_accumulate));
-            InnerSendFileInfo(m_accumulate);
+            InnerSendFileInfo(m_accumulate, true);
         }
         break;
 

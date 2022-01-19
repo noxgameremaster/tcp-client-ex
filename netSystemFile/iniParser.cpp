@@ -3,6 +3,7 @@
 #include "iniParser.h"
 #include "iniToken.h"
 #include <iostream>
+#include <algorithm>
 
 IniParser::IniParser()
 {
@@ -423,9 +424,12 @@ bool IniParser::SectionPreorder(std::function<bool(const std::string &)> &&actio
 
 		const auto &valueSection = section.second;
 
-		for (const auto &elem : valueSection)
+		for (auto &elem : valueSection)
 		{
-			if (!action(elem.first + '=' + AdjectCharT(elem.second, '"')))
+            std::string s = elem.second;
+
+            std::transform(s.cbegin(), s.cend(), s.begin(), [](const auto &c) { return (c == '\\') ? '/' : c; });
+			if (!action(elem.first + '=' + AdjectCharT(s, '"')))
 				return false;
 		}
 	}

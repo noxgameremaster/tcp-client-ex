@@ -29,10 +29,12 @@ public:
     ~DownloadFileInfo() override;
 
 private:
-    size_t ElementCount() override
+    size_t ElementCount() const override
     {
         return static_cast<size_t>(PropertyInfo::PropertyEnd);
     }
+
+    std::string GetUniqId() const override;
 
 public:
     std::string GetElement(int index) override;

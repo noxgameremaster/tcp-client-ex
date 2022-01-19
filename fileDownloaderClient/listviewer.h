@@ -21,8 +21,11 @@ public:
 
 private:
     using list_element_ty = std::shared_ptr<ListElement>;
-    std::vector<list_element_ty> m_listdata;
-    std::map<int, list_element_ty> m_datamap;
+    using list_cont_ty = std::vector<list_element_ty>;
+    using list_cont_iterator = list_cont_ty::const_iterator;
+
+    list_cont_ty m_listdata;
+    std::map<std::string, list_cont_iterator> m_iterMap;
     std::unique_ptr<ListHeaderPanel> m_headerPanel;
 
 public:
@@ -32,11 +35,13 @@ public:
 private:
     void DrawStuff(CDC &cdc);
 private:
-    bool GetListData(int keyId, list_element_ty &dest);
+    bool GetListData(const std::string &uniqKey, list_element_ty &dest);
     bool UpdateChangedCell(list_element_ty &updateData);
 
 public:
-    void Append(int keyId, list_element_ty addData);
+    bool Erase(list_element_ty delData);
+    bool Append(list_element_ty addData, bool update = true);
+    bool AppendWithList(const std::list<list_element_ty> &addDataList);
     void AttachListColumn(const ListColumn &columnData);
 
 private:

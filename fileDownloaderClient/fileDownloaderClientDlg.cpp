@@ -143,6 +143,7 @@ void CfileDownloaderClientDlg::InitPageManager()
 	std::unique_ptr<FilePanel> filePanel(new FilePanel(IDD_FILELIST_PANEL, this));
 
     m_coreUi->OnSendInfoToFilePanel().Connection(&FilePanel::SlotFileListAppend, filePanel.get());
+    m_coreUi->OnSendComplete().Connection(&FilePanel::SlotFileListErase, filePanel.get());
 
 	m_mainPageLoader->MakePage("filepage", std::move(filePanel));
     std::unique_ptr<DebugPage> debugPanel(new DebugPage(IDD_DEBUG_PANEL, this));
@@ -152,6 +153,7 @@ void CfileDownloaderClientDlg::InitPageManager()
 
     std::unique_ptr<DownloadCompletePanel> completePanel(new DownloadCompletePanel(IDD_DOWN_COMPLETED_PANEL, this));
 
+    m_coreUi->OnReleaseCompleteFile().Connection(&DownloadCompletePanel::SlotAppendComplete, completePanel.get());
     m_mainPageLoader->MakePage("completePage", std::move(completePanel));
 	m_mainPageLoader->ShowPage("filepage");
 

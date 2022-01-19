@@ -9,6 +9,14 @@ DownloadFileInfo::DownloadFileInfo()
 DownloadFileInfo::~DownloadFileInfo()
 { }
 
+std::string DownloadFileInfo::GetUniqId() const
+{
+    if (m_filename.empty())
+        return "EMPTY";
+
+    return m_filename + m_savepath;
+}
+
 std::string DownloadFileInfo::GetElement(int index)
 {
     switch (index)

@@ -15,6 +15,7 @@ private:
     uint8_t m_reportError;
 
     size_t m_downloadBytes;
+    bool m_completed;
 
 public:
     FilePacket();
@@ -99,6 +100,15 @@ private:
     bool ServerWrite();
     bool OnWritePacket() override;
 
+public:
+    void SetComplete()
+    {
+        m_completed = true;
+    }
+    bool IsCompleted() const
+    {
+        return m_completed;
+    }
 };
 
 #endif

@@ -25,12 +25,17 @@ protected:
     }
 
 private:
-    virtual size_t ElementCount()
+    virtual size_t ElementCount() const
     {
         return 2;
     }
 
 public:
+    virtual std::string GetUniqId() const
+    {
+        return std::to_string(m_order);
+    }
+
     virtual std::string GetElement(int index);
     virtual void SetElement(int index, const std::string &value);
     virtual bool Clone(const ListElement *other);

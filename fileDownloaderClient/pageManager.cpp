@@ -73,7 +73,7 @@ void PageManager::DestroyAll()
     for (auto &page : m_objectMap)
     {
         if (dynamic_cast<CTabPage *>(page.second.get()))
-            dynamic_cast<CTabPage *>(page.second.get())->BeforeDestroy();
+            static_cast<CTabPage *>(page.second.get())->BeforeDestroy();
         //page.second->DestroyWindow();
         //page.second.reset();
     }

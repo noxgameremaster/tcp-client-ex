@@ -31,6 +31,7 @@ FilePacket::FilePacket()
     m_pathLength = 0;
     m_reportError = 0;
     m_downloadBytes = 0;
+    m_completed = false;
 }
 
 FilePacket::~FilePacket()

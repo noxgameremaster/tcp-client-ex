@@ -9,6 +9,7 @@ class NetClient;
 class IniFileMan;
 class NetPacket;
 class DownloadFileInfo;
+class CompletedFileInfo;
 
 class CoreUi : public NetService
 {
@@ -16,7 +17,6 @@ private:
     const std::string m_settingFileName;
     std::unique_ptr<NetClient> m_netMain;
     std::unique_ptr<IniFileMan> m_iniMan;
-    std::unique_ptr<IniFileMan> m_completedInfo;
     std::future<bool> m_netRunner;
 
 public:
@@ -54,6 +54,10 @@ public:
     DECLARE_SIGNAL(OnForwardMessage, std::string, uint32_t)
 public:
     DECLARE_SIGNAL(OnSendInfoToFilePanel, std::shared_ptr<DownloadFileInfo>)
+public:
+    DECLARE_SIGNAL(OnSendComplete, std::shared_ptr<DownloadFileInfo>)
+public:
+    DECLARE_SIGNAL(OnReleaseCompleteFile, std::shared_ptr<CompletedFileInfo>)
 };
 
 #endif

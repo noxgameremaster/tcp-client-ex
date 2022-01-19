@@ -18,7 +18,7 @@ public:
     ~TaskLargeFile() override;
 
 private:
-    void InnerSendFileInfo(const size_t amount);
+    void InnerSendFileInfo(const size_t amount, bool isLast = false);
     bool CreateDownloadFile(const std::string &url);
     void RequestChunkData();
     void ReportDownloadComplete();

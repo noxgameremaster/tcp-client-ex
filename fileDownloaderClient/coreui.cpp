@@ -5,6 +5,7 @@
 #include "filepacket.h"
 #include "netLogObject.h"
 #include "downloadFileInfo.h"
+#include "completedFileInfo.h"
 #include "eventworker.h"
 #include "iniFileMan.h"
 #include "stringHelper.h"
@@ -43,12 +44,6 @@ void CoreUi::OnInitialOnce()
 bool CoreUi::OnInitialize()
 {
     m_iniMan = std::make_unique<IniFileMan>();
-    m_completedInfo = std::make_unique<IniFileMan>();
-
-    m_completedInfo->SetItemValue("file1", "name", std::string("abc.txt"));
-
-    std::string dest;
-    m_completedInfo->GetItemValue("file1", "name", dest);
 
     return true;
 }
@@ -163,8 +158,21 @@ void CoreUi::SlotGetInnerPacket(std::shared_ptr<NetPacket> &&packet)
         auto filePacket = dynamic_cast<FilePacket *>(packet.get());
         std::shared_ptr<DownloadFileInfo> fileInfo(new DownloadFileInfo);
 
-        fileInfo->SetFileInfo(filePacket->GetFileName(), filePacket->GetFilePath(), filePacket->GetFilesize(), filePacket->GetDownloadBytes());
-        QUEUE_EMIT(m_OnSendInfoToFilePanel, std::move(fileInfo));
+        fileInfo->SetFileInfo(filePacket->GetFileName(), filePacket->GetFilePath(), 
+            filePacket->IsCompleted() ? filePacket->GetDownloadBytes() : filePacket->GetFilesize(), filePacket->GetDownloadBytes());
+        QUEUE_EMIT((filePacket->IsCompleted() ? m_OnSendComplete : m_OnSendInfoToFilePanel), std::move(fileInfo));
+
+        if (filePacket->IsCompleted())
+        {
+            std::shared_ptr<CompletedFileInfo> completeFile(new CompletedFileInfo);
+            std::string url = stringFormat("%s\\%s", filePacket->GetFilePath(), filePacket->GetFileName());
+
+            completeFile->SetCreatedDateTime();
+            completeFile->SetElement(CompletedFileInfo::PropertyInfo::FileUrl, url);
+            completeFile->SetElement(CompletedFileInfo::PropertyInfo::FileSize, std::to_string(filePacket->GetDownloadBytes()));
+            QUEUE_EMIT(m_OnReleaseCompleteFile, completeFile);
+        }
+
         return;
     }
     NET_PUSH_LOGMSG(stringFormat("get packet %s", packet->ClassName()));
