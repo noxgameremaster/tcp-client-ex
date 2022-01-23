@@ -35,7 +35,7 @@ public:
     const timeval *Interval();
     std::list<WinSocket *> NotifiedClientList();
 
-    bool DoSelect(std::function<void(WinSocket *)> &&f);
+    bool DoSelect(std::function<bool(WinSocket *)> &&f);
 };
 
 #endif

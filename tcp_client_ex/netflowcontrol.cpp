@@ -14,7 +14,7 @@
 using namespace _StringHelper;
 
 NetFlowControl::NetFlowControl()
-    : NetService()
+    : NetService(), m_lock(new std::mutex)
 {
     m_taskmanager = std::make_unique<TaskManager>(this);
 
@@ -25,27 +25,14 @@ NetFlowControl::NetFlowControl()
     m_debugCountEnqueueIn = 0;
     m_debugCountEnqueueOut = 0;
 
-    m_terminated = false;
+    m_ioThread = std::make_unique<EventThread>(this);
+    m_ioThread->SetLocker(m_lock);
+    m_ioThread->SetExecution([this]() { return this->CheckIOList(); });
+    m_ioThread->SetCondition([this]() { return this->CheckHasIO(); });
 }
 
 NetFlowControl::~NetFlowControl()
 { }
-
-void NetFlowControl::IOThreadWork()
-{
-    do
-    {
-        {
-            std::unique_lock<std::mutex> lock(m_lock);
-            m_condvar.wait(lock, [this]() { return this->m_terminated || this->m_ioCount > 0; });
-
-            if (m_terminated)
-                break;
-        }
-        CheckIOList();
-    }
-    while (true);
-}
 
 bool NetFlowControl::CheckHasIO() const
 {
@@ -55,7 +42,7 @@ bool NetFlowControl::CheckHasIO() const
 void NetFlowControl::DequeueIO(NetFlowControl::net_packet_list_type &ioList, std::function<bool(NetFlowControl::net_packet_type&&)> &&processor)
 {
     net_packet_type packet;
-    std::unique_lock<std::mutex> localLock(m_lock);
+    std::unique_lock<std::mutex> localLock(*m_lock);
 
     while (ioList.size())
     {
@@ -79,30 +66,13 @@ bool NetFlowControl::CheckIOList()
 
 bool NetFlowControl::OnInitialize()
 {
-    if (m_ioThread.joinable())
-    {
-        m_terminated = true;
-        m_condvar.notify_all();
-        m_ioThread.join();
-    }
-    m_ioThread = std::thread([this]() { this->IOThreadWork(); });
-    return true;
-}
-
-void NetFlowControl::OnDeinitialize()
-{ }
-
-bool NetFlowControl::OnStarted()
-{
+    m_ioThread->Startup();
     return m_taskmanager->Startup();
 }
 
-void NetFlowControl::OnStopped()
+void NetFlowControl::OnDeinitialize()
 {
-    m_terminated = true;
-    m_condvar.notify_all();
-    if (m_ioThread.joinable())
-        m_ioThread.join();
+    m_ioThread->Shutdown();
     m_taskmanager->Shutdown();
 }
 
@@ -159,12 +129,12 @@ void NetFlowControl::Enqueue(NetFlowControl::net_packet_type&& packet, IOType io
         }
 
         {
-            std::lock_guard<std::mutex> lock(m_lock);
+            std::lock_guard<std::mutex> lock(*m_lock);
 
             ioList->push_back(std::move(packet));
             ++m_ioCount;
         }
-        m_condvar.notify_one();
+        m_ioThread->Notify();
     }
     while (false);
 }

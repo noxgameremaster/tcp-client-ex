@@ -30,6 +30,7 @@ void DebugPage::OnInitialUpdate()
 {
     m_btnEcho.SetCallback([this]() { this->NotifyTesting("echo test"); });
     m_btnFileReq.SetCallback([this]() { this->NotifyTesting("file request"); });
+    m_btnReconn.SetCallback([this]() { this->NotifyTesting("server reconnect"); });
     m_btnInput.SetCallback([this]() { this->SendCommandLine(); });
 }
 
@@ -38,6 +39,11 @@ void DebugPage::InitCControls()
     m_btnEcho.ModifyWndName("Echo Testing");
     m_btnFileReq.ModifyWndName("File Request");
     m_btnInput.ModifyWndName("Send");
+    m_btnReconn.ModifyWndName("Reconnect");
+    m_textTitle.SetWindowTextA("Administrator Page");
+    m_textTitle.SetTextColor(RGB(255, 174, 201));
+    m_textInput.SetTextColor(RGB(109, 3, 124));
+    m_textInput.SetBackgroundColor(RGB(181, 230, 29));
 }
 
 void DebugPage::DoDataExchange(CDataExchange *pDX)
@@ -50,6 +56,8 @@ void DebugPage::DoDataExchange(CDataExchange *pDX)
     controlExchange(DEBUG_ECHO_BTN, m_btnEcho);
     controlExchange(DEBUG_FILE_REQ_BTN, m_btnFileReq);
     controlExchange(DEBUG_SEND_BTN, m_btnInput);
+    controlExchange(DEBUG_TITLE_TEXT, m_textTitle);
+    controlExchange(DEBUG_BTN_RECONNECT, m_btnReconn);
 
     InitCControls();
 }

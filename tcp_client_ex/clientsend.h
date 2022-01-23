@@ -16,14 +16,19 @@ private:
     std::unique_ptr<EventThread> m_sendThread;
 
 public:
-    ClientSend(std::shared_ptr<WinSocket> &sock, NetObject *parent = nullptr);
+    explicit ClientSend(NetObject *parent = nullptr);
     ~ClientSend() override;
 
 private:
     void BufferOnPushed();
     bool StreamSend();
-    bool OnInitialize() override;
-    void OnDeinitialize() override;
+    void OnInitialOnce() override;
+    bool OnInitialize() override
+    {
+        return true;
+    }
+    void OnDeinitialize() override
+    { }
     bool OnStarted() override;
     void OnStopped() override;
 
@@ -43,6 +48,7 @@ public:
 
         (obj->*memberF)(m_sendbuffer);
     }
+    void SetSendSocket(std::shared_ptr<WinSocket> &sock);
 
 private:
     std::shared_ptr<std::mutex> m_lock;

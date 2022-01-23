@@ -208,6 +208,10 @@ void CfileDownloaderClientDlg::DoTesting(const std::string &testName, const std:
     {
         m_coreUi->SendCommandToServer(context);
     }
+    else if (testName == "server reconnect")
+    {
+        m_coreUi->TestTryReconnect();
+    }
 }
 
 BEGIN_MESSAGE_MAP(CfileDownloaderClientDlg, CDialogEx)

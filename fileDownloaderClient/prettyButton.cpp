@@ -44,6 +44,7 @@ void PrettyButton::OnPaint()
 {
     //CMFCButton::OnPaint();
 
+    //CPaintDC dc(this);
     //CClientDC cdc(this);
     CBufferDC cdc(this);
 

@@ -8,7 +8,6 @@
 #include "eventworker.h"
 #include "stringHelper.h"
 #include "netLogObject.h"
-#include "frameRateThread.h"
 
 #include <iostream>
 #include <cassert>
@@ -20,6 +19,10 @@ NetClient::NetClient()
     : NetService()
 {
     m_flowcontrol = std::make_unique<NetFlowControl>();
+    m_receiver = std::make_unique<ClientReceive>(this);
+    m_sender = std::make_unique<ClientSend>(this);
+
+    m_connected = false;
 }
 
 NetClient::~NetClient()
@@ -27,7 +30,7 @@ NetClient::~NetClient()
 
 void NetClient::OnInitialOnce()
 {
-    FrameRateThread::FrameThreadObject().Startup();
+    m_sender->SharedSendBuffer(m_flowcontrol.get(), &NetFlowControl::SetSendBuffer);
 }
 
 void NetClient::OnError(const std::string &title, const std::string &errorMessage)
@@ -52,26 +55,17 @@ bool NetClient::StandBySocket()
 
 bool NetClient::ReceiverInit()
 {
-    decltype(m_receiver) receiver(new ClientReceive(m_netsocket, this));
+    ShareOption(m_receiver.get());
+    m_receiver->SetReceiveSocket(m_netsocket);
 
-    ShareOption(receiver.get());
-
-    if (!receiver->Startup())
-        return false;
-
-    m_receiver = std::move(receiver);
-    return true;
+    return m_receiver->Startup();
 }
 
 bool NetClient::SenderInit()
 {
-    decltype(m_sender) sender(new ClientSend(m_netsocket, this));
+    m_sender->SetSendSocket(m_netsocket);
 
-    if (!sender->Startup())
-        return false;
-
-    m_sender = std::move(sender);
-    return true;
+    return m_sender->Startup();
 }
 
 bool NetClient::OnInitialize()
@@ -84,12 +78,6 @@ bool NetClient::OnInitialize()
             throw false;
     };
 
-    //SetNetOption("125.180.25.219", 8282);
-    //SetNetOption("192.168.0.14", 8282);
-    //SetNetOption("125.180.25.219", 8282);
-    //SetNetOption("127.0.0.1", 8282);
-    //SetNetOption("61.36.35.46", 8282);
-
     try
     {
         checkException(StandBySocket());
@@ -101,11 +89,6 @@ bool NetClient::OnInitialize()
     {
         return fail;
     }
-    catch (...)
-    {
-        assert(false);
-    }
-    m_sender->SharedSendBuffer(m_flowcontrol.get(), &NetFlowControl::SetSendBuffer);
 
     return true;
 }
@@ -131,7 +114,7 @@ void NetClient::OnStopped()
     if (m_netStatus)
         m_netStatus->Shutdown();
 
-    FrameRateThread::FrameThreadObject().Shutdown();
+    m_netsocket.reset();
 }
 
 bool NetClient::NetDebugInit()
@@ -209,8 +192,9 @@ void NetClient::SlotReportPing(uint32_t recvCount, uint32_t sendCount)
     std::string report = stringFormat("server not response (receive: %d, send: %d)", recvCount, sendCount);
 
     NET_PUSH_LOGMSG(report, PrintUtil::ConsoleColor::COLOR_GREY);
-
-    //EventWorker::Instance().AppendTask(&m_OnDeadlockTest);  //will cause deadlock
     if (m_flowcontrol)
         m_flowcontrol->DebugReportInputOutputCounting();
+
+    if (m_receiver)
+        m_receiver->DebugShowReceive();
 }

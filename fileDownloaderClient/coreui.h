@@ -49,6 +49,9 @@ public:
 
 private:
     void SlotGetInnerPacket(std::shared_ptr<NetPacket> &&packet);
+    
+public:
+    void TestTryReconnect();
 
 public:
     DECLARE_SIGNAL(OnForwardMessage, std::string, uint32_t)

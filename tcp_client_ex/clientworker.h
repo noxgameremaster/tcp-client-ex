@@ -6,13 +6,13 @@
 #include <vector>
 
 class NetPacket;
-class LoopThread;
+class EventThread;
 class PacketBufferFix;
 
 class ClientWorker : public NetService
 {
 private:
-    std::unique_ptr<LoopThread> m_workThread;
+    std::unique_ptr<EventThread> m_workThread;
     std::shared_ptr<PacketBufferFix> m_packetBuffer;
 
 public:
@@ -29,6 +29,7 @@ public:
 
 private:
     bool InitPacketForwarding();
+    void OnInitialOnce() override;
     bool OnInitialize() override;
     void OnDeinitialize() override;
     bool OnStarted() override;
@@ -44,6 +45,9 @@ private:
 
 private:
     DECLARE_SIGNAL(OnReleasePacket, std::unique_ptr<NetPacket>&&)
+
+private:
+    std::shared_ptr<std::mutex> m_lock;
 };
 
 #endif

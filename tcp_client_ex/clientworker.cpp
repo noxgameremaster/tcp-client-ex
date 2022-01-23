@@ -2,7 +2,6 @@
 #include "clientworker.h"
 #include "netclient.h"
 #include "iobuffer.h"
-//#include "packetBuffer.h"
 #include "packetBufferFix.h"
 #include "chatPacket.h"
 #include "echoPacket.h"
@@ -14,14 +13,15 @@
 #include "reportErrorPacket.h"
 #include "filepacketupload.h"
 #include "packetOrderTable.h"
-#include "loopThread.h"
+#include "eventThread.h"
 
 ClientWorker::ClientWorker(NetObject *parent)
-    : NetService(parent)
+    : NetService(parent), m_lock(new std::mutex)
 {
-    m_workThread = std::make_unique<LoopThread>(this);
-    m_workThread->SetTaskFunction([this]() { return this->FetchFromBuffer(); });
-    m_workThread->SetWaitCondition([this]() { return this->IsContained(); });
+    m_workThread = std::make_unique<EventThread>(this);
+    m_workThread->SetExecution([this]() { return this->FetchFromBuffer(); });
+    m_workThread->SetCondition([this]() { return this->IsContained(); });
+    m_workThread->SetLocker(m_lock);
 
     m_packetBuffer = std::make_unique<PacketBufferFix>();
 }
@@ -31,9 +31,6 @@ ClientWorker::~ClientWorker()
 
 bool ClientWorker::IsContained() const
 {
-    if (!m_packetBuffer)
-        return false;
-
     return !m_packetBuffer->IsEmpty();
 }
 
@@ -73,14 +70,14 @@ bool ClientWorker::InitPacketForwarding()
     return m_OnReleasePacket.Connection(&NetClient::SlotReceivePacket, serv);
 }
 
+void ClientWorker::OnInitialOnce()
+{
+    InitPacketForwarding();
+}
+
 bool ClientWorker::OnInitialize()
 {
-    if (!m_packetBuffer)
-        return false;
-    if (!InitPacketForwarding())
-        return false;
-
-    return true;
+    return m_packetBuffer ? true : false;
 }
 
 void ClientWorker::OnDeinitialize()

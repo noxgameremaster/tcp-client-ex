@@ -2,12 +2,16 @@
 #include "taskthread.h"
 #include "taskmanager.h"
 #include "netpacket.h"
-#include "loopThread.h"
+#include "eventThread.h"
 
 TaskThread::TaskThread(NetObject *parent)
-    : AbstractTask(parent)
+    : AbstractTask(parent), m_lock(new std::mutex)
 {
-    m_terminated = false;
+    m_taskThread = std::make_unique<EventThread>(this);
+
+    m_taskThread->SetLocker(m_lock);
+    m_taskThread->SetCondition([this]() { return this->IsMessageList(); });
+    m_taskThread->SetExecution([this]() { this->Dequeue(); return true; });
 }
 
 TaskThread::~TaskThread()
@@ -42,20 +46,20 @@ void TaskThread::Dequeue()
 {
     std::unique_ptr<NetPacket> msg;
 
-    for (;;)
+    do
     {
         {
-            std::unique_lock<std::mutex> ulock(m_lock);
-            m_condvar.wait(ulock, [this]() { return this->m_terminated || this->IsMessageList(); });
-
-            if (m_terminated)
+            std::unique_lock<std::mutex> lock(*m_lock);
+            if (m_msglist.empty())
                 break;
 
             msg = std::move(m_msglist.front());
             m_msglist.pop_front();
         }
+
         ExecuteTask(std::move(msg));
     }
+    while (true);
 }
 
 void TaskThread::DoTask(std::unique_ptr<NetPacket> &&)
@@ -64,29 +68,21 @@ void TaskThread::DoTask(std::unique_ptr<NetPacket> &&)
 void TaskThread::PushBack(std::unique_ptr<NetPacket> &&msg)
 {
     {
-        std::lock_guard<std::mutex> lock(m_lock);
+        std::lock_guard<std::mutex> lock(*m_lock);
 
         m_msglist.push_back(std::move(msg));
     }
-    //m_taskThread->Notify();
-    m_condvar.notify_one();
+    m_taskThread->Notify();
 }
 
 void TaskThread::StopThread()
 {
-    m_terminated = true;
-    if (m_taskThread.joinable())
-    {
-        m_condvar.notify_one();
-        m_taskThread.join();
-    }
-    //m_taskThread->Shutdown();
+    m_taskThread->Shutdown();
 }
 
 void TaskThread::RunThread()
 {
-    //m_taskThread->Startup();
-    m_taskThread = std::thread([this]() { this->Dequeue(); });
+    m_taskThread->Startup();
 }
 
 

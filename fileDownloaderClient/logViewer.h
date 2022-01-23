@@ -34,7 +34,9 @@ private:
     CRect m_updateLocation;
 
     std::atomic<int> m_addMsg;
-    std::unique_ptr<LoopThread> m_updateThread;
+    std::thread m_updateThread;
+    std::condition_variable m_condvar;
+    bool m_endThread;
     bool m_goToEnd;
 
 public:
@@ -48,7 +50,7 @@ private:
 public:
     void ConditionalUpdateViewer(bool forceUpdate = false);
     bool IsUpdateItem() const;
-    bool UpdateThreadTask();
+    void UpdateThreadTask();
 
 private:
     std::string CurrentLocalTime();

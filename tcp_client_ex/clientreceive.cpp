@@ -14,25 +14,29 @@
 
 using namespace _StringHelper;
 
-ClientReceive::ClientReceive(std::shared_ptr<WinSocket> &sock, NetObject *parent)
+ClientReceive::ClientReceive(NetObject *parent)
     : NetService(parent)
 {
     static_assert(read_receive_buffer_count >= 4, "a receive count must be equal or greator than 4");
 
-    m_netsocket = sock;
-    m_readFds = std::make_unique<SocketSet>();
-    m_readFds->SetTimeInterval(1, 0);
-
     m_packetBuffer = std::make_unique<PacketBufferFix>();
     m_receiveThread = std::make_unique<LoopThread>(this);
-
-    m_receiveThread->SetTaskFunction([this]() { return this->DoTask(); });
-
-    m_stopped = false;  //fixme
+    m_readFds = std::make_unique<SocketSet>();
+    m_readFds->SetTimeInterval(1, 0);
 }
 
 ClientReceive::~ClientReceive()
-{ }
+{
+    m_networker.reset();
+}
+
+void ClientReceive::OnInitialOnce()
+{
+    m_networker = std::make_unique<ClientWorker>(GetParent());
+    m_networker->SetReceiveBuffer(m_packetBuffer);
+
+    m_OnReceivePushStream.Connection(&ClientWorker::BufferOnPushed, m_networker.get());
+}
 
 bool ClientReceive::NotifyErrorToOwner()
 {
@@ -67,7 +71,7 @@ void ClientReceive::OnDisconnected(WinSocket *sock)
     m_OnDisconnect.Emit(sock->GetFd());
 }
 
-void ClientReceive::ReceiveFrom(WinSocket *sock)
+bool ClientReceive::ReceiveFrom(WinSocket *sock)
 {
     static std::vector<uint8_t> receiveVector;
 
@@ -83,16 +87,16 @@ void ClientReceive::ReceiveFrom(WinSocket *sock)
             QUEUE_EMIT(m_OnReceivePushStream);
             break;
         }
-        m_stopped = true;
+        return false;
     }
     while (false);
+
+    return true;
 }
 
 bool ClientReceive::DoTask()
 {
-    m_readFds->DoSelect([this](WinSocket *s) { this->ReceiveFrom(s); });
-
-    return !m_stopped;
+    return m_readFds->DoSelect([this](WinSocket *s) { return this->ReceiveFrom(s); });
 }
 
 bool ClientReceive::OnInitialize()
@@ -100,29 +104,21 @@ bool ClientReceive::OnInitialize()
     if (!m_netsocket)
         return false;
 
-    m_readFds->Append(m_netsocket.get());
-
-    m_networker = std::make_unique<ClientWorker>(GetParent());
-    m_networker->SetReceiveBuffer(m_packetBuffer);
-    m_networker->Startup();
-
-    m_OnReceivePushStream.Connection(&ClientWorker::BufferOnPushed, m_networker.get());
-
-    return true;
+    return m_networker->Startup();
 }
 
 void ClientReceive::OnDeinitialize()
 {
-
     if (m_networker)
-    {
         m_networker->Shutdown();
-        m_networker.reset();
-    }
+
+    m_readFds->Clear();
 }
 
 bool ClientReceive::OnStarted()
 {
+    m_receiveThread->SetTaskFunction([this]() { return this->DoTask(); });
+
     return m_receiveThread->Startup();
 }
 
@@ -131,5 +127,15 @@ void ClientReceive::OnStopped()
     m_receiveThread->Shutdown();
 }
 
+void ClientReceive::SetReceiveSocket(std::shared_ptr<WinSocket> &sock)
+{
+    m_netsocket = sock;
+    m_readFds->Append(m_netsocket.get());
+}
 
+void ClientReceive::DebugShowReceive()
+{
+    std::string debugmsg = stringFormat("receive buffer: %d ", m_packetBuffer->DebugPacketBufferSize());
 
+    NET_PUSH_LOGMSG(debugmsg);
+}

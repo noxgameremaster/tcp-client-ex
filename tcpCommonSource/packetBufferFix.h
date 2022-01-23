@@ -98,6 +98,10 @@ public:
     bool IsEmpty() const;
     bool PopPacket(std::unique_ptr<NetPacket> &dest);
 
+
+
+    size_t DebugPacketBufferSize() const;
+
 private:
     mutable std::mutex m_lock;
 };

@@ -20,6 +20,7 @@ private:
     std::shared_ptr<NetFlowControl> m_flowcontrol;
 
     std::unique_ptr<NetStatus> m_netStatus;
+    bool m_connected;
 
 public:
     explicit NetClient();

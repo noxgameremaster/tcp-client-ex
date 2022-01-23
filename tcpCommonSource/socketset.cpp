@@ -124,7 +124,7 @@ std::list<WinSocket *> SocketSet::NotifiedClientList()
     return clients;
 }
 
-bool SocketSet::DoSelect(std::function<void(WinSocket *)> &&f)
+bool SocketSet::DoSelect(std::function<bool(WinSocket *)> &&f)
 {
     if (m_pimpl->m_socketmap.empty())
         return false;
@@ -135,12 +135,15 @@ bool SocketSet::DoSelect(std::function<void(WinSocket *)> &&f)
     if (SOCKET_ERROR == result)
         return false;
     if (!result)
-        return false;   //timeout
+        return true;   //timeout
 
     auto clist = NotifiedClientList();
 
     for (auto client : clist)
-        f(client);
+    {
+        if (!f(client))
+            return false;
+    }
 
     return true;
 }

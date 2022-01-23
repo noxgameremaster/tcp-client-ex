@@ -44,7 +44,7 @@ bool LargeFileChunkPacket::ReadStreamFromServer()
         {
             std::string errmsg = stringFormat("chunk buffer to small! receive: %d bytes", m_streamLength);
 
-            NetLogObject::LogObject().AppendLogMessage(errmsg);
+            NET_PUSH_LOGMSG(errmsg);
             return false;
         }
         m_fileStreamV.resize(m_streamLength);

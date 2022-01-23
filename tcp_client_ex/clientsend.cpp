@@ -5,17 +5,12 @@
 #include "eventThread.h"
 #include "winsocket.h"
 
-ClientSend::ClientSend(std::shared_ptr<WinSocket> &sock, NetObject *parent)
-    : NetService(parent)
+ClientSend::ClientSend(NetObject *parent)
+    : NetService(parent), m_lock(new std::mutex)
 {
-    m_lock = std::make_shared<std::mutex>();
-    m_netsocket = sock;
-    
-    m_sendThread = std::make_unique<EventThread>(this);
-
-    m_sendThread->SetCondition([this]() { return !this->m_sendbuffer->IsEmpty(); });
-    m_sendThread->SetExecution([this]() { return this->StreamSend(); });
-    m_sendThread->SetLocker(m_lock);
+    m_sendbuffer = std::make_shared<IOBuffer>();
+    m_sendbuffer->SetLargeBufferScale(IOBuffer::receive_buffer_max_size);
+    m_sendbuffer->SetTrigger(this, [this]() { this->BufferOnPushed(); });
 }
 
 ClientSend::~ClientSend()
@@ -38,21 +33,17 @@ bool ClientSend::StreamSend()
     return true;
 }
 
-bool ClientSend::OnInitialize()
+void ClientSend::OnInitialOnce()
 {
-    m_sendbuffer = std::make_shared<IOBuffer>();
-    m_sendbuffer->SetLargeBufferScale(IOBuffer::receive_buffer_max_size);
-    m_sendbuffer->SetTrigger(this, [this]() { this->BufferOnPushed(); });
-
-    return true;
+    m_sendThread = std::make_unique<EventThread>(this);
+    m_sendThread->SetCondition([this]() { return !this->m_sendbuffer->IsEmpty(); });
+    m_sendThread->SetExecution([this]() { return this->StreamSend(); });
+    m_sendThread->SetLocker(m_lock);
 }
-
-void ClientSend::OnDeinitialize()
-{ }
 
 bool ClientSend::OnStarted()
 {
-    return m_sendThread->Startup();
+    return m_netsocket ? m_sendThread->Startup() : false;
 }
 
 void ClientSend::OnStopped()
@@ -60,3 +51,7 @@ void ClientSend::OnStopped()
     m_sendThread->Shutdown();
 }
 
+void ClientSend::SetSendSocket(std::shared_ptr<WinSocket> &sock)
+{
+    m_netsocket = sock;
+}

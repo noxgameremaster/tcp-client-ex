@@ -323,3 +323,8 @@ bool PacketBufferFix::PopPacket(std::unique_ptr<NetPacket> &dest)
     return false;
 }
 
+size_t PacketBufferFix::DebugPacketBufferSize() const
+{
+    return m_tempBuffer->Size();
+}
+

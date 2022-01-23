@@ -22,17 +22,16 @@ private:
     std::unique_ptr<ClientWorker> m_networker;
     std::unique_ptr<LoopThread> m_receiveThread;
 
-    bool m_stopped;
-
 public:
-    explicit ClientReceive(std::shared_ptr<WinSocket> &sock, NetObject *parent = nullptr);
+    explicit ClientReceive(NetObject *parent = nullptr);
     ~ClientReceive() override;
 
 private:
+    void OnInitialOnce() override;
     bool NotifyErrorToOwner();
     bool ErrorBufferIsFull();
     void OnDisconnected(WinSocket *sock);
-    void ReceiveFrom(WinSocket *sock);
+    bool ReceiveFrom(WinSocket *sock);
     bool DoTask();
 
     bool OnInitialize() override;
@@ -44,6 +43,11 @@ private:
     {
         return "ClientReceive";
     }
+
+public:
+    void SetReceiveSocket(std::shared_ptr<WinSocket> &sock);
+
+    void DebugShowReceive();
 
 private:
     DECLARE_SIGNAL(OnReceivePushStream)

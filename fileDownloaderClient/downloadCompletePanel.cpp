@@ -3,6 +3,7 @@
 #include "downloadCompletePanel.h"
 #include "completedFileInfo.h"
 #include "iniFileMan.h"
+#include "stringhelper.h"
 #include "resource.h"
 
 static constexpr auto complete_ini_filename = "completeLog.txt";
@@ -12,6 +13,8 @@ static constexpr auto section_file_key = "DownloadFile";
 static constexpr auto file_key_url_key = "fileUrl";
 static constexpr auto file_key_size_key = "fileSize";
 static constexpr auto file_key_datetime_key = "dateTime";
+
+using namespace _StringHelper;
 
 DownloadCompletePanel::DownloadCompletePanel(UINT nIDTemplate, CWnd *parent)
     : CTabPage(nIDTemplate, parent)
@@ -58,6 +61,8 @@ void DownloadCompletePanel::InitCControls()
 {
     m_textTitle.SetWindowTextA("Downloaded Files");
     m_textTitle.SetTextColor(RGB(242, 251, 132));
+    m_textDesc.SetWindowTextA("-");
+    m_textDesc.SetTextColor(RGB(181, 230, 29));
 }
 
 void DownloadCompletePanel::InitialLoadIni()
@@ -71,6 +76,14 @@ void DownloadCompletePanel::InitialLoadIni()
     {
         UpdateReportView();
     }
+}
+
+void DownloadCompletePanel::UpdateItemCountText()
+{
+    int completeCount = 0;
+
+    if (m_completeIni->GetItemValue(section_key_complete_info, key_complete_count, completeCount))
+        m_textDesc.SetWindowTextA(toArray(stringFormat("found %d items", completeCount)));
 }
 
 void DownloadCompletePanel::OnInitialUpdate()
@@ -99,6 +112,8 @@ void DownloadCompletePanel::OnInitialUpdate()
 
 void DownloadCompletePanel::OnEnterScreen()
 {
+    std::unique_ptr<DownloadCompletePanel, std::function<void(DownloadCompletePanel*)>> sync(this, [this](DownloadCompletePanel *panel) { panel->UpdateItemCountText(); });
+
     if (m_completeTempList.empty())
         return;
 
@@ -140,5 +155,6 @@ void DownloadCompletePanel::DoDataExchange(CDataExchange *pDX)
 
     controlExchange(COMPLETE_TITLE, m_textTitle);
     controlExchange(COMPLETE_LIST, m_completeList);
+    controlExchange(COMPLETE_DESC, m_textDesc);
     InitCControls();
 }

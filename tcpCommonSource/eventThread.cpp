@@ -21,7 +21,8 @@ bool EventThread::OnInitialize()
     if (m_lock.expired())
         return false;
 
-    m_asyncTask = std::async(std::launch::async, &EventThread::Running, this);
+    m_halted = std::make_shared<std::atomic<bool>>(false);
+    m_asyncTask = std::async(std::launch::async, [this]() { return this->Running(this->m_halted); });
     return true;
 }
 
@@ -34,7 +35,9 @@ void EventThread::OnDeinitialize()
 {
     if (m_asyncTask.valid())
     {
-        m_terminated = true;
+        *m_halted = true;
+        m_halted.reset();
+
         m_condvar.notify_all();
         m_asyncTask.get();
     }
@@ -43,7 +46,7 @@ void EventThread::OnDeinitialize()
 void EventThread::OnStopped()
 { }
 
-bool EventThread::Running()
+bool EventThread::Running(std::shared_ptr<std::atomic<bool>> halted)
 {
     do
     {
@@ -53,8 +56,8 @@ bool EventThread::Running()
             {
                 std::unique_lock<std::mutex> lock(*getlock);
 
-                m_condvar.wait(lock, [this]() { return m_terminated || m_condition(); });
-                if (m_terminated)
+                m_condvar.wait(lock, [this, halted]() { return (*halted == true) || m_condition(); });
+                if (*halted == true)
                     break;
             }
         }

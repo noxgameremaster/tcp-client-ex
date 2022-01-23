@@ -15,6 +15,7 @@ class DownloadCompletePanel : public CTabPage
 private:
     ListViewer m_completeList;
     TextLabel m_textTitle;
+    TextLabel m_textDesc;
     std::unique_ptr<IniFileMan> m_completeIni;
     std::list<std::shared_ptr<ListElement>> m_completeTempList;
 
@@ -27,6 +28,7 @@ private:
     void InitialLoadIni();
     void InitCControls();
     void OnInitialUpdate() override;
+    void UpdateItemCountText();
     void OnEnterScreen() override;
     void BeforeDestroy() override;
 

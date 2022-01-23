@@ -6,7 +6,7 @@ NetService::NetService(NetObject *parent)
     : NetObject(parent)
 {
     m_turnOn = false;
-    m_onceInvokable = [this]() { this->m_onceInvokable = { }; this->OnInitialOnce(); };
+    m_onceInvokable = [this]() { this->m_onceInvokable = []() { }; this->OnInitialOnce(); };
 }
 
 NetService::~NetService()

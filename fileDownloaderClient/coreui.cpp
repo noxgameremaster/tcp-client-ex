@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "coreui.h"
 #include "netclient.h"
+#include "netPreprocess.h"
 #include "filepacket.h"
 #include "netLogObject.h"
 #include "downloadFileInfo.h"
@@ -22,8 +23,7 @@ CoreUi::~CoreUi()
 
 void CoreUi::OnInitialOnce()
 {
-    EventWorker::Instance();
-    NetLogObject::LogObject().Startup();
+    NetPreprocess::Instance().Startup();
     NetLogObject::LogObject().OnReleaseLogMessage().Connection(&CoreUi::ReceiveLogMessage, this);
 
     m_netMain = std::make_unique<NetClient>();
@@ -145,8 +145,7 @@ void CoreUi::SendCommandToServer(const std::string &cmd)
 
 void CoreUi::StopCoreService()
 {
-    NetLogObject::LogObject().Shutdown();
-    //EventWorker::Instance().Stop();
+    NetPreprocess::Instance().Shutdown();
 }
 
 void CoreUi::SlotGetInnerPacket(std::shared_ptr<NetPacket> &&packet)
@@ -165,7 +164,7 @@ void CoreUi::SlotGetInnerPacket(std::shared_ptr<NetPacket> &&packet)
         if (filePacket->IsCompleted())
         {
             std::shared_ptr<CompletedFileInfo> completeFile(new CompletedFileInfo);
-            std::string url = stringFormat("%s\\%s", filePacket->GetFilePath(), filePacket->GetFileName());
+            std::string url = stringFormat("%s/%s", filePacket->GetFilePath(), filePacket->GetFileName());
 
             completeFile->SetCreatedDateTime();
             completeFile->SetElement(CompletedFileInfo::PropertyInfo::FileUrl, url);
@@ -176,5 +175,11 @@ void CoreUi::SlotGetInnerPacket(std::shared_ptr<NetPacket> &&packet)
         return;
     }
     NET_PUSH_LOGMSG(stringFormat("get packet %s", packet->ClassName()));
+}
+
+void CoreUi::TestTryReconnect()     //!----RemoveMe--- testonly--!//
+{
+    m_netMain->Shutdown();
+    m_netMain->Startup();
 }
 

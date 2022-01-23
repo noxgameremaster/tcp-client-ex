@@ -23,10 +23,7 @@ private:
     net_packet_list_type m_inpacketList;
     net_packet_list_type m_outpacketList;
     net_packet_list_type m_innerPacketList;
-    std::thread m_ioThread;
-    //std::unique_ptr<EventThread> m_ioThread;
-    std::condition_variable m_condvar;
-    bool m_terminated;
+    std::unique_ptr<EventThread> m_ioThread;
 
     int m_debugCountIn;
     int m_debugCountOut;
@@ -41,17 +38,14 @@ public:
     ~NetFlowControl();
 
 private:
-    void IOThreadWork();
     bool CheckHasIO() const;
     void DequeueIO(net_packet_list_type &ioList, std::function<bool(net_packet_type&&)> &&processor);
     bool CheckIOList();
     virtual bool OnInitialize();
     virtual void OnDeinitialize();
-    virtual bool OnStarted();
-    virtual void OnStopped();
 
 public:
-    void SetSendBuffer(std::shared_ptr<IOBuffer> sendbuffer)
+    void SetSendBuffer(std::weak_ptr<IOBuffer> sendbuffer)
     {
         m_sendbuffer = sendbuffer;
     }
@@ -87,7 +81,7 @@ public:
     void DebugReportInputOutputCounting();
 
 private:
-    mutable std::mutex m_lock;
+    std::shared_ptr<std::mutex> m_lock;
 };
 
 #endif

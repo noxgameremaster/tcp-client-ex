@@ -24,9 +24,7 @@ public:
 private:
     bool CheckNetStatus();
     bool OnInitialize() override;
-    bool OnStarted() override;
     void OnDeinitialize() override;
-    void OnStopped() override;
 
 public:
     void SlotOnReceive(uint32_t recvCount);

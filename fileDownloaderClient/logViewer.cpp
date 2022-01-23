@@ -3,7 +3,6 @@
 #include "logViewer.h"
 #include "cbufferdc.h"
 #include "resource.h"
-#include "loopThread.h"
 #include "stringHelper.h"
 
 #include <chrono>
@@ -56,7 +55,7 @@ LogViewer::LogViewer()
     m_scrollMap.emplace("pagedown", [this]() { return this->PageDownViewer(); });
     m_scrollMap.emplace("end", [this]() { return this->MoveToPageEnd(); });
     m_addMsg = 0;
-    m_updateThread = std::make_unique<LoopThread>();
+    m_endThread = false;
     m_goToEnd = true;
 
     m_uiUpdateData.reserve(max_appear_slot_count);
@@ -142,17 +141,27 @@ bool LogViewer::IsUpdateItem() const
     return m_addMsg > 0;
 }
 
-bool LogViewer::UpdateThreadTask()
+void LogViewer::UpdateThreadTask()
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    do
+    {
+        {
+            std::unique_lock<std::mutex> lock(m_lock);
 
-    m_addMsg = 0;
-    if (m_goToEnd)
-        ViewerScrolling("end");
-    else
-        ConditionalUpdateViewer();
+            m_condvar.wait(lock, [this]() { return m_endThread || this->IsUpdateItem(); });
 
-    return true;
+            if (m_endThread)
+                break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+        m_addMsg = 0;
+        if (m_goToEnd)
+            ViewerScrolling("end");
+        else
+            ConditionalUpdateViewer();
+    }
+    while (true);
 }
 
 std::string LogViewer::CurrentLocalTime()
@@ -190,7 +199,7 @@ void LogViewer::CreateNewLog(const std::string &message, uint32_t msgColor)
     }
 
     ++m_addMsg;
-    m_updateThread->Notify();
+    m_condvar.notify_one();
 }
 
 void LogViewer::CreateColumn(const std::string &columnName, const int &width)
@@ -303,9 +312,11 @@ void LogViewer::SetFocusToEnd()
 
 void LogViewer::StopLogViewThread()
 {
-    if (m_updateThread)
+    if (m_updateThread.joinable())
     {
-        m_updateThread->Shutdown();
+        m_endThread = true;
+        m_condvar.notify_one();
+        m_updateThread.join();
     }
 }
 
@@ -363,9 +374,8 @@ void LogViewer::PreSubclassWindow()
 
     GetClientRect(&m_updateLocation);
     m_updateLocation.top = headerRect.bottom;
-    m_updateThread->SetTaskFunction([this]() { return this->UpdateThreadTask(); });
-    m_updateThread->SetWaitCondition([this]() { return this->IsUpdateItem(); });
-    m_updateThread->Startup();
+
+    m_updateThread = std::thread([this]() { this->UpdateThreadTask(); });
 
     int count = max_appear_slot_count;
 

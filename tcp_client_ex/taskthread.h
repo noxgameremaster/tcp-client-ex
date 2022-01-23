@@ -7,16 +7,13 @@
 #include <mutex>
 
 class NetPacket;
-//class LoopThread;
+class EventThread;
 
 class TaskThread : public AbstractTask
 {
 private:
     std::list<std::unique_ptr<NetPacket>> m_msglist;
-    //std::unique_ptr<LoopThread> m_taskThread;
-    std::thread m_taskThread;
-    bool m_terminated;
-    std::condition_variable m_condvar;
+    std::unique_ptr<EventThread> m_taskThread;
 
 public:
     TaskThread(NetObject *parent);
@@ -51,7 +48,7 @@ public:
     }
 
 private:
-    std::mutex m_lock;
+    std::shared_ptr<std::mutex> m_lock;
 };
 
 #endif

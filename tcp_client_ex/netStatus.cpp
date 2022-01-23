@@ -58,11 +58,6 @@ bool NetStatus::OnInitialize()
     m_statusThread = std::make_unique<LoopThread>(this);
     m_statusThread->SetTaskFunction([this]() { return this->CheckNetStatus(); });
 
-    return true;
-}
-
-bool NetStatus::OnStarted()
-{
     return m_statusThread->Startup();
 }
 
@@ -71,9 +66,6 @@ void NetStatus::OnDeinitialize()
     m_statusThread->Shutdown();
     m_statusThread.reset();
 }
-
-void NetStatus::OnStopped()
-{ }
 
 void NetStatus::SlotOnReceive(uint32_t recvCount)
 {

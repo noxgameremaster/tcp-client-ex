@@ -4,6 +4,7 @@
 
 #include "netservice.h"
 #include <future>
+#include <atomic>
 
 class EventThread : public NetService
 {
@@ -12,7 +13,7 @@ private:
     std::function<bool()> m_condition;
     std::function<bool()> m_execution;
     std::future<bool> m_asyncTask;
-    bool m_terminated;
+    std::shared_ptr<std::atomic<bool>> m_halted;
 
 public:
     explicit EventThread(NetObject *parent = nullptr);
@@ -25,7 +26,7 @@ private:
     void OnDeinitialize() override;
     void OnStopped() override;
 
-    bool Running();
+    bool Running(std::shared_ptr<std::atomic<bool>> halted);
 
 public:
     void SetCondition(std::function<bool()> &&condition);
