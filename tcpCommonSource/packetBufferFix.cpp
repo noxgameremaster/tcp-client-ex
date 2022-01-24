@@ -287,32 +287,24 @@ void PacketBufferFix::ReadStream()
 
 bool PacketBufferFix::PushBack(WinSocket *sock, const std::vector<uint8_t> &stream)
 {
-    {
-        std::unique_lock<std::mutex> lock(m_lock);
+    if (!AppendSenderInfo(sock))
+        return false;
 
-        if (!AppendSenderInfo(sock))
-            return false;
+    if (!CheckCapacity(stream.size()))
+        return false;
 
-        if (!CheckCapacity(stream.size()))
-            return false;
-
-        std::copy(stream.cbegin(), stream.cend(), m_buffer.begin() + m_writeSeekpoint);
-        m_writeSeekpoint += stream.size();
-    }
+    std::copy(stream.cbegin(), stream.cend(), m_buffer.begin() + m_writeSeekpoint);
+    m_writeSeekpoint += stream.size();
     return true;
 }
 
 bool PacketBufferFix::IsEmpty() const
 {
-    std::unique_lock<std::mutex> lock(m_lock);
-
     return m_packetList.empty() && m_writeSeekpoint == 0;
 }
 
 bool PacketBufferFix::PopPacket(std::unique_ptr<NetPacket> &dest)
 {
-    std::unique_lock<std::mutex> lock(m_lock);
-
     ReadStream();
     if (m_packetList.size())
     {

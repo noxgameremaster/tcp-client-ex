@@ -24,6 +24,8 @@ ClientWorker::ClientWorker(NetObject *parent)
     m_workThread->SetLocker(m_lock);
 
     m_packetBuffer = std::make_unique<PacketBufferFix>();
+    m_packetBuffer->SetInstanceFunction([](uint8_t packetId)
+    { return ClientWorker::DistinguishPacket(packetId); });
 }
 
 ClientWorker::~ClientWorker()
@@ -36,24 +38,30 @@ bool ClientWorker::IsContained() const
 
 bool ClientWorker::FetchFromBuffer()
 {
-    std::unique_ptr<NetPacket> pack;
+    std::unique_ptr<NetPacket> pack = nullptr;
 
-    if (m_packetBuffer->PopPacket(pack))
-        m_OnReleasePacket.Emit(std::move(pack));
+    {
+        std::unique_lock<std::mutex> lock(*m_lock);
+        m_packetBuffer->PopPacket(pack);
+    }
 
+    if (!pack)
+        return true;
+
+    m_OnReleasePacket.Emit(std::move(pack));
     return true;
 }
 
-void ClientWorker::BufferOnPushed()
+bool ClientWorker::PushWorkBuffer(WinSocket *sock, const std::vector<uint8_t> &stream)
 {
-    m_workThread->Notify();
-}
+    {
+        std::unique_lock<std::mutex> lock(*m_lock);
 
-void ClientWorker::SetReceiveBuffer(std::shared_ptr<PacketBufferFix> packetBuffer)
-{
-    m_packetBuffer = packetBuffer;
-    m_packetBuffer->SetInstanceFunction([](uint8_t packetId) 
-    { return ClientWorker::DistinguishPacket(packetId); });
+        if (!m_packetBuffer->PushBack(sock, stream))
+            return false;
+    }
+    //m_workThread->Notify();
+    return true;
 }
 
 bool ClientWorker::InitPacketForwarding()
@@ -113,5 +121,15 @@ std::unique_ptr<NetPacket> ClientWorker::DistinguishPacket(uint8_t packetId)
     case PacketOrderTable<ReportErrorPacket>::GetId(): return std::make_unique<ReportErrorPacket>();
     default: return nullptr;
     }
+}
+
+void ClientWorker::SlotWorkerWakeup()
+{
+    m_workThread->Notify();
+}
+
+size_t ClientWorker::GetWorkBufferSize() const
+{
+    return m_packetBuffer->DebugPacketBufferSize();
 }
 

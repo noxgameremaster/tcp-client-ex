@@ -95,7 +95,7 @@ END_MESSAGE_MAP()
 
 CfileDownloaderClientDlg::CfileDownloaderClientDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_FILEDOWNLOADERCLIENT_DIALOG, pParent),
-	m_bkBrush(new CBrush(RGB(63, 72, 204)))
+	m_bkBrush(new CBrush(RGB(16, 64, 128)))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_wndcc = std::make_unique<MainWndCC>(this);

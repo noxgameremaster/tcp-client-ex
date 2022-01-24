@@ -2,7 +2,6 @@
 #include "clientreceive.h"
 #include "netflowcontrol.h"
 #include "clientworker.h"
-#include "packetBufferFix.h"
 #include "socketset.h"
 #include "winsocket.h"
 #include "netLogObject.h"
@@ -19,7 +18,6 @@ ClientReceive::ClientReceive(NetObject *parent)
 {
     static_assert(read_receive_buffer_count >= 4, "a receive count must be equal or greator than 4");
 
-    m_packetBuffer = std::make_unique<PacketBufferFix>();
     m_receiveThread = std::make_unique<LoopThread>(this);
     m_readFds = std::make_unique<SocketSet>();
     m_readFds->SetTimeInterval(1, 0);
@@ -33,9 +31,8 @@ ClientReceive::~ClientReceive()
 void ClientReceive::OnInitialOnce()
 {
     m_networker = std::make_unique<ClientWorker>(GetParent());
-    m_networker->SetReceiveBuffer(m_packetBuffer);
 
-    m_OnReceivePushStream.Connection(&ClientWorker::BufferOnPushed, m_networker.get());
+    m_OnReceivePushStream.Connection(&ClientWorker::SlotWorkerWakeup, m_networker.get());
 }
 
 bool ClientReceive::NotifyErrorToOwner()
@@ -73,18 +70,19 @@ void ClientReceive::OnDisconnected(WinSocket *sock)
 
 bool ClientReceive::ReceiveFrom(WinSocket *sock)
 {
-    static std::vector<uint8_t> receiveVector;
+    std::vector<uint8_t> receiveVector;
 
     do
     {
         receiveVector.resize(read_receive_buffer_count);
         if (!sock->Receive(receiveVector))
             OnDisconnected(sock);
-        else if (!m_packetBuffer->PushBack(sock, receiveVector))
+        else if (!m_networker->PushWorkBuffer(sock, receiveVector))
             ErrorBufferIsFull();
         else
         {
-            QUEUE_EMIT(m_OnReceivePushStream);
+            //QUEUE_EMIT(m_OnReceivePushStream);
+            m_OnReceivePushStream.Emit();
             break;
         }
         return false;
@@ -135,7 +133,7 @@ void ClientReceive::SetReceiveSocket(std::shared_ptr<WinSocket> &sock)
 
 void ClientReceive::DebugShowReceive()
 {
-    std::string debugmsg = stringFormat("receive buffer: %d ", m_packetBuffer->DebugPacketBufferSize());
+    std::string debugmsg = stringFormat("receive buffer: %d ", m_networker->GetWorkBufferSize());
 
     NET_PUSH_LOGMSG(debugmsg);
 }

@@ -19,7 +19,7 @@ public:
 protected:
     DECLARE_MESSAGE_MAP()
     afx_msg LRESULT OnSetText(WPARAM wParam, LPARAM lParam);
-    afx_msg HBRUSH TextLabel::CtlColor(CDC* pDC, UINT nCtlColor);
+    afx_msg HBRUSH CtlColor(CDC* pDC, UINT nCtlColor);
 };
 
 #endif

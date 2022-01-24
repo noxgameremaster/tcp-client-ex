@@ -8,12 +8,13 @@
 class NetPacket;
 class EventThread;
 class PacketBufferFix;
+class WinSocket;
 
 class ClientWorker : public NetService
 {
 private:
     std::unique_ptr<EventThread> m_workThread;
-    std::shared_ptr<PacketBufferFix> m_packetBuffer;
+    std::unique_ptr<PacketBufferFix> m_packetBuffer;
 
 public:
     explicit ClientWorker(NetObject *parent);
@@ -24,8 +25,7 @@ private:
     bool FetchFromBuffer();
 
 public:
-    void BufferOnPushed();
-    void SetReceiveBuffer(std::shared_ptr<PacketBufferFix> packetBuffer);
+    bool PushWorkBuffer(WinSocket *sock, const std::vector<uint8_t> &stream);
 
 private:
     bool InitPacketForwarding();
@@ -42,6 +42,10 @@ private:
     }
 
     static std::unique_ptr<NetPacket> DistinguishPacket(uint8_t packetId);
+
+public:
+    void SlotWorkerWakeup();
+    size_t GetWorkBufferSize() const;
 
 private:
     DECLARE_SIGNAL(OnReleasePacket, std::unique_ptr<NetPacket>&&)

@@ -101,9 +101,6 @@ public:
 
 
     size_t DebugPacketBufferSize() const;
-
-private:
-    mutable std::mutex m_lock;
 };
 
 #endif

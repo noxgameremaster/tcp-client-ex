@@ -9,7 +9,6 @@
 class WinSocket;
 class SocketSet;
 class ClientWorker;
-class PacketBufferFix;
 class LoopThread;
 
 class ClientReceive : public NetService
@@ -18,7 +17,6 @@ class ClientReceive : public NetService
 private:
     std::shared_ptr<WinSocket> m_netsocket;
     std::unique_ptr<SocketSet> m_readFds;
-    std::shared_ptr<PacketBufferFix> m_packetBuffer;
     std::unique_ptr<ClientWorker> m_networker;
     std::unique_ptr<LoopThread> m_receiveThread;
 
